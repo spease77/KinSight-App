@@ -1116,7 +1116,9 @@ export async function getContactRowById(
   try {
     const supabase = createServerSupabase();
     const { data, error } = await withTimeout(
-      supabase.from("contacts").select("*").eq("id", trimmedId).single(),
+      Promise.resolve(
+        supabase.from("contacts").select("*").eq("id", trimmedId).single()
+      ),
       8_000,
       "Database query timed out"
     );
@@ -1652,7 +1654,7 @@ export async function syncPhoneContacts(
     });
   }
 
-  const existingRows: ContactSyncExistingRow[] = (data ?? []).map((row) => ({
+  const existingRows: ContactSyncExistingRow[] = ((data as ContactRow[] | null) ?? []).map((row) => ({
     id: row.id,
     name: row.name,
     company: row.company,

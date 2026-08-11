@@ -55,7 +55,6 @@ export function unlockSpeechSynthesis(): void {
   const silent = new Audio(SILENT_WAV_DATA_URI);
   configureMobileAudio(silent);
   silent.volume = 0.01;
-  silent.playsInline = true;
 
   void silent
     .play()

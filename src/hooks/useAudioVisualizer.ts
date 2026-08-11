@@ -34,7 +34,7 @@ function createAudioContext(): AudioContext | null {
  */
 export function measureAnalyserVolume(
   analyser: AnalyserNode,
-  timeDomainBuffer: Uint8Array
+  timeDomainBuffer: Uint8Array<ArrayBuffer>
 ): number {
   analyser.getByteTimeDomainData(timeDomainBuffer);
 
@@ -88,7 +88,7 @@ export function useAudioVisualizer({
     const source = audioContext.createMediaStreamSource(stream);
     source.connect(analyser);
 
-    const timeDomainBuffer = new Uint8Array(analyser.fftSize);
+    const timeDomainBuffer = new Uint8Array(analyser.fftSize) as Uint8Array<ArrayBuffer>;
     timeDomainBufferRef.current = timeDomainBuffer;
 
     let frameId = 0;

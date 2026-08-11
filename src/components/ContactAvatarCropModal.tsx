@@ -109,7 +109,8 @@ export function ContactAvatarCropModal({
 
   const handleTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
     if (event.touches.length === 2) {
-      const [a, b] = event.touches;
+      const a = event.touches[0]!;
+      const b = event.touches[1]!;
       const distance = Math.hypot(
         b.clientX - a.clientX,
         b.clientY - a.clientY
@@ -121,7 +122,8 @@ export function ContactAvatarCropModal({
 
   const handleTouchMove = (event: React.TouchEvent<HTMLDivElement>) => {
     if (event.touches.length !== 2 || !pinchStateRef.current) return;
-    const [a, b] = event.touches;
+    const a = event.touches[0]!;
+    const b = event.touches[1]!;
     const distance = Math.hypot(b.clientX - a.clientX, b.clientY - a.clientY);
     const ratio = distance / pinchStateRef.current.distance;
     setZoom(clampZoom(pinchStateRef.current.zoom * ratio));
