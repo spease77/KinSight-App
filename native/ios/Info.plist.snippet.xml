@@ -1,0 +1,18 @@
+<!-- Merge into ios/App/Info.plist -->
+<!--
+<key>CFBundleURLTypes</key>
+<array>
+  <dict>
+    <key>CFBundleURLName</key>
+    <string>app.kinsight.mobile</string>
+    <key>CFBundleURLSchemes</key>
+    <array>
+      <string>kinsight</string>
+    </array>
+  </dict>
+</array>
+<key>NSMicrophoneUsageDescription</key>
+<string>KinSight uses the microphone for hands-free relationship notes and wake-word listening.</string>
+<key>NSSpeechRecognitionUsageDescription</key>
+<string>KinSight transcribes your voice commands into relationship intelligence.</string>
+-->

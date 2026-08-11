@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>CFBundleDisplayName</key>
+	<string>KinSight</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>kinsight_mobile</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>$(FLUTTER_BUILD_NAME)</string>
+	<key>CFBundleSignature</key>
+	<string>????</string>
+	<key>CFBundleVersion</key>
+	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
+	<key>UILaunchStoryboardName</key>
+	<string>LaunchScreen</string>
+	<key>UIMainStoryboardFile</key>
+	<string>Main</string>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+	</array>
+
+	<!-- Path 2: custom URL scheme for Siri / Shortcuts hand-off -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>app.kinsight.mobile</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>kinsight</string>
+			</array>
+		</dict>
+	</array>
+
+	<!-- Path 1: microphone + wake word -->
+	<key>NSMicrophoneUsageDescription</key>
+	<string>KinSight listens for "Hey KinSight" and records relationship notes.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>KinSight transcribes your spoken commands and meeting notes.</string>
+
+	<!-- Optional: register App Intent phrases with iOS 16+ (see AppIntents folder) -->
+	<key>INAlternativeAppNames</key>
+	<array>
+		<string>KinSight</string>
+	</array>
+</dict>
+</plist>

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="open_kinsight"
+        android:enabled="true"
+        android:icon="@mipmap/ic_launcher"
+        android:shortcutShortLabel="@string/app_name"
+        android:shortcutLongLabel="Open KinSight">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="kinsight://capture?source=google" />
+    </shortcut>
+
+    <shortcut
+        android:shortcutId="tell_kinsight"
+        android:enabled="true"
+        android:icon="@mipmap/ic_launcher"
+        android:shortcutShortLabel="Tell KinSight"
+        android:shortcutLongLabel="Tell KinSight a command">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="kinsight://voice?source=google" />
+    </shortcut>
+</shortcuts>

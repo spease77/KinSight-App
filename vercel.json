@@ -1,0 +1,12 @@
+{
+  "regions": ["pdx1"],
+  "crons": [
+    {
+      "path": "/api/cron/maintenance-reminders",
+      "schedule": "0 9 * * *"
+    }
+  ],
+  "env": {
+    "NODE_OPTIONS": "--dns-result-order=ipv4first"
+  }
+}
