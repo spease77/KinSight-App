@@ -885,6 +885,10 @@ b {
   padding-top: 3rem;
 }
 
+.contact-detail-page > .contact-inset-groups {
+  margin-top: 1.5rem;
+}
+
 .contact-detail-nav {
   background: transparent;
   pointer-events: none;

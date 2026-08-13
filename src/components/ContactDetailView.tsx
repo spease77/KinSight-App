@@ -38,8 +38,8 @@ export function ContactDetailView({
     <div className="contact-detail-view">
       <ContactDetailNavBar contactId={contact.id} />
 
-      <div className="contact-detail-page flex flex-col gap-3 px-5 pb-8">
-      <div className="contact-detail-hero flex w-full flex-col items-center gap-3">
+      <div className="contact-detail-page flex flex-col px-5 pb-8">
+      <div className="contact-detail-hero flex w-full flex-col items-center gap-3.5">
         <ContactPhotoUpload
           contact={contact}
           sortBy={sortBy}
