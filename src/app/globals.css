@@ -23,6 +23,8 @@
   --text-icon: #7e8492;
 
   --border-subtle: #26282e;
+  --border-row-divider: rgb(229 231 235 / 0.1);
+  --border-card-outline: rgb(255 255 255 / 0.05);
 
   /* Primary brand — indigo-lavender */
   --accent-primary: #5e6ad2;
@@ -96,6 +98,8 @@
   --text-icon: #6a6d73;
 
   --border-subtle: #d4d7d6;
+  --border-row-divider: rgb(243 244 246);
+  --border-card-outline: rgb(226 232 240 / 0.55);
 
   /* Primary brand — indigo-lavender */
   --accent-primary: #5e6ad2;
@@ -168,6 +172,8 @@
     --text-icon: #6a6d73;
 
     --border-subtle: #d4d7d6;
+  --border-row-divider: rgb(243 244 246);
+  --border-card-outline: rgb(226 232 240 / 0.55);
 
     --accent-primary: #5e6ad2;
     --accent-primary-bright: #5e6ad2;
@@ -239,6 +245,8 @@
     --text-icon: #7e8492;
 
     --border-subtle: #26282e;
+  --border-row-divider: rgb(229 231 235 / 0.1);
+  --border-card-outline: rgb(255 255 255 / 0.05);
 
     --accent-primary: #5e6ad2;
     --accent-primary-bright: #6b76db;
@@ -2097,7 +2105,7 @@ b {
 }
 
 [data-theme="light"] .contact-profile-notes-card__body {
-  border-color: var(--border-subtle);
+  border-color: var(--border-card-outline);
   background-color: var(--bg-card);
 }
 
@@ -2147,18 +2155,21 @@ b {
 }
 
 [data-theme="light"] .edit-contact-group__card {
-  border-color: var(--border-subtle);
+  border-color: var(--border-card-outline);
   background-color: var(--bg-card);
   box-shadow:
     0 1px 2px rgba(8, 9, 10, 0.04),
-    0 0 0 1px rgba(8, 9, 10, 0.03);
+    0 0 0 1px rgba(8, 9, 10, 0.02);
 }
 
 [data-theme="light"] .edit-contact-name-row--border,
 [data-theme="light"] .edit-contact-deletable-row--border,
 [data-theme="light"] .edit-contact-row--border,
-[data-theme="light"] .edit-contact-add-row--bordered {
-  border-bottom-color: var(--border-subtle);
+[data-theme="light"] .edit-contact-add-row--bordered,
+[data-theme="light"] .edit-contact-notes-card__body,
+[data-theme="light"] .related-person-row--border,
+[data-theme="light"] .related-person-row__header--border {
+  border-color: var(--border-row-divider);
 }
 
 [data-theme="light"] .edit-contact-fact-row__text {
@@ -2187,6 +2198,11 @@ b {
 
 [data-theme="light"] .edit-contact-fact-sheet__textarea::placeholder {
   color: var(--text-secondary);
+}
+
+[data-theme="light"] .edit-contact-notes-card__textarea {
+  border-color: var(--border-card-outline);
+  background-color: var(--bg-elevated);
 }
 
 [data-theme="light"] .related-person-row__name {
@@ -2280,11 +2296,21 @@ b {
   [data-theme="system"] .contact-inset-group__card,
   [data-theme="system"] .edit-contact-group__card,
   [data-theme="system"] .contact-profile-notes-card__body {
-    border-color: var(--border-subtle);
+    border-color: var(--border-card-outline);
     background-color: var(--bg-card);
     box-shadow:
       0 1px 2px rgba(8, 9, 10, 0.04),
-      0 0 0 1px rgba(8, 9, 10, 0.03);
+      0 0 0 1px rgba(8, 9, 10, 0.02);
+  }
+
+  [data-theme="system"] .edit-contact-name-row--border,
+  [data-theme="system"] .edit-contact-deletable-row--border,
+  [data-theme="system"] .edit-contact-row--border,
+  [data-theme="system"] .edit-contact-add-row--bordered,
+  [data-theme="system"] .edit-contact-notes-card__body,
+  [data-theme="system"] .related-person-row--border,
+  [data-theme="system"] .related-person-row__header--border {
+    border-color: var(--border-row-divider);
   }
 
   [data-theme="system"] .contact-inset-row__label {
@@ -4622,8 +4648,8 @@ b {
   overflow: hidden;
   width: 100%;
   border-radius: 1rem;
-  border: 1px solid rgb(255 255 255 / 0.05);
-  background-color: rgb(24 24 27 / 0.92);
+  border: 1px solid var(--border-card-outline);
+  background-color: var(--bg-card);
   box-shadow:
     0 10px 15px -3px rgb(0 0 0 / 0.4),
     0 4px 6px -4px rgb(0 0 0 / 0.4);
@@ -4638,7 +4664,7 @@ b {
 }
 
 .edit-contact-name-row--border {
-  border-bottom: 1px solid color-mix(in srgb, #27272a 80%, transparent);
+  border-bottom: 1px solid var(--border-row-divider);
 }
 
 .edit-contact-name-row__label {
@@ -4781,7 +4807,7 @@ b {
 }
 
 .edit-contact-deletable-row--border {
-  border-bottom: 1px solid color-mix(in srgb, #27272a 80%, transparent);
+  border-bottom: 1px solid var(--border-row-divider);
 }
 
 .edit-contact-deletable-row--removing {
@@ -4801,7 +4827,7 @@ b {
 }
 
 .edit-contact-row--border {
-  border-bottom: 1px solid color-mix(in srgb, #27272a 80%, transparent);
+  border-bottom: 1px solid var(--border-row-divider);
 }
 
 .edit-contact-row__body {
@@ -5035,7 +5061,7 @@ b {
 }
 
 .edit-contact-add-row--bordered {
-  border-top: 1px solid color-mix(in srgb, #27272a 80%, transparent);
+  border-top: 1px solid var(--border-row-divider);
 }
 
 .edit-contact-add-row__icon {
@@ -5079,7 +5105,7 @@ b {
 
 .edit-contact-notes-card__body {
   padding: 0 1rem 1rem;
-  border-top: 1px solid color-mix(in srgb, var(--border-subtle) 65%, transparent);
+  border-top: 1px solid var(--border-row-divider);
 }
 
 .edit-contact-notes-card__textarea {
@@ -5088,7 +5114,7 @@ b {
   resize: vertical;
   min-height: 6rem;
   border-radius: 1rem;
-  border: 1px solid rgb(255 255 255 / 0.05);
+  border: 1px solid var(--border-card-outline);
   background-color: color-mix(in srgb, var(--bg-main) 60%, transparent);
   padding: 0.75rem;
   font-family: var(--font-sans), system-ui, sans-serif;
@@ -5245,8 +5271,8 @@ b {
 
 .contact-profile-notes-card__body {
   border-radius: 1rem;
-  border: 1px solid #27272a;
-  background-color: color-mix(in srgb, #18181b 50%, transparent);
+  border: 1px solid var(--border-card-outline);
+  background-color: var(--bg-card);
   padding: 1rem;
 }
 
@@ -5468,7 +5494,7 @@ b {
 }
 
 .related-person-row--border {
-  border-bottom: 1px solid color-mix(in srgb, var(--border-subtle) 65%, transparent);
+  border-bottom: 1px solid var(--border-row-divider);
 }
 
 .related-person-row__header {
@@ -5500,7 +5526,7 @@ b {
 }
 
 .related-person-row__header--border {
-  border-bottom: 1px solid color-mix(in srgb, var(--border-subtle) 65%, transparent);
+  border-bottom: 1px solid var(--border-row-divider);
 }
 
 .related-person-row__main {
