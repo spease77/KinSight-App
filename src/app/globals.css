@@ -2978,6 +2978,18 @@ b {
 }
 
 /* ── Microphone — orange idle, green while listening ── */
+.mic-hero,
+.mic-hero-spotlight {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+.mic-button {
+  background: transparent;
+  border: none;
+}
+
 .mic-shell {
   background-color: var(--accent-orange);
   border: 2px solid #b86a28;

@@ -57,7 +57,9 @@ function getMicVolumePresentation(
   return {
     shell: {
       transform: `scale(${scale})`,
-      boxShadow: `0 0 ${blur.toFixed(1)}px ${spread.toFixed(1)}px ${glowColor}`,
+      boxShadow: isRecording || intensity > 0
+        ? `0 0 ${blur.toFixed(1)}px ${spread.toFixed(1)}px ${glowColor}`
+        : undefined,
     },
   };
 }
@@ -77,8 +79,7 @@ function MicToggleControl({
 
   return (
     <div
-      className={`relative flex shrink-0 items-center justify-center ${sizes.wrapper} ${VOLUME_TRANSITION_CLASS}`}
-      style={shell}
+      className={`relative flex shrink-0 items-center justify-center bg-transparent ${sizes.wrapper}`}
     >
       <span
         className={`mic-ring pointer-events-none absolute rounded-full border ${
@@ -109,7 +110,8 @@ function MicToggleControl({
         disabled={disabled || isBusy}
         aria-label={isRecording ? "Stop recording" : "Start recording"}
         aria-pressed={isRecording}
-        className={`mic-button relative z-10 flex items-center justify-center rounded-full transition-all duration-300 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 ${sizes.button}`}
+        style={shell}
+        className={`mic-button relative z-10 flex items-center justify-center rounded-full border-0 bg-transparent p-0 shadow-none transition-all duration-300 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 ${sizes.button} ${VOLUME_TRANSITION_CLASS}`}
       >
         <div
           className={`mic-shell absolute inset-0 rounded-full ${
@@ -156,8 +158,8 @@ export function MicrophoneButton({
   }
 
   return (
-    <div className="mic-hero flex w-full flex-col items-center gap-6">
-      <div className="mic-hero-spotlight relative flex items-center justify-center">
+    <div className="mic-hero flex w-full flex-col items-center gap-6 bg-transparent">
+      <div className="mic-hero-spotlight relative flex items-center justify-center bg-transparent">
         <MicToggleControl
           isRecording={isRecording}
           isBusy={isBusy}
