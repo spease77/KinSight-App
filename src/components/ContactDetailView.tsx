@@ -38,7 +38,7 @@ export function ContactDetailView({
     <div className="contact-detail-view">
       <ContactDetailNavBar contactId={contact.id} />
 
-      <div className="contact-detail-page flex flex-col gap-6 px-5 pb-8">
+      <div className="contact-detail-page flex flex-col gap-3 px-5 pb-8">
       <div className="contact-detail-hero flex w-full flex-col items-center gap-3">
         <ContactPhotoUpload
           contact={contact}
@@ -63,13 +63,13 @@ export function ContactDetailView({
         <div className="contact-detail-hero__comm-actions">
           <ContactQuickActions profile={contact.profile} />
         </div>
-      </div>
 
-      <ContactAnchorQuickAdd
-        contact={contact}
-        variant="detail"
-        onContactUpdate={onContactUpdate}
-      />
+        <ContactAnchorQuickAdd
+          contact={contact}
+          variant="detail"
+          onContactUpdate={onContactUpdate}
+        />
+      </div>
 
       <ContactDetailIntelSection
         contact={contact}
