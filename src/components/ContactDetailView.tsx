@@ -48,7 +48,7 @@ export function ContactDetailView({
         />
 
         <div className="contact-detail-hero__identity">
-          <h1 className="contact-detail-hero__name text-3xl font-normal tracking-tight text-white">
+          <h1 className="contact-detail-hero__name text-3xl font-normal tracking-tight">
             {displayName}
           </h1>
         </div>

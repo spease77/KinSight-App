@@ -418,7 +418,7 @@ export function ContactAnchorQuickAdd({
       <div
         className={`contact-quick-add-chips__track contact-anchor-pills__track ${
           variant === "detail"
-            ? "flex flex-wrap items-center justify-center gap-2.5"
+            ? "flex flex-nowrap items-center justify-center gap-2"
             : ""
         } ${
           inlineMode !== "closed"

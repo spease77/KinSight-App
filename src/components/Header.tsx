@@ -89,7 +89,7 @@ export function Header({
 
   return (
     <>
-      <header className="sticky top-0 z-30 bg-main px-4 pb-4 pt-12 [padding-top:max(3rem,env(safe-area-inset-top))]">
+      <header className="sticky top-0 z-30 bg-main px-4 pb-4 pt-3">
         <div className="flex items-center justify-between gap-3">
           <h1 className="font-sans text-3xl font-normal tracking-tight text-foreground sm:text-4xl">
             {isHome ? "KinSight" : title}

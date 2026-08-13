@@ -37,8 +37,6 @@ const TABS = [
   },
 ] as const;
 
-const ACTIVE_TAB_CLASS = "bg-indigo-950/50 text-indigo-400";
-
 export function BottomNav() {
   const pathname = usePathname();
 
@@ -59,24 +57,16 @@ export function BottomNav() {
             <Link
               key={href}
               href={href}
-              className={`
-                flex min-w-0 flex-1 flex-col items-center gap-1 rounded-xl px-2 py-1.5
-                transition-colors
-                ${
-                  active
-                    ? ACTIVE_TAB_CLASS
-                    : "text-icon hover:text-foreground"
-                }
-              `}
+              className={`bottom-nav__tab flex min-w-0 flex-1 flex-col items-center gap-1 rounded-xl px-2 py-1.5 transition-colors ${
+                active ? "bottom-nav__tab--active" : "text-icon hover:text-foreground"
+              }`}
             >
               <Icon
-                className={`h-5 w-5 ${active ? "text-indigo-400" : "text-icon"}`}
+                className={`bottom-nav__icon h-5 w-5 ${active ? "" : "text-icon"}`}
                 strokeWidth={active ? 2.25 : 2}
               />
               <span
-                className={`text-[10px] font-normal tracking-wide ${
-                  active ? "text-indigo-400" : ""
-                }`}
+                className={`bottom-nav__label text-[10px] font-normal tracking-wide`}
               >
                 {label}
               </span>
