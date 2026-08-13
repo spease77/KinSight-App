@@ -777,7 +777,7 @@ b {
   font-weight: 600;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: #71717a;
+  color: var(--text-secondary);
 }
 
 .contact-inset-group__title {
@@ -1692,7 +1692,7 @@ b {
   font-family: var(--font-sans), system-ui, sans-serif;
   font-size: 0.8125rem;
   font-weight: 500;
-  color: #a1a1aa;
+  color: var(--text-secondary);
 }
 
 .contact-inset-row__label--subtle {
@@ -1703,7 +1703,7 @@ b {
   font-family: var(--font-sans), system-ui, sans-serif;
   font-size: 0.9375rem;
   line-height: 1.45;
-  color: #f4f4f5;
+  color: var(--text-primary);
   word-break: break-word;
 }
 
@@ -2077,7 +2077,8 @@ b {
 [data-theme="light"] .ui-category-label,
 [data-theme="light"] .contact-inset-group__title,
 [data-theme="light"] .contact-inset-row__label--subtle,
-[data-theme="light"] .edit-contact-section__title {
+[data-theme="light"] .edit-contact-section__title,
+[data-theme="light"] .related-person-row__label {
   color: var(--text-secondary);
 }
 
@@ -2178,6 +2179,54 @@ b {
   color: var(--text-secondary);
 }
 
+[data-theme="light"] .related-person-row__name {
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .related-person-row__secondary {
+  color: var(--text-body);
+}
+
+[data-theme="light"] .related-person-row__label {
+  color: var(--text-secondary);
+}
+
+[data-theme="light"] .related-person-row__add-fact {
+  color: var(--accent-primary);
+}
+
+[data-theme="light"] .related-person-row__add-fact:hover:not(:disabled) {
+  color: var(--accent-primary-bright);
+}
+
+[data-theme="light"] .related-person-row__facts-toggle {
+  border-color: var(--border-subtle);
+  background-color: var(--accent-primary-muted);
+  color: var(--text-body);
+}
+
+[data-theme="light"] .related-person-row__panel {
+  background-color: color-mix(in srgb, var(--bg-card-hover) 75%, var(--bg-main));
+}
+
+[data-theme="light"] .related-person-fact__text {
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .related-person-row__add-input {
+  border-color: var(--border-subtle);
+  background-color: var(--bg-elevated);
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .related-person-row__add-input::placeholder {
+  color: var(--text-secondary);
+}
+
+[data-theme="light"] .contact-inset-row__secondary {
+  color: var(--text-secondary);
+}
+
 @media (prefers-color-scheme: light) {
   [data-theme="system"] .contact-detail-hero__name {
     color: var(--text-primary);
@@ -2239,7 +2288,46 @@ b {
 
   [data-theme="system"] .ui-category-label,
   [data-theme="system"] .contact-inset-group__title,
-  [data-theme="system"] .edit-contact-section__title {
+  [data-theme="system"] .contact-inset-row__label--subtle,
+  [data-theme="system"] .edit-contact-section__title,
+  [data-theme="system"] .related-person-row__label {
+    color: var(--text-secondary);
+  }
+
+  [data-theme="system"] .related-person-row__name,
+  [data-theme="system"] .related-person-fact__text {
+    color: var(--text-primary);
+  }
+
+  [data-theme="system"] .related-person-row__secondary {
+    color: var(--text-body);
+  }
+
+  [data-theme="system"] .related-person-row__add-fact {
+    color: var(--accent-primary);
+  }
+
+  [data-theme="system"] .related-person-row__add-fact:hover:not(:disabled) {
+    color: var(--accent-primary-bright);
+  }
+
+  [data-theme="system"] .related-person-row__facts-toggle {
+    border-color: var(--border-subtle);
+    background-color: var(--accent-primary-muted);
+    color: var(--text-body);
+  }
+
+  [data-theme="system"] .related-person-row__panel {
+    background-color: color-mix(in srgb, var(--bg-card-hover) 75%, var(--bg-main));
+  }
+
+  [data-theme="system"] .related-person-row__add-input {
+    border-color: var(--border-subtle);
+    background-color: var(--bg-elevated);
+    color: var(--text-primary);
+  }
+
+  [data-theme="system"] .contact-inset-row__secondary {
     color: var(--text-secondary);
   }
 }
@@ -5429,13 +5517,13 @@ b {
 .related-person-row__name {
   font-family: var(--font-sans), system-ui, sans-serif;
   font-size: 0.9375rem;
-  color: #f4f4f5;
+  color: var(--text-primary);
 }
 
 .related-person-row__secondary {
   font-family: var(--font-mono), system-ui, sans-serif;
   font-size: 0.6875rem;
-  color: #a1a1aa;
+  color: var(--text-secondary);
 }
 
 .related-person-row__aside,
@@ -5455,14 +5543,14 @@ b {
   font-family: var(--font-sans), system-ui, sans-serif;
   font-size: 0.75rem;
   font-weight: 500;
-  color: #a1a1aa;
+  color: var(--accent-primary);
   cursor: pointer;
   white-space: nowrap;
   transition: color 0.15s ease;
 }
 
 .related-person-row__add-fact:hover:not(:disabled) {
-  color: #c7d2fe;
+  color: var(--accent-primary-bright);
 }
 
 .related-person-row__add-fact:disabled {
@@ -5592,7 +5680,7 @@ b {
   font-family: var(--font-sans), system-ui, sans-serif;
   font-size: 0.8125rem;
   line-height: 1.35;
-  color: #f4f4f5;
+  color: var(--text-primary);
 }
 
 .related-person-fact__delete {
