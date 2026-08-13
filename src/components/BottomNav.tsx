@@ -58,11 +58,11 @@ export function BottomNav() {
               key={href}
               href={href}
               className={`bottom-nav__tab flex min-w-0 flex-1 flex-col items-center gap-1 rounded-xl px-2 py-1.5 transition-colors ${
-                active ? "bottom-nav__tab--active" : "text-icon hover:text-foreground"
+                active ? "bottom-nav__tab--active" : "hover:text-foreground"
               }`}
             >
               <Icon
-                className={`bottom-nav__icon h-5 w-5 ${active ? "" : "text-icon"}`}
+                className="bottom-nav__icon h-5 w-5"
                 strokeWidth={active ? 2.25 : 2}
               />
               <span
