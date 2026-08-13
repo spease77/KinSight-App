@@ -17,11 +17,13 @@ import {
 
 interface ContactPersonNetworkSectionProps {
   contact: ContactDetail;
+  title?: string;
   onContactUpdate?: (contact: ContactDetail) => void;
 }
 
 export function ContactPersonNetworkSection({
   contact,
+  title,
   onContactUpdate,
 }: ContactPersonNetworkSectionProps) {
   const [savingEntryId, setSavingEntryId] = useState<string | null>(null);
@@ -84,7 +86,7 @@ export function ContactPersonNetworkSection({
   }
 
   return (
-    <ContactInsetGroup>
+    <ContactInsetGroup title={title}>
       {entries.map((entry, index) => (
         <RelatedPersonFactsRow
           key={entry.id}

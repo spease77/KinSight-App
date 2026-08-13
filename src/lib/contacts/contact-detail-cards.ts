@@ -327,10 +327,9 @@ export function buildProfileContextRows(
   return buildProfileOverviewRows(contact);
 }
 
-export function buildProfileOverviewRows(
+export function buildRelationshipCompanyRows(
   contact: ContactDetail
 ): ContactDetailCardRow[] {
-  const profile = sanitizeContactProfile(contact.profile);
   const relationship =
     contact.relationship ?? readContactRelationship(contact.profile);
   const rows: ContactDetailCardRow[] = [];
@@ -353,6 +352,15 @@ export function buildProfileOverviewRows(
       value: company,
     });
   }
+
+  return rows;
+}
+
+export function buildInterestsDatesRows(
+  contact: ContactDetail
+): ContactDetailCardRow[] {
+  const profile = sanitizeContactProfile(contact.profile);
+  const rows: ContactDetailCardRow[] = [];
 
   const interestsRow = buildInterestsOverviewRow(profile);
   if (interestsRow) {
@@ -377,6 +385,15 @@ export function buildProfileOverviewRows(
   }
 
   return rows;
+}
+
+export function buildProfileOverviewRows(
+  contact: ContactDetail
+): ContactDetailCardRow[] {
+  return [
+    ...buildRelationshipCompanyRows(contact),
+    ...buildInterestsDatesRows(contact),
+  ];
 }
 
 export function buildContactInfoRows(

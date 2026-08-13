@@ -4,7 +4,8 @@ import { useMemo } from "react";
 import type { ContactDetail } from "@/types/contact";
 import {
   buildContactInfoRows,
-  buildProfileOverviewRows,
+  buildInterestsDatesRows,
+  buildRelationshipCompanyRows,
   getContactIntelMemoKey,
   hasProfileNotes,
 } from "@/lib/contacts/contact-detail-cards";
@@ -27,12 +28,16 @@ export function ContactDetailIntelSection({
 }: ContactDetailIntelSectionProps) {
   const intelMemoKey = getContactIntelMemoKey(contact);
 
-  const profileOverviewRows = useMemo(
-    () => buildProfileOverviewRows(contact),
+  const relationshipCompanyRows = useMemo(
+    () => buildRelationshipCompanyRows(contact),
     [intelMemoKey]
   );
   const contactInfoRows = useMemo(
     () => buildContactInfoRows(contact),
+    [intelMemoKey]
+  );
+  const interestsDatesRows = useMemo(
+    () => buildInterestsDatesRows(contact),
     [intelMemoKey]
   );
 
@@ -46,33 +51,44 @@ export function ContactDetailIntelSection({
   const hasNotes = useMemo(() => hasProfileNotes(contact), [intelMemoKey]);
 
   const showEmptyState =
-    profileOverviewRows.length === 0 &&
-    !hasPersonNetwork &&
+    relationshipCompanyRows.length === 0 &&
     contactInfoRows.length === 0 &&
+    interestsDatesRows.length === 0 &&
+    !hasPersonNetwork &&
     !hasNotes;
 
   return (
     <div className="contact-inset-groups">
       <ContactDetailInsetSection
-        rows={profileOverviewRows}
+        title="Relationship & Company"
+        rows={relationshipCompanyRows}
+        contactId={contact.id}
+        sourceMetadata={contact.sourceMetadata}
+      />
+
+      <ContactDetailInsetSection
+        title="Contact Info"
+        rows={contactInfoRows}
+        contactId={contact.id}
+        sourceMetadata={contact.sourceMetadata}
+      />
+
+      <ContactDetailInsetSection
+        title="Interests & Important Dates"
+        rows={interestsDatesRows}
         contactId={contact.id}
         sourceMetadata={contact.sourceMetadata}
       />
 
       <ContactPersonNetworkSection
         contact={contact}
+        title="Family / Connections"
         onContactUpdate={onContactUpdate}
       />
 
       <ContactProfileNotesCard
         contact={contact}
         onContactUpdate={onContactUpdate}
-      />
-
-      <ContactDetailInsetSection
-        rows={contactInfoRows}
-        contactId={contact.id}
-        sourceMetadata={contact.sourceMetadata}
       />
 
       {showEmptyState ? (
