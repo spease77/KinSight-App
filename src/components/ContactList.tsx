@@ -106,7 +106,7 @@ function ContactCard({
   if (!contactHref) {
     return (
       <li>
-        <div className="ui-card flex w-full items-center gap-4 px-4 py-3.5 text-left">
+        <div className="contact-list-row flex w-full items-center gap-4 px-4 py-3 text-left">
           {cardBody}
         </div>
       </li>
@@ -119,7 +119,7 @@ function ContactCard({
         href={contactHref}
         prefetch
         aria-label={`View ${displayName}`}
-        className="ui-card ui-card-interactive group flex w-full cursor-pointer touch-manipulation items-center gap-4 px-4 py-3.5 text-left active:scale-[0.99]"
+        className="contact-list-row group flex w-full cursor-pointer touch-manipulation items-center gap-4 px-4 py-3 text-left active:scale-[0.99]"
         onClick={(event) => {
           if (
             event.defaultPrevented ||
@@ -376,8 +376,8 @@ export function ContactList({
         <ul
           className={
             fullPage
-              ? "flex flex-col gap-2.5 pr-1"
-              : "contacts-scroll flex max-h-[38vh] flex-col gap-2.5 overflow-y-auto pr-1 sm:max-h-[42vh]"
+              ? "contact-list-card ui-card"
+              : "contact-list-card ui-card contacts-scroll max-h-[38vh] overflow-y-auto pr-1 sm:max-h-[42vh]"
           }
         >
           {sortedContacts.map((contact) => (

@@ -3287,6 +3287,39 @@ b {
   background-color: var(--accent-orange);
 }
 
+/* ── Contact list (unified row layout) ── */
+.contact-list-card {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.contact-list-card > li:not(:last-child) .contact-list-row {
+  border-bottom: 1px solid rgb(229 231 235 / 0.1);
+}
+
+[data-theme="light"] .contact-list-card > li:not(:last-child) .contact-list-row {
+  border-bottom: 1px solid rgb(243 244 246);
+}
+
+@media (prefers-color-scheme: light) {
+  [data-theme="system"] .contact-list-card > li:not(:last-child) .contact-list-row {
+    border-bottom: 1px solid rgb(243 244 246);
+  }
+}
+
+.contact-list-row {
+  border-radius: 0;
+  border: none;
+  background-color: transparent;
+  transition: background-color 0.12s ease;
+}
+
+.contact-list-row:hover,
+.contact-list-row:focus-visible {
+  background-color: var(--bg-card-hover);
+}
+
 .contacts-scroll::-webkit-scrollbar {
   width: 4px;
 }
