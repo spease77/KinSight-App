@@ -15,7 +15,7 @@ export function AppShell({ children }: AppShellProps) {
         <div className="app-shell hotel-texture relative mx-auto min-h-dvh max-w-lg">
         <div className="app-bottom-glow" aria-hidden="true" />
 
-        <div className="relative z-10 overflow-x-hidden pb-[calc(4.75rem+env(safe-area-inset-bottom))]">
+        <div className="relative z-10 overflow-x-hidden pb-[calc(var(--bottom-nav-height,4.75rem)+env(safe-area-inset-bottom))]">
           {children}
         </div>
 

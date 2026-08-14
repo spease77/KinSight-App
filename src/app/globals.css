@@ -444,11 +444,14 @@ b {
 
 .hotel-texture {
   background-color: var(--bg-main);
+  min-height: 100dvh;
 }
 
 .app-shell {
   --safe-top: env(safe-area-inset-top, 0px);
+  --bottom-nav-height: 4.75rem;
   padding-top: var(--safe-top);
+  min-height: 100dvh;
 }
 
 .border-agenda-grid-line {
@@ -714,7 +717,7 @@ b {
   filter: drop-shadow(0 0 2px rgba(94, 106, 210, 0.45));
 }
 
-/* Subtle blue wash in bottom fifth, above nav (all screens) */
+/* Subtle wash behind bottom nav and home indicator (full viewport height) */
 .app-bottom-glow {
   pointer-events: none;
   position: fixed;
@@ -722,7 +725,11 @@ b {
   z-index: 0;
   width: 100%;
   max-width: 32rem;
-  height: 20dvh;
+  bottom: 0;
+  height: calc(
+    20dvh + var(--bottom-nav-height, 4.75rem) +
+      env(safe-area-inset-bottom, 0px)
+  );
   transform: translateX(-50%);
   background: linear-gradient(
     to top,
@@ -730,7 +737,6 @@ b {
     var(--app-bottom-glow-mid) 55%,
     transparent 100%
   );
-  bottom: calc(4.75rem + env(safe-area-inset-bottom));
 }
 
 .home-ask-bar {
@@ -2034,12 +2040,15 @@ b {
   left: 0;
   right: 0;
   z-index: 50;
-  border-top: 1px solid color-mix(in srgb, var(--border-subtle) 75%, transparent);
-  background-color: var(--bg-main);
+  border-top: none;
+  background-color: color-mix(in srgb, var(--bg-main) 72%, transparent);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
   padding-bottom: env(safe-area-inset-bottom, 0px);
   transition:
     transform 0.2s ease,
-    opacity 0.2s ease;
+    opacity 0.2s ease,
+    background-color 0.2s ease;
 }
 
 .bottom-nav--keyboard-open {
