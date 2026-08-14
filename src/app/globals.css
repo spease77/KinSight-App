@@ -3089,7 +3089,6 @@ b {
 .contact-avatar-silhouette__photo {
   pointer-events: none;
   user-select: none;
-  mix-blend-mode: darken;
 }
 
 .avatar-ring-blue {

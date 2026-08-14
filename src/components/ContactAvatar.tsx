@@ -65,7 +65,7 @@ function ContactAvatarSilhouette({
           src="/images/contact-bust-placeholder.png"
           alt=""
           fill
-          className="contact-avatar-silhouette__photo object-cover"
+          className="contact-avatar-silhouette__photo object-contain"
           sizes="216px"
           unoptimized
           priority
@@ -74,9 +74,9 @@ function ContactAvatarSilhouette({
         <Image
           src="/images/contact-bust-placeholder.png"
           alt=""
-          width={64}
-          height={64}
-          className="contact-avatar-silhouette__photo h-[62%] w-[62%] object-contain object-bottom"
+          fill
+          className="contact-avatar-silhouette__photo object-contain"
+          sizes={IMAGE_SIZES[size]}
           unoptimized
         />
       )}
