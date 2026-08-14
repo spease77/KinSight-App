@@ -23,7 +23,7 @@ export function ContactDetailNavBar({ contactId }: ContactDetailNavBarProps) {
         </Link>
         <Link
           href={`/contacts/${contactId}/edit`}
-          className="contact-detail-nav__pill contact-detail-nav__pill--edit pointer-events-auto"
+          className="ui-btn-primary pointer-events-auto flex items-center rounded-full px-4 py-1.5 text-sm font-medium"
         >
           Edit
         </Link>
