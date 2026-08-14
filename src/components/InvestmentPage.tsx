@@ -73,8 +73,8 @@ export function InvestmentPage() {
             contacts={selectedContacts}
             refreshToken={refreshToken}
           />
-          <p className="mx-auto mb-4 max-w-md text-center text-sm text-zinc-400">
-            Log a touchpoint every 45 days to maintain a strong connection.
+          <p className="mb-4 text-center text-sm text-zinc-400">
+            Track interactions to maintain a strong bond.
           </p>
         </div>
 
