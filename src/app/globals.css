@@ -3074,12 +3074,12 @@ b {
 }
 
 .contact-avatar-silhouette {
-  border: 1px solid color-mix(in srgb, #ffffff 8%, transparent);
-  background-color: color-mix(in srgb, #64748b 88%, #475569);
+  border: 1px solid color-mix(in srgb, #ffffff 10%, transparent);
+  background-color: color-mix(in srgb, #d1d5db 92%, #e5e7eb);
   color: #0a0a0a;
   box-shadow:
-    0 1px 0 color-mix(in srgb, #ffffff 5%, transparent) inset,
-    0 8px 24px rgba(0, 0, 0, 0.22);
+    0 1px 0 color-mix(in srgb, #ffffff 8%, transparent) inset,
+    0 8px 24px rgba(0, 0, 0, 0.18);
 }
 
 .contact-avatar-silhouette--hero {

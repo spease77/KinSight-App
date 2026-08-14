@@ -8,6 +8,8 @@ import {
   type ContactSortField,
 } from "@/lib/contacts/sort-contacts";
 
+const CONTACT_AVATAR_PLACEHOLDER_SRC = "/images/contact-bust-placeholder.png";
+
 type ContactAvatarSize = "sm" | "lg" | "detail" | "hero" | "xl";
 type ContactAvatarPlaceholder = "initials" | "silhouette";
 
@@ -62,20 +64,20 @@ function ContactAvatarSilhouette({
     >
       {isHero ? (
         <Image
-          src="/images/contact-bust-placeholder.png"
+          src={CONTACT_AVATAR_PLACEHOLDER_SRC}
           alt=""
           fill
-          className="contact-avatar-silhouette__photo object-contain"
+          className="contact-avatar-silhouette__photo object-cover"
           sizes="216px"
           unoptimized
           priority
         />
       ) : (
         <Image
-          src="/images/contact-bust-placeholder.png"
+          src={CONTACT_AVATAR_PLACEHOLDER_SRC}
           alt=""
           fill
-          className="contact-avatar-silhouette__photo object-contain"
+          className="contact-avatar-silhouette__photo object-cover"
           sizes={IMAGE_SIZES[size]}
           unoptimized
         />
@@ -91,7 +93,7 @@ export function ContactAvatar({
   lastName,
   avatarUrl,
   size = "sm",
-  placeholder = "initials",
+  placeholder = "silhouette",
   className = "",
 }: ContactAvatarProps) {
   const sizeClass = SIZE_CLASSES[size];
