@@ -348,13 +348,13 @@ export function AddMeetingModal({
           <MeetingGroupedCard>
             <div className="flex min-h-[3.25rem] items-center justify-between gap-4 px-4 py-3">
               <span className="text-[15px] text-foreground">
-                Push to External Calendar
+                Push to External Calendar(s)
               </span>
               <MeetingIosSwitch
                 checked={pushToExternalCalendar}
                 onChange={setPushToExternalCalendar}
                 disabled={isSaving}
-                label="Push meeting to external calendar"
+                label="Push meeting to external calendar(s)"
               />
             </div>
 
