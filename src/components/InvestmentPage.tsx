@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { UserPlus } from "lucide-react";
+import { Clock } from "lucide-react";
 import type { Contact } from "@/types/contact";
 import { Header } from "@/components/Header";
 import { InvestmentContactList } from "@/components/investment/InvestmentContactList";
@@ -57,7 +57,7 @@ export function InvestmentPage() {
         aria-expanded={showLogTimeForm}
         aria-label="Add time log entry"
       >
-        <UserPlus className="h-3.5 w-3.5" strokeWidth={2} />
+        <Clock className="h-3.5 w-3.5" strokeWidth={2} />
         Add
       </button>
     </div>
