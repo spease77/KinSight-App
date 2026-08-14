@@ -1,7 +1,6 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
-import { X } from "lucide-react";
 import type { Contact, ContactDetail } from "@/types/contact";
 import {
   DEFAULT_MEETING_FORMAT,
@@ -29,7 +28,7 @@ import { MeetingIosSwitch } from "@/components/agenda/MeetingIosSwitch";
 import { MeetingTimingCard } from "@/components/agenda/MeetingTimingCard";
 import { MeetingTitleLocationCard } from "@/components/agenda/MeetingTitleLocationCard";
 import { MeetingModalSaveButton } from "@/components/agenda/MeetingModalSaveButton";
-import { DiscardChangesConfirmModal } from "@/components/DiscardChangesConfirmModal";
+import { MeetingModalCloseButton } from "@/components/agenda/MeetingModalCloseButton";
 import type { ScheduledInteraction } from "@/types/scheduled-interaction";
 
 interface MeetingFormSnapshot {
@@ -59,7 +58,6 @@ export function AddMeetingModal({
 }: AddMeetingModalProps) {
   const [entered, setEntered] = useState(false);
   const [baseline, setBaseline] = useState<MeetingFormSnapshot | null>(null);
-  const [discardPromptOpen, setDiscardPromptOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [location, setLocation] = useState("");
   const [manualEmail, setManualEmail] = useState("");
@@ -85,7 +83,6 @@ export function AddMeetingModal({
     if (!open) {
       setEntered(false);
       setBaseline(null);
-      setDiscardPromptOpen(false);
       return;
     }
 
@@ -219,24 +216,7 @@ export function AddMeetingModal({
   };
 
   const dismissModal = () => {
-    setDiscardPromptOpen(false);
     onClose();
-  };
-
-  const handleCloseRequest = () => {
-    if (isSaving) return;
-
-    if (hasChanges) {
-      setDiscardPromptOpen(true);
-      return;
-    }
-
-    dismissModal();
-  };
-
-  const handleDiscardChanges = () => {
-    if (isSaving) return;
-    dismissModal();
   };
 
   const handleSave = async (event: FormEvent) => {
@@ -338,49 +318,38 @@ export function AddMeetingModal({
   if (!open) return null;
 
   return (
-    <>
-      <div
-        className={`fixed inset-0 z-40 flex items-end justify-center bg-black/70 backdrop-blur-sm transition-opacity duration-200 sm:items-center ${
-          entered ? "opacity-100" : "opacity-0"
-        }`}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="add-meeting-title"
-      >
-        <div
-          className={`meeting-sheet flex max-h-[94dvh] w-full max-w-lg flex-col overflow-hidden bg-main shadow-2xl transition-all duration-300 ease-out sm:rounded-2xl ${
-            entered
-              ? "translate-y-0 opacity-100"
-              : "translate-y-6 opacity-0 sm:translate-y-2 sm:scale-[0.98]"
-          }`}
-          onClick={(event) => event.stopPropagation()}
-        >
-          <header className="flex shrink-0 items-center justify-between border-b border-border-green/50 bg-main px-4 py-3">
-            <button
-              type="button"
-              onClick={handleCloseRequest}
-              disabled={isSaving}
-              className="meeting-modal-header-btn text-muted transition-all duration-200 hover:text-foreground disabled:opacity-40"
-              aria-label="Cancel"
-            >
-              <X className="h-5 w-5" strokeWidth={2.25} />
-            </button>
+    <div
+      className={`fixed inset-0 z-40 flex h-dvh flex-col bg-main transition-opacity duration-200 ${
+        entered ? "opacity-100" : "opacity-0"
+      }`}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="add-meeting-title"
+    >
+      <div className="mx-auto flex h-full w-full max-w-lg flex-col">
+        <header className="flex shrink-0 items-center justify-between border-b border-border-green/50 bg-main px-4 py-3">
+          <MeetingModalCloseButton
+            hasChanges={hasChanges}
+            disabled={isSaving}
+            onClose={dismissModal}
+            onDiscard={dismissModal}
+          />
 
-            <h2
-              id="add-meeting-title"
-              className="flex-1 text-center font-sans text-[17px] font-semibold tracking-tight text-foreground"
-            >
-              New Event
-            </h2>
+          <h2
+            id="add-meeting-title"
+            className="flex-1 text-center font-sans text-[17px] font-semibold tracking-tight text-foreground"
+          >
+            New Event
+          </h2>
 
-            <MeetingModalSaveButton
-              formId="add-meeting-form"
-              isDirty={hasChanges}
-              isSaving={isSaving}
-              savingLabel="Saving event"
-              saveLabel="Save event"
-            />
-          </header>
+          <MeetingModalSaveButton
+            formId="add-meeting-form"
+            isDirty={hasChanges}
+            isSaving={isSaving}
+            savingLabel="Saving event"
+            saveLabel="Save event"
+          />
+        </header>
 
         <form
           id="add-meeting-form"
@@ -475,16 +444,7 @@ export function AddMeetingModal({
             </p>
           ) : null}
         </form>
-        </div>
       </div>
-
-      {discardPromptOpen ? (
-        <DiscardChangesConfirmModal
-          message="Are you sure you want to discard this new event?"
-          onCancel={() => setDiscardPromptOpen(false)}
-          onDiscard={handleDiscardChanges}
-        />
-      ) : null}
-    </>
+    </div>
   );
 }

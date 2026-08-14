@@ -24,7 +24,7 @@ export function MeetingModalSaveButton({
     className: `flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-all duration-200 ${
       isDirty
         ? "bg-indigo-600 text-white hover:bg-indigo-500 active:scale-95 disabled:opacity-80"
-        : "pointer-events-none bg-zinc-800 text-zinc-500"
+        : "pointer-events-none bg-zinc-600 text-white"
     }`,
     "aria-label": isSaving ? savingLabel : saveLabel,
     "aria-disabled": !isDirty || isSaving,

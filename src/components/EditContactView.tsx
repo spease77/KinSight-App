@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronDown, X } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import type { ContactDetail } from "@/types/contact";
 import {
   ContactPhotoUpload,
@@ -40,7 +40,7 @@ import {
   type ContactSortField,
 } from "@/lib/contacts/sort-contacts";
 import { MeetingModalSaveButton } from "@/components/agenda/MeetingModalSaveButton";
-import { DiscardChangesConfirmModal } from "@/components/DiscardChangesConfirmModal";
+import { MeetingModalCloseButton } from "@/components/agenda/MeetingModalCloseButton";
 
 interface EditContactViewProps {
   contact: ContactDetail;
@@ -65,7 +65,6 @@ export function EditContactView({
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [discardPromptOpen, setDiscardPromptOpen] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -102,24 +101,7 @@ export function EditContactView({
   };
 
   const navigateAway = () => {
-    setDiscardPromptOpen(false);
     router.push(`/contacts/${contact.id}`);
-  };
-
-  const handleCancel = () => {
-    if (isSaving) return;
-
-    if (hasChanges) {
-      setDiscardPromptOpen(true);
-      return;
-    }
-
-    navigateAway();
-  };
-
-  const handleDiscardChanges = () => {
-    if (isSaving) return;
-    navigateAway();
   };
 
   const handleSave = async () => {
@@ -172,23 +154,22 @@ export function EditContactView({
   return (
     <div className="edit-contact-page">
       <header className="edit-contact-page__nav" aria-label="Edit contact actions">
-        <button
-          type="button"
-          className="edit-contact-header__btn edit-contact-header__btn--cancel"
-          onClick={handleCancel}
+        <MeetingModalCloseButton
+          hasChanges={hasChanges}
           disabled={isSaving}
-          aria-label="Cancel"
-        >
-          <X className="h-5 w-5" strokeWidth={2.5} />
-        </button>
-
-        <MeetingModalSaveButton
-          onClick={() => void handleSave()}
-          isDirty={hasChanges}
-          isSaving={isSaving}
-          savingLabel="Saving contact"
-          saveLabel="Save contact"
+          onClose={navigateAway}
+          onDiscard={navigateAway}
         />
+
+        <div className="pointer-events-auto">
+          <MeetingModalSaveButton
+            onClick={() => void handleSave()}
+            isDirty={hasChanges}
+            isSaving={isSaving}
+            savingLabel="Saving contact"
+            saveLabel="Save contact"
+          />
+        </div>
       </header>
 
       <EditContactDeleteProvider>
@@ -389,14 +370,6 @@ export function EditContactView({
             }
           }}
           onConfirm={() => void handleDeleteConfirm()}
-        />
-      ) : null}
-
-      {discardPromptOpen ? (
-        <DiscardChangesConfirmModal
-          message="Are you sure you want to discard these contact changes?"
-          onCancel={() => setDiscardPromptOpen(false)}
-          onDiscard={handleDiscardChanges}
         />
       ) : null}
     </div>

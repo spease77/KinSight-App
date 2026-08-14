@@ -3201,7 +3201,8 @@ b {
   align-items: center;
   justify-content: center;
   border-radius: 9999px;
-  background: color-mix(in srgb, var(--bg-card-hover) 82%, var(--bg-elevated));
+  background: #52525b;
+  color: #ffffff;
 }
 
 @media (min-width: 640px) {
@@ -4752,8 +4753,8 @@ b {
 }
 
 .edit-contact-header__btn--cancel {
-  background-color: color-mix(in srgb, var(--bg-card-hover) 80%, transparent);
-  color: var(--text-secondary);
+  background-color: #52525b;
+  color: #ffffff;
 }
 
 .edit-contact-header__btn--save {
