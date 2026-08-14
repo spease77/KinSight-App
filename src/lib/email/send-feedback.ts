@@ -4,11 +4,13 @@ const FEEDBACK_FROM =
 
 interface SendFeedbackEmailInput {
   userName: string;
+  userEmail: string | null;
   message: string;
 }
 
 export async function sendFeedbackEmail({
   userName,
+  userEmail,
   message,
 }: SendFeedbackEmailInput): Promise<{ ok: true } | { ok: false; error: string }> {
   const apiKey = process.env.RESEND_API_KEY;
@@ -20,7 +22,24 @@ export async function sendFeedbackEmail({
     };
   }
 
-  const subject = `${userName.trim()} - KinSight User Feedback`;
+  const subject = `${userName} - KinSight User Feedback`;
+  const text = [
+    `From: ${userName}`,
+    `Email: ${userEmail ?? "Not provided"}`,
+    "",
+    message.trim(),
+  ].join("\n");
+
+  const payload: Record<string, unknown> = {
+    from: FEEDBACK_FROM,
+    to: [FEEDBACK_TO],
+    subject,
+    text,
+  };
+
+  if (userEmail) {
+    payload.reply_to = userEmail;
+  }
 
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -28,12 +47,7 @@ export async function sendFeedbackEmail({
       Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      from: FEEDBACK_FROM,
-      to: [FEEDBACK_TO],
-      subject,
-      text: message.trim(),
-    }),
+    body: JSON.stringify(payload),
   });
 
   if (!res.ok) {

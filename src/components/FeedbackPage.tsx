@@ -4,21 +4,14 @@ import { useEffect, useState } from "react";
 import { Check, Loader2, Send } from "lucide-react";
 import { Header } from "@/components/Header";
 
-const USER_NAME_KEY = "kinsight-user-name";
 const SUBMITTED_RESET_MS = 3000;
 
 type SubmitState = "idle" | "sending" | "submitted";
 
 export function FeedbackPage() {
-  const [userName, setUserName] = useState("");
   const [message, setMessage] = useState("");
   const [submitState, setSubmitState] = useState<SubmitState>("idle");
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const saved = localStorage.getItem(USER_NAME_KEY);
-    if (saved) setUserName(saved);
-  }, []);
 
   useEffect(() => {
     if (submitState !== "submitted") return;
@@ -33,9 +26,8 @@ export function FeedbackPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const name = userName.trim();
     const text = message.trim();
-    if (!name || !text || submitState !== "idle") return;
+    if (!text || submitState !== "idle") return;
 
     setSubmitState("sending");
     setError(null);
@@ -44,7 +36,7 @@ export function FeedbackPage() {
       const res = await fetch("/api/feedback", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userName: name, message: text }),
+        body: JSON.stringify({ message: text }),
       });
 
       const data = (await res.json()) as { error?: string };
@@ -55,7 +47,6 @@ export function FeedbackPage() {
         return;
       }
 
-      localStorage.setItem(USER_NAME_KEY, name);
       setMessage("");
       setSubmitState("submitted");
     } catch {
@@ -72,28 +63,15 @@ export function FeedbackPage() {
       <Header title="Feedback" />
       <main className="flex flex-col gap-6 px-5 pb-6 pt-4">
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-          <label className="flex flex-col gap-1.5">
-            <span className="ui-label">Your name</span>
-            <input
-              type="text"
-              value={userName}
-              onChange={(e) => setUserName(e.target.value)}
-              placeholder="Who is this from?"
-              autoComplete="name"
-              disabled={isSending || isSubmitted}
-              className="app-field-input app-field-input--neutral text-sm disabled:opacity-60"
-            />
-          </label>
-
-          <label className="flex flex-col gap-1.5">
+          <label className="flex min-h-[min(50vh,22rem)] flex-col gap-1.5">
             <span className="ui-label">Feedback</span>
             <textarea
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Tell us what's working, what's not, or what you'd like KinSight to do next."
-              rows={6}
+              rows={10}
               disabled={isSending || isSubmitted}
-              className="app-field-input app-field-input--neutral resize-none text-sm disabled:opacity-60"
+              className="app-field-input app-field-input--neutral min-h-[min(44vh,20rem)] flex-1 resize-none text-sm disabled:opacity-60"
             />
           </label>
 
@@ -106,7 +84,7 @@ export function FeedbackPage() {
           <div className="flex justify-center pt-1">
             <button
               type="submit"
-              disabled={isSending || isSubmitted}
+              disabled={isSending || isSubmitted || !message.trim()}
               className={`
                 inline-flex items-center gap-2 px-6 py-2.5 text-sm
                 active:scale-[0.98] disabled:cursor-default disabled:opacity-100
