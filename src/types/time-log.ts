@@ -1,6 +1,6 @@
 export type InvestmentSortField = "time" | "last_name" | "first_name";
 
-export type MeetingFormat = "in_person" | "phone" | "video_call";
+export type MeetingFormat = "in_person" | "phone" | "video_call" | "reminder";
 
 export const MEETING_FORMAT_OPTIONS: {
   value: MeetingFormat;
@@ -9,6 +9,7 @@ export const MEETING_FORMAT_OPTIONS: {
   { value: "in_person", label: "In-Person" },
   { value: "phone", label: "Phone" },
   { value: "video_call", label: "Video Call" },
+  { value: "reminder", label: "Reminder" },
 ];
 
 export const DEFAULT_MEETING_FORMAT: MeetingFormat = "in_person";

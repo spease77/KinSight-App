@@ -9,6 +9,7 @@ const MEETING_FORMATS = new Set<MeetingFormat>([
   "in_person",
   "phone",
   "video_call",
+  "reminder",
 ]);
 
 function parseMeetingFormat(value: unknown): MeetingFormat | null | undefined {

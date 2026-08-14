@@ -93,9 +93,10 @@ export function InvestmentPage() {
       <LogTimeModal
         open={isLogTimeOpen}
         onClose={() => setIsLogTimeOpen(false)}
-        selectedContacts={selectedContacts}
-        onContactsChange={setSelectedContacts}
-        onContactSelect={handleContactSelect}
+        selectedContact={selectedContacts[0] ?? null}
+        onSelectedContactChange={(contact) => {
+          setSelectedContacts(contact ? [contact] : []);
+        }}
         onLogged={handleLogged}
       />
     </>
