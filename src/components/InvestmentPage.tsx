@@ -24,16 +24,11 @@ export function InvestmentPage() {
   useEffect(() => {
     if (isLoading) return;
 
-    if (contacts.length === 0) {
-      setSelectedContact(null);
-      return;
-    }
-
     setSelectedContact((current) => {
-      if (current && contacts.some((contact) => contact.id === current.id)) {
-        return current;
-      }
-      return contacts[0];
+      if (!current) return null;
+      return contacts.some((contact) => contact.id === current.id)
+        ? current
+        : null;
     });
   }, [contacts, isLoading]);
 
