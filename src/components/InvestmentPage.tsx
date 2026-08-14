@@ -70,10 +70,8 @@ export function InvestmentPage() {
             contacts={selectedContacts}
             refreshToken={refreshToken}
           />
-          <p className="text-sm leading-relaxed text-muted">
-            Milestones track your long-term relationship depth. Log a touchpoint
-            every 45 days to keep the relationship healthy and prevent the
-            connection from fading.
+          <p className="mx-auto mb-4 max-w-md text-center text-sm text-zinc-400">
+            Log a touchpoint every 45 days to maintain a strong connection.
           </p>
         </div>
 
