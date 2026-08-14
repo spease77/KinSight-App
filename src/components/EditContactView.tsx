@@ -1,8 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
-import { Check, ChevronDown, Loader2, X } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { ChevronDown, X } from "lucide-react";
 import type { ContactDetail } from "@/types/contact";
 import {
   ContactPhotoUpload,
@@ -29,6 +29,7 @@ import {
   buildEditContactFieldState,
   type EditContactFieldState,
 } from "@/lib/contacts/labeled-contact-fields";
+import { snapshotsEqual } from "@/lib/forms/compare-snapshots";
 import { saveEditContact } from "@/lib/contacts/edit-contact-save";
 import { deleteContactById } from "@/lib/contacts/delete-contact";
 import { imageBlobFromClipboardEvent } from "@/lib/contacts/avatar-crop";
@@ -38,6 +39,8 @@ import {
   loadContactSortPreference,
   type ContactSortField,
 } from "@/lib/contacts/sort-contacts";
+import { MeetingModalSaveButton } from "@/components/agenda/MeetingModalSaveButton";
+import { DiscardChangesConfirmModal } from "@/components/DiscardChangesConfirmModal";
 
 interface EditContactViewProps {
   contact: ContactDetail;
@@ -51,6 +54,9 @@ export function EditContactView({
   const router = useRouter();
   const { removeContact } = useContacts();
   const photoActionsRef = useRef<ContactPhotoActions | null>(null);
+  const initialStateRef = useRef<EditContactFieldState>(
+    buildEditContactFieldState(contact.profile ?? {})
+  );
   const [sortBy, setSortBy] = useState<ContactSortField>("first");
   const [state, setState] = useState<EditContactFieldState>(() =>
     buildEditContactFieldState(contact.profile ?? {})
@@ -59,12 +65,24 @@ export function EditContactView({
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [discardPromptOpen, setDiscardPromptOpen] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const hasChanges = useMemo(
+    () => !snapshotsEqual(state, initialStateRef.current),
+    [state]
+  );
 
   useEffect(() => {
     setSortBy(loadContactSortPreference());
   }, []);
+
+  useEffect(() => {
+    const next = buildEditContactFieldState(contact.profile ?? {});
+    setState(next);
+    initialStateRef.current = next;
+  }, [contact.id, contact.profile]);
 
   useEffect(() => {
     const handlePaste = (event: ClipboardEvent) => {
@@ -83,8 +101,25 @@ export function EditContactView({
     setError(null);
   };
 
-  const handleCancel = () => {
+  const navigateAway = () => {
+    setDiscardPromptOpen(false);
     router.push(`/contacts/${contact.id}`);
+  };
+
+  const handleCancel = () => {
+    if (isSaving) return;
+
+    if (hasChanges) {
+      setDiscardPromptOpen(true);
+      return;
+    }
+
+    navigateAway();
+  };
+
+  const handleDiscardChanges = () => {
+    if (isSaving) return;
+    navigateAway();
   };
 
   const handleSave = async () => {
@@ -147,19 +182,13 @@ export function EditContactView({
           <X className="h-5 w-5" strokeWidth={2.5} />
         </button>
 
-        <button
-          type="button"
-          className="edit-contact-header__btn edit-contact-header__btn--save"
+        <MeetingModalSaveButton
           onClick={() => void handleSave()}
-          disabled={isSaving}
-          aria-label="Save"
-        >
-          {isSaving ? (
-            <Loader2 className="h-5 w-5 animate-spin" strokeWidth={2.5} />
-          ) : (
-            <Check className="h-5 w-5" strokeWidth={2.5} />
-          )}
-        </button>
+          isDirty={hasChanges}
+          isSaving={isSaving}
+          savingLabel="Saving contact"
+          saveLabel="Save contact"
+        />
       </header>
 
       <EditContactDeleteProvider>
@@ -360,6 +389,14 @@ export function EditContactView({
             }
           }}
           onConfirm={() => void handleDeleteConfirm()}
+        />
+      ) : null}
+
+      {discardPromptOpen ? (
+        <DiscardChangesConfirmModal
+          message="Are you sure you want to discard these contact changes?"
+          onCancel={() => setDiscardPromptOpen(false)}
+          onDiscard={handleDiscardChanges}
         />
       ) : null}
     </div>

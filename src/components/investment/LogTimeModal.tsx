@@ -17,6 +17,7 @@ import {
   resolveInitialSelectedEmails,
   type ContactEmailOption,
 } from "@/lib/contacts/contact-emails";
+import { snapshotsEqual } from "@/lib/forms/compare-snapshots";
 import {
   composeLogTimeNotes,
   meetingFormatFromSegment,
@@ -27,6 +28,21 @@ import { MeetingGroupedCard } from "@/components/agenda/MeetingGroupedCard";
 import { MeetingTitleLocationCard } from "@/components/agenda/MeetingTitleLocationCard";
 import { MeetingModalSaveButton } from "@/components/agenda/MeetingModalSaveButton";
 import { LogTimeTimingCard } from "@/components/investment/LogTimeTimingCard";
+import { DiscardChangesConfirmModal } from "@/components/DiscardChangesConfirmModal";
+
+interface LogTimeFormSnapshot {
+  title: string;
+  location: string;
+  manualEmail: string;
+  selectedEmails: string[];
+  isAllDay: boolean;
+  loggedAt: string;
+  durationHours: string;
+  durationMinutes: string;
+  meetingFormat: MeetingFormatSegment;
+  notes: string;
+  contactId: string | null;
+}
 
 interface LogTimeModalProps {
   open: boolean;
@@ -44,6 +60,8 @@ export function LogTimeModal({
   onLogged,
 }: LogTimeModalProps) {
   const [entered, setEntered] = useState(false);
+  const [baseline, setBaseline] = useState<LogTimeFormSnapshot | null>(null);
+  const [discardPromptOpen, setDiscardPromptOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [location, setLocation] = useState("");
   const [manualEmail, setManualEmail] = useState("");
@@ -62,36 +80,82 @@ export function LogTimeModal({
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
-  const resetForm = useCallback(() => {
-    setTitle("");
+  useEffect(() => {
+    if (!open) {
+      setEntered(false);
+      setBaseline(null);
+      setDiscardPromptOpen(false);
+      return;
+    }
+
+    const initialLoggedAt = defaultMeetingStartLocal();
+    const initialTitle = selectedContact
+      ? buildAgendaMeetingTitle(selectedContact.name, DEFAULT_MEETING_FORMAT)
+      : "";
+
+    setTitle(initialTitle);
     setLocation("");
     setManualEmail("");
     setSelectedEmails([]);
     setContactEmailOptions([]);
     setIsLoadingContactEmails(false);
     setIsAllDay(false);
-    setLoggedAt(defaultMeetingStartLocal());
+    setLoggedAt(initialLoggedAt);
     setDurationHours("");
     setDurationMinutes("30");
     setMeetingFormat(DEFAULT_MEETING_FORMAT);
     setNotes("");
     setError(null);
-  }, []);
 
-  useEffect(() => {
-    if (!open) {
-      setEntered(false);
-      return;
-    }
-
-    resetForm();
-    if (selectedContact) {
-      setTitle(buildAgendaMeetingTitle(selectedContact.name, DEFAULT_MEETING_FORMAT));
-    }
+    setBaseline({
+      title: initialTitle,
+      location: "",
+      manualEmail: "",
+      selectedEmails: [],
+      isAllDay: false,
+      loggedAt: initialLoggedAt,
+      durationHours: "",
+      durationMinutes: "30",
+      meetingFormat: DEFAULT_MEETING_FORMAT,
+      notes: "",
+      contactId: selectedContact?.id ?? null,
+    });
 
     const frame = requestAnimationFrame(() => setEntered(true));
     return () => cancelAnimationFrame(frame);
-  }, [open, resetForm, selectedContact?.id]);
+  }, [open, selectedContact?.id]);
+
+  const currentSnapshot = useMemo<LogTimeFormSnapshot>(
+    () => ({
+      title,
+      location,
+      manualEmail,
+      selectedEmails,
+      isAllDay,
+      loggedAt,
+      durationHours,
+      durationMinutes,
+      meetingFormat,
+      notes,
+      contactId: selectedContact?.id ?? null,
+    }),
+    [
+      title,
+      location,
+      manualEmail,
+      selectedEmails,
+      isAllDay,
+      loggedAt,
+      durationHours,
+      durationMinutes,
+      meetingFormat,
+      notes,
+      selectedContact?.id,
+    ]
+  );
+
+  const hasChanges =
+    baseline !== null && !snapshotsEqual(currentSnapshot, baseline);
 
   const handleSelectContact = useCallback(
     async (contact: Contact) => {
@@ -141,9 +205,25 @@ export function LogTimeModal({
     return trimmed && isValidContactEmail(trimmed) ? [trimmed] : [];
   };
 
-  const handleClose = () => {
-    if (isSaving) return;
+  const dismissModal = () => {
+    setDiscardPromptOpen(false);
     onClose();
+  };
+
+  const handleCloseRequest = () => {
+    if (isSaving) return;
+
+    if (hasChanges) {
+      setDiscardPromptOpen(true);
+      return;
+    }
+
+    dismissModal();
+  };
+
+  const handleDiscardChanges = () => {
+    if (isSaving) return;
+    dismissModal();
   };
 
   const handleSubmit = async (event: FormEvent) => {
@@ -204,7 +284,7 @@ export function LogTimeModal({
       }
 
       onLogged?.();
-      onClose();
+      dismissModal();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not save time.");
     } finally {
@@ -212,40 +292,22 @@ export function LogTimeModal({
     }
   };
 
-  const canSave = useMemo(() => {
-    if (!selectedContact) return false;
-
-    const hasValidDuration =
-      resolveDurationMinutesFromParts(durationHours, durationMinutes) !== null ||
-      isAllDay;
-
-    return hasValidDuration;
-  }, [selectedContact, durationHours, durationMinutes, isAllDay]);
-
   if (!open) return null;
 
   return (
-    <div
-      className={`fixed inset-0 z-40 flex items-end justify-center bg-black/70 backdrop-blur-sm transition-opacity duration-200 sm:items-center ${
-        entered ? "opacity-100" : "opacity-0"
-      }`}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="log-time-title"
-      onClick={handleClose}
-    >
+    <>
       <div
-        className={`meeting-sheet flex max-h-[94dvh] w-full max-w-lg flex-col overflow-hidden bg-main shadow-2xl transition-all duration-300 ease-out sm:rounded-2xl ${
-          entered
-            ? "translate-y-0 opacity-100"
-            : "translate-y-6 opacity-0 sm:translate-y-2 sm:scale-[0.98]"
+        className={`fixed inset-0 z-40 flex h-dvh flex-col bg-main transition-opacity duration-200 ${
+          entered ? "opacity-100" : "opacity-0"
         }`}
-        onClick={(event) => event.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="log-time-title"
       >
         <header className="flex shrink-0 items-center justify-between border-b border-border-green/50 bg-main px-4 py-3">
           <button
             type="button"
-            onClick={handleClose}
+            onClick={handleCloseRequest}
             disabled={isSaving}
             className="meeting-modal-header-btn text-muted transition-all duration-200 hover:text-foreground disabled:opacity-40"
             aria-label="Cancel"
@@ -257,12 +319,12 @@ export function LogTimeModal({
             id="log-time-title"
             className="flex-1 text-center font-sans text-[17px] font-semibold tracking-tight text-foreground"
           >
-            Add Time
+            Log Time
           </h2>
 
           <MeetingModalSaveButton
             formId="log-time-form"
-            isActive={canSave}
+            isDirty={hasChanges}
             isSaving={isSaving}
             savingLabel="Saving time log"
             saveLabel="Save log"
@@ -336,6 +398,14 @@ export function LogTimeModal({
           ) : null}
         </form>
       </div>
-    </div>
+
+      {discardPromptOpen ? (
+        <DiscardChangesConfirmModal
+          message="Are you sure you want to discard this time log?"
+          onCancel={() => setDiscardPromptOpen(false)}
+          onDiscard={handleDiscardChanges}
+        />
+      ) : null}
+    </>
   );
 }

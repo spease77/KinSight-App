@@ -22,13 +22,29 @@ import {
   type ContactEmailOption,
 } from "@/lib/contacts/contact-emails";
 import { showSuccessToast } from "@/lib/ui/toast";
+import { snapshotsEqual } from "@/lib/forms/compare-snapshots";
 import { MeetingFormatSegmentControl } from "@/components/agenda/MeetingFormatSegmentControl";
 import { MeetingGroupedCard } from "@/components/agenda/MeetingGroupedCard";
 import { MeetingIosSwitch } from "@/components/agenda/MeetingIosSwitch";
 import { MeetingTimingCard } from "@/components/agenda/MeetingTimingCard";
 import { MeetingTitleLocationCard } from "@/components/agenda/MeetingTitleLocationCard";
 import { MeetingModalSaveButton } from "@/components/agenda/MeetingModalSaveButton";
+import { DiscardChangesConfirmModal } from "@/components/DiscardChangesConfirmModal";
 import type { ScheduledInteraction } from "@/types/scheduled-interaction";
+
+interface MeetingFormSnapshot {
+  title: string;
+  location: string;
+  manualEmail: string;
+  selectedEmails: string[];
+  isAllDay: boolean;
+  startAt: string;
+  endAt: string;
+  meetingFormat: MeetingFormatSegment;
+  pushToExternalCalendar: boolean;
+  notes: string;
+  contactId: string | null;
+}
 
 interface AddMeetingModalProps {
   open: boolean;
@@ -42,6 +58,8 @@ export function AddMeetingModal({
   onSaved,
 }: AddMeetingModalProps) {
   const [entered, setEntered] = useState(false);
+  const [baseline, setBaseline] = useState<MeetingFormSnapshot | null>(null);
+  const [discardPromptOpen, setDiscardPromptOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [location, setLocation] = useState("");
   const [manualEmail, setManualEmail] = useState("");
@@ -63,8 +81,17 @@ export function AddMeetingModal({
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
-  const resetForm = useCallback(() => {
+  useEffect(() => {
+    if (!open) {
+      setEntered(false);
+      setBaseline(null);
+      setDiscardPromptOpen(false);
+      return;
+    }
+
     const start = defaultMeetingStartLocal();
+    const end = defaultMeetingEndLocal(start);
+
     setTitle("");
     setLocation("");
     setManualEmail("");
@@ -74,39 +101,61 @@ export function AddMeetingModal({
     setSelectedContact(null);
     setIsAllDay(false);
     setStartAt(start);
-    setEndAt(defaultMeetingEndLocal(start));
+    setEndAt(end);
     setMeetingFormat(DEFAULT_MEETING_FORMAT);
     setPushToExternalCalendar(true);
     setNotes("");
     setError(null);
-  }, []);
 
-  useEffect(() => {
-    if (!open) {
-      setEntered(false);
-      return;
-    }
+    setBaseline({
+      title: "",
+      location: "",
+      manualEmail: "",
+      selectedEmails: [],
+      isAllDay: false,
+      startAt: start,
+      endAt: end,
+      meetingFormat: DEFAULT_MEETING_FORMAT,
+      pushToExternalCalendar: true,
+      notes: "",
+      contactId: null,
+    });
 
-    resetForm();
     const frame = requestAnimationFrame(() => setEntered(true));
     return () => cancelAnimationFrame(frame);
-  }, [open, resetForm]);
+  }, [open]);
 
-  const canSave = useMemo(() => {
-    if (!title.trim() || !selectedContact) return false;
+  const currentSnapshot = useMemo<MeetingFormSnapshot>(
+    () => ({
+      title,
+      location,
+      manualEmail,
+      selectedEmails,
+      isAllDay,
+      startAt,
+      endAt,
+      meetingFormat,
+      pushToExternalCalendar,
+      notes,
+      contactId: selectedContact?.id ?? null,
+    }),
+    [
+      title,
+      location,
+      manualEmail,
+      selectedEmails,
+      isAllDay,
+      startAt,
+      endAt,
+      meetingFormat,
+      pushToExternalCalendar,
+      notes,
+      selectedContact?.id,
+    ]
+  );
 
-    const emails =
-      selectedContact
-        ? selectedEmails
-            .map((email) => email.trim())
-            .filter((email) => isValidContactEmail(email))
-        : [];
-
-    if (emails.length > 0) return true;
-
-    const trimmed = manualEmail.trim();
-    return Boolean(trimmed && isValidContactEmail(trimmed));
-  }, [title, selectedContact, selectedEmails, manualEmail]);
+  const hasChanges =
+    baseline !== null && !snapshotsEqual(currentSnapshot, baseline);
 
   const handleSelectContact = useCallback(
     async (contact: Contact) => {
@@ -167,6 +216,27 @@ export function AddMeetingModal({
     ) {
       setEndAt(defaultMeetingEndLocal(value));
     }
+  };
+
+  const dismissModal = () => {
+    setDiscardPromptOpen(false);
+    onClose();
+  };
+
+  const handleCloseRequest = () => {
+    if (isSaving) return;
+
+    if (hasChanges) {
+      setDiscardPromptOpen(true);
+      return;
+    }
+
+    dismissModal();
+  };
+
+  const handleDiscardChanges = () => {
+    if (isSaving) return;
+    dismissModal();
   };
 
   const handleSave = async (event: FormEvent) => {
@@ -255,7 +325,7 @@ export function AddMeetingModal({
       }
 
       onSaved?.(data.interaction);
-      onClose();
+      dismissModal();
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Could not save meeting."
@@ -268,48 +338,49 @@ export function AddMeetingModal({
   if (!open) return null;
 
   return (
-    <div
-      className={`fixed inset-0 z-40 flex items-end justify-center bg-black/70 backdrop-blur-sm transition-opacity duration-200 sm:items-center ${
-        entered ? "opacity-100" : "opacity-0"
-      }`}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="add-meeting-title"
-    >
+    <>
       <div
-        className={`meeting-sheet flex max-h-[94dvh] w-full max-w-lg flex-col overflow-hidden bg-main shadow-2xl transition-all duration-300 ease-out sm:rounded-2xl ${
-          entered
-            ? "translate-y-0 opacity-100"
-            : "translate-y-6 opacity-0 sm:translate-y-2 sm:scale-[0.98]"
+        className={`fixed inset-0 z-40 flex items-end justify-center bg-black/70 backdrop-blur-sm transition-opacity duration-200 sm:items-center ${
+          entered ? "opacity-100" : "opacity-0"
         }`}
-        onClick={(event) => event.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="add-meeting-title"
       >
-        <header className="flex shrink-0 items-center justify-between border-b border-border-green/50 bg-main px-4 py-3">
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={isSaving}
-            className="meeting-modal-header-btn text-muted transition-all duration-200 hover:text-foreground disabled:opacity-40"
-            aria-label="Cancel"
-          >
-            <X className="h-5 w-5" strokeWidth={2.25} />
-          </button>
+        <div
+          className={`meeting-sheet flex max-h-[94dvh] w-full max-w-lg flex-col overflow-hidden bg-main shadow-2xl transition-all duration-300 ease-out sm:rounded-2xl ${
+            entered
+              ? "translate-y-0 opacity-100"
+              : "translate-y-6 opacity-0 sm:translate-y-2 sm:scale-[0.98]"
+          }`}
+          onClick={(event) => event.stopPropagation()}
+        >
+          <header className="flex shrink-0 items-center justify-between border-b border-border-green/50 bg-main px-4 py-3">
+            <button
+              type="button"
+              onClick={handleCloseRequest}
+              disabled={isSaving}
+              className="meeting-modal-header-btn text-muted transition-all duration-200 hover:text-foreground disabled:opacity-40"
+              aria-label="Cancel"
+            >
+              <X className="h-5 w-5" strokeWidth={2.25} />
+            </button>
 
-          <h2
-            id="add-meeting-title"
-            className="flex-1 text-center font-sans text-[17px] font-semibold tracking-tight text-foreground"
-          >
-            New Event
-          </h2>
+            <h2
+              id="add-meeting-title"
+              className="flex-1 text-center font-sans text-[17px] font-semibold tracking-tight text-foreground"
+            >
+              New Event
+            </h2>
 
-          <MeetingModalSaveButton
-            formId="add-meeting-form"
-            isActive={canSave}
-            isSaving={isSaving}
-            savingLabel="Saving event"
-            saveLabel="Save event"
-          />
-        </header>
+            <MeetingModalSaveButton
+              formId="add-meeting-form"
+              isDirty={hasChanges}
+              isSaving={isSaving}
+              savingLabel="Saving event"
+              saveLabel="Save event"
+            />
+          </header>
 
         <form
           id="add-meeting-form"
@@ -404,7 +475,16 @@ export function AddMeetingModal({
             </p>
           ) : null}
         </form>
+        </div>
       </div>
-    </div>
+
+      {discardPromptOpen ? (
+        <DiscardChangesConfirmModal
+          message="Are you sure you want to discard this new event?"
+          onCancel={() => setDiscardPromptOpen(false)}
+          onDiscard={handleDiscardChanges}
+        />
+      ) : null}
+    </>
   );
 }
