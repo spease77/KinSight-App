@@ -242,10 +242,10 @@ export function AgendaPage() {
                 />
               </>
             ) : (
-              <p className="ui-card type-editorial border-dashed px-4 py-3 text-center text-sm text-muted">
+              <p className="py-3 text-center text-sm text-muted">
                 {isSearchActive && hasTimeFrameResults
                   ? "No meetings match your search."
-                  : "Nothing scheduled. Use '+' or home mic to add."}
+                  : "Nothing scheduled. Use '+' button or home mic to add."}
               </p>
             )}
           </>
