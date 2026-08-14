@@ -53,35 +53,20 @@ function ContactAvatarSilhouette({
   className: string;
   size: ContactAvatarSize;
 }) {
-  const isHero = size === "hero";
-
   return (
     <div
-      className={`contact-avatar-silhouette relative flex shrink-0 items-center justify-center overflow-hidden rounded-full ${
-        isHero ? "contact-avatar-silhouette--hero" : ""
-      } ${sizeClass} ${className}`}
+      className={`contact-avatar-silhouette relative flex shrink-0 items-center justify-center overflow-hidden rounded-full ${sizeClass} ${className}`}
       aria-label={`${name} photo placeholder`}
     >
-      {isHero ? (
-        <Image
-          src={CONTACT_AVATAR_PLACEHOLDER_SRC}
-          alt=""
-          fill
-          className="contact-avatar-silhouette__photo object-cover"
-          sizes="216px"
-          unoptimized
-          priority
-        />
-      ) : (
-        <Image
-          src={CONTACT_AVATAR_PLACEHOLDER_SRC}
-          alt=""
-          fill
-          className="contact-avatar-silhouette__photo object-cover"
-          sizes={IMAGE_SIZES[size]}
-          unoptimized
-        />
-      )}
+      <Image
+        src={CONTACT_AVATAR_PLACEHOLDER_SRC}
+        alt=""
+        fill
+        className="contact-avatar-silhouette__photo object-cover"
+        sizes={IMAGE_SIZES[size]}
+        unoptimized
+        priority={size === "hero"}
+      />
     </div>
   );
 }
