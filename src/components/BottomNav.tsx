@@ -48,7 +48,7 @@ export function BottomNav() {
       aria-hidden={keyboardOpen}
       className={`bottom-nav ${keyboardOpen ? "bottom-nav--keyboard-open" : ""}`}
     >
-      <div className="bottom-nav__inner mx-auto flex max-w-lg items-stretch justify-around px-2">
+      <div className="bottom-nav__inner">
         {TABS.map(({ href, label, icon: Icon, match }) => {
           const active = match(pathname);
 
@@ -57,18 +57,19 @@ export function BottomNav() {
               key={href}
               href={href}
               tabIndex={keyboardOpen ? -1 : undefined}
-              className={`bottom-nav__tab flex min-w-0 flex-1 flex-col items-center gap-0.5 px-2 py-2 transition-colors ${
+              className={`bottom-nav__tab ${
                 active ? "bottom-nav__tab--active" : ""
               }`}
             >
-              <Icon
-                className="bottom-nav__icon h-6 w-6"
-                strokeWidth={active ? 2 : 1.75}
-                fill={active ? "currentColor" : "none"}
-              />
-              <span className="bottom-nav__label text-[10px] font-medium tracking-wide">
-                {label}
+              <span
+                className={`bottom-nav__icon-wrap${
+                  active ? " bottom-nav__icon-wrap--active" : ""
+                }`}
+                aria-hidden="true"
+              >
+                <Icon className="bottom-nav__icon" strokeWidth={2} />
               </span>
+              <span className="bottom-nav__label">{label}</span>
             </Link>
           );
         })}
