@@ -3074,8 +3074,8 @@ b {
 }
 
 .contact-avatar-silhouette {
-  border: 1px solid color-mix(in srgb, #ffffff 10%, transparent);
-  background-color: color-mix(in srgb, #d1d5db 92%, #e5e7eb);
+  border: 1px solid color-mix(in srgb, #ffffff 12%, transparent);
+  background-color: #e8e8e8;
   color: #0a0a0a;
   box-shadow:
     0 1px 0 color-mix(in srgb, #ffffff 8%, transparent) inset,
