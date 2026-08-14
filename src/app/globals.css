@@ -1,5 +1,17 @@
 @import "tailwindcss";
 
+@custom-variant dark {
+  &:where([data-theme="dark"], [data-theme="dark"] *) {
+    @slot;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    &:where([data-theme="system"], [data-theme="system"] *) {
+      @slot;
+    }
+  }
+}
+
 /* ── Deep charcoal & platinum (dark default) ── */
 :root,
 [data-theme="dark"] {
@@ -59,9 +71,6 @@
   --accent-orange-glow: rgba(255, 198, 77, 0.2);
   --accent-yellow-glow: rgba(255, 198, 77, 0.18);
   --accent-mic-glow: rgba(94, 106, 210, 0.32);
-
-  --app-bottom-glow-start: rgba(38, 40, 46, 0.65);
-  --app-bottom-glow-mid: rgba(38, 40, 46, 0.2);
 
   --agenda-grid-line: rgba(244, 245, 246, 0.06);
   --agenda-grid-line-header: rgba(244, 245, 246, 0.09);
@@ -135,9 +144,6 @@
   --accent-yellow-glow: rgba(181, 121, 0, 0.1);
   --accent-mic-glow: rgba(94, 106, 210, 0.18);
 
-  --app-bottom-glow-start: rgba(230, 232, 231, 0.55);
-  --app-bottom-glow-mid: rgba(230, 232, 231, 0.18);
-
   --agenda-grid-line: rgba(8, 9, 10, 0.06);
   --agenda-grid-line-header: rgba(8, 9, 10, 0.085);
 
@@ -206,9 +212,6 @@
     --accent-orange-glow: rgba(181, 121, 0, 0.12);
     --accent-yellow-glow: rgba(181, 121, 0, 0.1);
     --accent-mic-glow: rgba(94, 106, 210, 0.18);
-
-    --app-bottom-glow-start: rgba(230, 232, 231, 0.55);
-    --app-bottom-glow-mid: rgba(230, 232, 231, 0.18);
 
     --agenda-grid-line: rgba(8, 9, 10, 0.06);
     --agenda-grid-line-header: rgba(8, 9, 10, 0.085);
@@ -279,9 +282,6 @@
     --accent-orange-glow: rgba(255, 198, 77, 0.2);
     --accent-yellow-glow: rgba(255, 198, 77, 0.18);
     --accent-mic-glow: rgba(94, 106, 210, 0.32);
-
-    --app-bottom-glow-start: rgba(38, 40, 46, 0.65);
-    --app-bottom-glow-mid: rgba(38, 40, 46, 0.2);
 
     --agenda-grid-line: rgba(244, 245, 246, 0.06);
     --agenda-grid-line-header: rgba(244, 245, 246, 0.09);
@@ -723,7 +723,7 @@ b {
   pointer-events: none;
   position: fixed;
   left: 50%;
-  z-index: 0;
+  z-index: 20;
   width: 100%;
   max-width: 32rem;
   bottom: 0;
@@ -732,12 +732,6 @@ b {
       env(safe-area-inset-bottom, 0px)
   );
   transform: translateX(-50%);
-  background: linear-gradient(
-    to top,
-    var(--app-bottom-glow-start) 0%,
-    var(--app-bottom-glow-mid) 55%,
-    transparent 100%
-  );
 }
 
 .home-ask-bar {
