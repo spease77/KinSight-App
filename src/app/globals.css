@@ -465,10 +465,11 @@ b {
 
 .agenda-calendar-frame,
 .agenda-week-grid-frame {
-  height: calc(
-    var(--agenda-week-header-height) + var(--agenda-week-viewport-height)
-  );
-  flex-shrink: 0;
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .agenda-month-weekday-row {
@@ -515,10 +516,12 @@ b {
 .agenda-day-time-scroll {
   display: block;
   min-height: 0;
+  flex: 1 1 auto;
   max-height: var(--agenda-week-viewport-height);
   overflow-y: auto;
   overflow-x: hidden;
-  scroll-snap-type: y mandatory;
+  scroll-snap-type: y proximity;
+  -webkit-overflow-scrolling: touch;
 }
 
 .agenda-day-scroll-row {
@@ -558,22 +561,49 @@ b {
 .agenda-week-body-band {
   --agenda-time-gutter-width: 60px;
   --agenda-slot-height: 36px;
+  --agenda-grid-start-hour: 6;
+  --agenda-grid-end-hour: 21;
+  --agenda-grid-body-height: calc(
+    ((var(--agenda-grid-end-hour) - var(--agenda-grid-start-hour)) * 2 + 1) *
+      var(--agenda-slot-height)
+  );
   --agenda-week-header-height: 36px;
-  --agenda-week-viewport-height: 288px;
+  --agenda-week-viewport-height: clamp(320px, 58vh, var(--agenda-grid-body-height));
   --agenda-week-days-track-width: calc(100% * 7 / 5);
 }
 
 .agenda-week-header-band {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  flex-shrink: 0;
   border-bottom: 1px solid var(--agenda-grid-line-header);
+  background-color: var(--bg-main);
 }
 
 .agenda-week-time-scroll {
-  display: flex;
+  display: block;
   min-height: 0;
+  flex: 1 1 auto;
   max-height: var(--agenda-week-viewport-height);
   overflow-y: auto;
   overflow-x: hidden;
-  scroll-snap-type: y mandatory;
+  scroll-snap-type: y proximity;
+  -webkit-overflow-scrolling: touch;
+}
+
+.agenda-week-scroll-content {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.agenda-week-grid-body {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  align-items: flex-start;
 }
 
 .agenda-week-day-header-track,
@@ -590,8 +620,9 @@ b {
   display: flex;
   min-width: 0;
   flex: 1;
+  align-self: flex-start;
   overflow-x: auto;
-  overflow-y: hidden;
+  overflow-y: visible;
   scroll-snap-type: x mandatory;
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
@@ -626,6 +657,7 @@ b {
   min-width: var(--agenda-time-gutter-width);
   max-width: var(--agenda-time-gutter-width);
   flex-shrink: 0;
+  align-self: flex-start;
 }
 
 .agenda-week-time-corner {

@@ -18,7 +18,7 @@ export const AGENDA_PANEL_TITLE =
 
 /** Shared calendar content frame — same bounding box for Day, Week, and Month. */
 export const AGENDA_CALENDAR_FRAME =
-  "agenda-calendar-frame flex min-h-0 flex-none flex-col overflow-hidden";
+  "agenda-calendar-frame flex min-h-0 flex-1 flex-col overflow-hidden";
 
 export const AGENDA_DAY_TIME_SCROLL =
   "agenda-day-time-scroll vertical-time-container contacts-scroll min-h-0 w-full flex-1";
@@ -32,7 +32,7 @@ export const AGENDA_WEEK_HEADER_BAND = "agenda-week-header-band flex shrink-0";
 export const AGENDA_WEEK_TIME_SCROLL =
   "agenda-week-time-scroll vertical-time-container contacts-scroll flex min-h-0 min-w-0 flex-1";
 export const AGENDA_WEEK_DAY_HEADER =
-  "agenda-week-day-header relative z-20 shrink-0 border-b bg-main text-center font-mono text-[10px] font-semibold uppercase tracking-wide transition-colors";
+  "agenda-week-day-header sticky top-0 z-10 shrink-0 border-b bg-main text-center font-mono text-[10px] font-semibold uppercase tracking-wide transition-colors";
 
 export const AGENDA_MONTH_WEEKDAY =
   "py-1.5 text-center font-mono text-[11px] font-semibold uppercase tracking-wide text-muted";

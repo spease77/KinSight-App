@@ -233,145 +233,152 @@ export function AgendaWeekHourlyGrid({
       </div>
 
       <div className={`${AGENDA_WEEK_GRID_FRAME} agenda-week-body-band agenda-calendar-body-band`}>
-        <div className={AGENDA_WEEK_HEADER_BAND}>
-          <div
-            aria-hidden="true"
-            className={`agenda-week-time-corner ${AGENDA_GRID_BORDER_HEADER}`}
-            style={{ height: AGENDA_WEEK_HEADER_HEIGHT_PX }}
-          />
-
-          <div
-            ref={headerHorizontalScrollRef}
-            className="agenda-week-day-header-scroll"
-          >
-            <div
-              className="agenda-week-day-header-track"
-              style={{ height: AGENDA_WEEK_HEADER_HEIGHT_PX }}
-            >
-              {weekDays.map((day, dayIndex) => {
-                const isSelected = day.dateKey === selectedDateKey;
-
-                return (
-                  <button
-                    key={`header-${day.dateKey}`}
-                    type="button"
-                    onClick={() => onSelectedDateChange(day.date)}
-                    className={`${AGENDA_WEEK_DAY_HEADER} ${AGENDA_GRID_BORDER_LINE} ${
-                      dayIndex === 0 ? "border-l-0" : "border-l"
-                    } ${
-                      isSelected
-                        ? "bg-accent-green-muted text-foreground"
-                        : "text-muted hover:bg-card-hover hover:text-foreground"
-                    }`}
-                    style={{
-                      gridColumn: dayIndex + 1,
-                      gridRow: 1,
-                      height: AGENDA_WEEK_HEADER_HEIGHT_PX,
-                    }}
-                    aria-pressed={isSelected}
-                  >
-                    {day.label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-
         <div ref={verticalScrollRef} className={AGENDA_WEEK_TIME_SCROLL}>
-          <div className="agenda-week-time-gutter">
-            {slots.map((slot) => (
+          <div className="agenda-week-scroll-content">
+            <div className={AGENDA_WEEK_HEADER_BAND}>
               <div
-                key={slot.minutesFromMidnight}
-                data-agenda-slot-minutes={slot.minutesFromMidnight}
-                className="agenda-week-time-slot time-grid-row flex items-start justify-end whitespace-nowrap pr-1.5 pt-1 font-mono text-[10px] leading-none text-muted"
-              >
-                {slot.label}
-              </div>
-            ))}
-          </div>
-
-          <div
-            ref={bodyHorizontalScrollRef}
-            className="calendar-days-wrapper"
-          >
-            <div
-              className="agenda-week-days-track"
-              style={{
-                height: gridHeight,
-                minHeight: gridHeight,
-                gridTemplateRows: `repeat(${slots.length}, var(--agenda-slot-height))`,
-              }}
-            >
-              {slots.map((slot, slotIndex) => {
-                const gridRow = slotIndex + 1;
-
-                return (
-                  <Fragment key={slot.minutesFromMidnight}>
-                    {weekDays.map((day, dayIndex) => {
-                      const isSelected = day.dateKey === selectedDateKey;
-
-                      return (
-                        <div
-                          key={`${day.dateKey}-${slot.minutesFromMidnight}`}
-                          className={`agenda-week-grid-cell time-grid-row border-l border-t ${AGENDA_GRID_BORDER_LINE} ${
-                            dayIndex === 0 ? "border-l-0" : ""
-                          } ${isSelected ? "bg-accent-green-muted/10" : ""}`}
-                          style={{
-                            gridColumn: dayIndex + 1,
-                            gridRow,
-                          }}
-                        />
-                      );
-                    })}
-                  </Fragment>
-                );
-              })}
+                aria-hidden="true"
+                className={`agenda-week-time-corner ${AGENDA_GRID_BORDER_HEADER}`}
+                style={{ height: AGENDA_WEEK_HEADER_HEIGHT_PX }}
+              />
 
               <div
-                className="agenda-week-appointments-layer"
-                style={{ height: gridHeight }}
+                ref={headerHorizontalScrollRef}
+                className="agenda-week-day-header-scroll"
               >
                 <div
-                  className="relative"
-                  style={{ height: gridHeight }}
+                  className="agenda-week-day-header-track"
+                  style={{ height: AGENDA_WEEK_HEADER_HEIGHT_PX }}
                 >
-                  {eventLayouts.map(
-                    ({ interaction, topPx, heightPx, dayIndex }, index) => {
-                      const isSelected =
-                        selectedInteractionId === interaction.id;
-                      const columnWidth = 100 / 7;
+                  {weekDays.map((day, dayIndex) => {
+                    const isSelected = day.dateKey === selectedDateKey;
 
-                      return (
-                        <button
-                          key={interaction.id}
-                          type="button"
-                          onClick={() => onInteractionSelect(interaction.id)}
-                          className={`agenda-week-appointment pointer-events-auto overflow-hidden rounded-sm px-1 py-0.5 text-left shadow-sm transition-shadow ${agendaGridBlockClass(
-                            interaction.contactType,
-                            index
-                          )} ${isSelected ? AGENDA_ITEM_SELECTED_CLASS : ""}`}
-                          style={{
-                            top: topPx,
-                            left: `calc(${dayIndex * columnWidth}% + 2px)`,
-                            width: `calc(${columnWidth}% - 4px)`,
-                            height: heightPx,
-                          }}
-                          aria-pressed={isSelected}
-                          aria-label={`${interaction.contactName}, ${interaction.title}`}
-                        >
-                          <p className="truncate text-[9px] font-medium leading-tight">
-                            {interaction.contactName}
-                          </p>
-                          {heightPx >= AGENDA_GRID_SLOT_HEIGHT_PX && (
-                            <p className="truncate text-[8px] leading-tight text-muted">
-                              {interaction.title}
-                            </p>
-                          )}
-                        </button>
-                      );
-                    }
-                  )}
+                    return (
+                      <button
+                        key={`header-${day.dateKey}`}
+                        type="button"
+                        onClick={() => onSelectedDateChange(day.date)}
+                        className={`${AGENDA_WEEK_DAY_HEADER} ${AGENDA_GRID_BORDER_LINE} ${
+                          dayIndex === 0 ? "border-l-0" : "border-l"
+                        } ${
+                          isSelected
+                            ? "bg-accent-green-muted text-foreground"
+                            : "text-muted hover:bg-card-hover hover:text-foreground"
+                        }`}
+                        style={{
+                          gridColumn: dayIndex + 1,
+                          gridRow: 1,
+                          height: AGENDA_WEEK_HEADER_HEIGHT_PX,
+                        }}
+                        aria-pressed={isSelected}
+                      >
+                        {day.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            <div className="agenda-week-grid-body">
+              <div
+                className="agenda-week-time-gutter"
+                style={{ minHeight: gridHeight }}
+              >
+                {slots.map((slot) => (
+                  <div
+                    key={slot.minutesFromMidnight}
+                    data-agenda-slot-minutes={slot.minutesFromMidnight}
+                    className="agenda-week-time-slot time-grid-row flex items-start justify-end whitespace-nowrap pr-1.5 pt-1 font-mono text-[10px] leading-none text-muted"
+                  >
+                    {slot.label}
+                  </div>
+                ))}
+              </div>
+
+              <div
+                ref={bodyHorizontalScrollRef}
+                className="calendar-days-wrapper"
+              >
+                <div
+                  className="agenda-week-days-track"
+                  style={{
+                    height: gridHeight,
+                    minHeight: gridHeight,
+                    gridTemplateRows: `repeat(${slots.length}, var(--agenda-slot-height))`,
+                  }}
+                >
+                  {slots.map((slot, slotIndex) => {
+                    const gridRow = slotIndex + 1;
+
+                    return (
+                      <Fragment key={slot.minutesFromMidnight}>
+                        {weekDays.map((day, dayIndex) => {
+                          const isSelected = day.dateKey === selectedDateKey;
+
+                          return (
+                            <div
+                              key={`${day.dateKey}-${slot.minutesFromMidnight}`}
+                              className={`agenda-week-grid-cell time-grid-row border-l border-t ${AGENDA_GRID_BORDER_LINE} ${
+                                dayIndex === 0 ? "border-l-0" : ""
+                              } ${isSelected ? "bg-accent-green-muted/10" : ""}`}
+                              style={{
+                                gridColumn: dayIndex + 1,
+                                gridRow,
+                              }}
+                            />
+                          );
+                        })}
+                      </Fragment>
+                    );
+                  })}
+
+                  <div
+                    className="agenda-week-appointments-layer"
+                    style={{ height: gridHeight }}
+                  >
+                    <div
+                      className="relative"
+                      style={{ height: gridHeight }}
+                    >
+                      {eventLayouts.map(
+                        ({ interaction, topPx, heightPx, dayIndex }, index) => {
+                          const isSelected =
+                            selectedInteractionId === interaction.id;
+                          const columnWidth = 100 / 7;
+
+                          return (
+                            <button
+                              key={interaction.id}
+                              type="button"
+                              onClick={() => onInteractionSelect(interaction.id)}
+                              className={`agenda-week-appointment pointer-events-auto overflow-hidden rounded-sm px-1 py-0.5 text-left shadow-sm transition-shadow ${agendaGridBlockClass(
+                                interaction.contactType,
+                                index
+                              )} ${isSelected ? AGENDA_ITEM_SELECTED_CLASS : ""}`}
+                              style={{
+                                top: topPx,
+                                left: `calc(${dayIndex * columnWidth}% + 2px)`,
+                                width: `calc(${columnWidth}% - 4px)`,
+                                height: heightPx,
+                              }}
+                              aria-pressed={isSelected}
+                              aria-label={`${interaction.contactName}, ${interaction.title}`}
+                            >
+                              <p className="truncate text-[9px] font-medium leading-tight">
+                                {interaction.contactName}
+                              </p>
+                              {heightPx >= AGENDA_GRID_SLOT_HEIGHT_PX && (
+                                <p className="truncate text-[8px] leading-tight text-muted">
+                                  {interaction.title}
+                                </p>
+                              )}
+                            </button>
+                          );
+                        }
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
