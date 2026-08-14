@@ -3,7 +3,7 @@
 import { forwardRef, useEffect, useMemo, useState } from "react";
 import { Check } from "lucide-react";
 import type { Contact } from "@/types/contact";
-import { formatSelectedContactsLabel } from "@/lib/contacts/format-selected-contacts";
+import { formatContactDisplayName } from "@/lib/contacts/sort-contacts";
 import { parseContactNameParts } from "@/lib/contacts/parse-contact-name";
 import {
   formatDurationMinutes,
@@ -219,7 +219,7 @@ function ProgressRing({
 }
 
 interface TimeInvestmentMilestoneCardProps {
-  contacts: Contact[];
+  selectedContact: Contact | null;
   refreshToken?: number;
 }
 
@@ -394,14 +394,14 @@ export const TimeInvestmentMilestoneCard = forwardRef<
   HTMLElement,
   TimeInvestmentMilestoneCardProps
 >(function TimeInvestmentMilestoneCard(
-  { contacts = [], refreshToken = 0 },
+  { selectedContact = null, refreshToken = 0 },
   ref
 ) {
   const ringSize = useProgressRingSize();
   const { contacts: timeSummaries, isLoading, error } =
     useInvestmentSummary(refreshToken);
 
-  const goalContact = contacts.length === 1 ? contacts[0] : null;
+  const goalContact = selectedContact;
 
   const selectedSummary = useMemo(() => {
     if (!goalContact) return null;
@@ -417,13 +417,11 @@ export const TimeInvestmentMilestoneCard = forwardRef<
     return getContactMaintenanceStatus(selectedSummary?.lastLoggedAt ?? null, {
       isTrackingPaused: goalContact.isTrackingPaused ?? false,
     });
-  }, [
-    goalContact,
-    selectedSummary?.lastLoggedAt,
-    goalContact?.isTrackingPaused,
-  ]);
+  }, [goalContact, selectedSummary?.lastLoggedAt]);
 
-  const heading = formatSelectedContactsLabel(contacts);
+  const heading = goalContact
+    ? formatContactDisplayName(goalContact.name, "first")
+    : "Select a Contact";
   const hasGoalContact = goalContact != null;
   const nextGoalHours = nextMilestoneGoalHours(contactMinutes);
   const maintenanceOverdue =

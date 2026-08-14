@@ -11,7 +11,7 @@ import { useContacts } from "@/hooks/useContacts";
 
 export function InvestmentPage() {
   const { contacts, isLoading } = useContacts();
-  const [selectedContacts, setSelectedContacts] = useState<Contact[]>([]);
+  const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [refreshToken, setRefreshToken] = useState(0);
   const [isLogTimeOpen, setIsLogTimeOpen] = useState(false);
   const milestoneRef = useRef<HTMLElement>(null);
@@ -21,14 +21,24 @@ export function InvestmentPage() {
     setRefreshToken((current) => current + 1);
   };
 
-  const handleContactSelect = useCallback((contact: Contact) => {
-    setSelectedContacts((current) => {
-      const isSelected = current.some((item) => item.id === contact.id);
-      if (isSelected) {
-        return current.filter((item) => item.id !== contact.id);
+  useEffect(() => {
+    if (isLoading) return;
+
+    if (contacts.length === 0) {
+      setSelectedContact(null);
+      return;
+    }
+
+    setSelectedContact((current) => {
+      if (current && contacts.some((contact) => contact.id === current.id)) {
+        return current;
       }
-      return [...current, contact];
+      return contacts[0];
     });
+  }, [contacts, isLoading]);
+
+  const handleContactSelect = useCallback((contact: Contact) => {
+    setSelectedContact(contact);
   }, []);
 
   useEffect(() => {
@@ -41,9 +51,7 @@ export function InvestmentPage() {
       behavior: "smooth",
       block: "start",
     });
-  }, [selectedContacts]);
-
-  const selectedContactIds = selectedContacts.map((contact) => contact.id);
+  }, [selectedContact?.id]);
 
   const headerActions = (
     <div className="flex shrink-0 items-center gap-1.5">
@@ -70,7 +78,7 @@ export function InvestmentPage() {
         <div className="flex flex-col">
           <TimeInvestmentMilestoneCard
             ref={milestoneRef}
-            contacts={selectedContacts}
+            selectedContact={selectedContact}
             refreshToken={refreshToken}
           />
           <p className="mt-2 mb-3 text-center text-sm text-zinc-400">
@@ -83,7 +91,7 @@ export function InvestmentPage() {
         ) : (
           <InvestmentContactList
             contacts={contacts}
-            selectedContactIds={selectedContactIds}
+            selectedContactId={selectedContact?.id ?? null}
             onContactSelect={handleContactSelect}
             refreshToken={refreshToken}
           />
@@ -93,10 +101,8 @@ export function InvestmentPage() {
       <LogTimeModal
         open={isLogTimeOpen}
         onClose={() => setIsLogTimeOpen(false)}
-        selectedContact={selectedContacts[0] ?? null}
-        onSelectedContactChange={(contact) => {
-          setSelectedContacts(contact ? [contact] : []);
-        }}
+        selectedContact={selectedContact}
+        onSelectedContactChange={setSelectedContact}
         onLogged={handleLogged}
       />
     </>

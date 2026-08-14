@@ -73,7 +73,7 @@ function sortInvestmentContacts(
 
 interface InvestmentContactListProps {
   contacts: Contact[];
-  selectedContactIds?: string[];
+  selectedContactId?: string | null;
   onContactSelect: (contact: Contact) => void;
   refreshToken?: number;
 }
@@ -99,9 +99,9 @@ function InvestmentContactRow({
       type="button"
       onClick={() => onSelect(contact)}
       aria-pressed={isSelected}
-      className={`flex w-full items-center gap-3 rounded-lg border px-3.5 py-3 text-left transition-colors ${
+      className={`flex w-full cursor-pointer items-center gap-3 rounded-lg border px-3.5 py-3 text-left transition-colors ${
         isSelected
-          ? "border-border-green bg-accent-green-muted/40"
+          ? "border-indigo-500/50 bg-indigo-950/20"
           : "border-border/60 bg-card-hover/50 hover:bg-card-hover"
       }`}
     >
@@ -126,14 +126,10 @@ function InvestmentContactRow({
 
 export function InvestmentContactList({
   contacts,
-  selectedContactIds = [],
+  selectedContactId = null,
   onContactSelect,
   refreshToken = 0,
 }: InvestmentContactListProps) {
-  const selectedIdSet = useMemo(
-    () => new Set(selectedContactIds),
-    [selectedContactIds]
-  );
   const [sortBy, setSortBy] = useState<InvestmentSortField>("time");
   const [sortDirection, setSortDirection] =
     useState<ContactSortDirection>("desc");
@@ -254,7 +250,7 @@ export function InvestmentContactList({
               key={contact.id}
               contact={contact}
               sortBy={sortBy}
-              isSelected={selectedIdSet.has(contact.id)}
+              isSelected={contact.id === selectedContactId}
               totalMinutes={timeMinutesByContactId.get(contact.id) ?? 0}
               onSelect={onContactSelect}
             />
