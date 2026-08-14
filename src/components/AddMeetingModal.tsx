@@ -1,7 +1,7 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useState } from "react";
-import { Check, X } from "lucide-react";
+import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { X } from "lucide-react";
 import type { Contact, ContactDetail } from "@/types/contact";
 import {
   DEFAULT_MEETING_FORMAT,
@@ -27,6 +27,7 @@ import { MeetingGroupedCard } from "@/components/agenda/MeetingGroupedCard";
 import { MeetingIosSwitch } from "@/components/agenda/MeetingIosSwitch";
 import { MeetingTimingCard } from "@/components/agenda/MeetingTimingCard";
 import { MeetingTitleLocationCard } from "@/components/agenda/MeetingTitleLocationCard";
+import { MeetingModalSaveButton } from "@/components/agenda/MeetingModalSaveButton";
 import type { ScheduledInteraction } from "@/types/scheduled-interaction";
 
 interface AddMeetingModalProps {
@@ -91,7 +92,21 @@ export function AddMeetingModal({
     return () => cancelAnimationFrame(frame);
   }, [open, resetForm]);
 
-  const canSave = title.trim() !== "";
+  const canSave = useMemo(() => {
+    if (!title.trim() || !selectedContact) return false;
+
+    const emails =
+      selectedContact
+        ? selectedEmails
+            .map((email) => email.trim())
+            .filter((email) => isValidContactEmail(email))
+        : [];
+
+    if (emails.length > 0) return true;
+
+    const trimmed = manualEmail.trim();
+    return Boolean(trimmed && isValidContactEmail(trimmed));
+  }, [title, selectedContact, selectedEmails, manualEmail]);
 
   const handleSelectContact = useCallback(
     async (contact: Contact) => {
@@ -287,24 +302,13 @@ export function AddMeetingModal({
             New Event
           </h2>
 
-          <button
-            type="submit"
-            form="add-meeting-form"
-            disabled={isSaving || !canSave}
-            className={`meeting-modal-header-btn meeting-modal-save-btn transition-all duration-200 ${
-              canSave
-                ? "meeting-modal-save-btn--active"
-                : "pointer-events-none opacity-30"
-            } ${isSaving ? "opacity-80" : ""}`}
-            aria-label={isSaving ? "Saving event" : "Save event"}
-            aria-disabled={!canSave || isSaving}
-          >
-            {isSaving ? (
-              <span className="text-sm font-semibold text-accent-orange">…</span>
-            ) : (
-              <Check className="h-5 w-5" strokeWidth={2.5} />
-            )}
-          </button>
+          <MeetingModalSaveButton
+            formId="add-meeting-form"
+            isActive={canSave}
+            isSaving={isSaving}
+            savingLabel="Saving event"
+            saveLabel="Save event"
+          />
         </header>
 
         <form

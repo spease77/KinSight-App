@@ -1,7 +1,7 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useState } from "react";
-import { Check, Loader2, X } from "lucide-react";
+import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { X } from "lucide-react";
 import type { Contact, ContactDetail } from "@/types/contact";
 import {
   DEFAULT_MEETING_FORMAT,
@@ -25,6 +25,7 @@ import {
 import { MeetingFormatSegmentControl } from "@/components/agenda/MeetingFormatSegmentControl";
 import { MeetingGroupedCard } from "@/components/agenda/MeetingGroupedCard";
 import { MeetingTitleLocationCard } from "@/components/agenda/MeetingTitleLocationCard";
+import { MeetingModalSaveButton } from "@/components/agenda/MeetingModalSaveButton";
 import { LogTimeTimingCard } from "@/components/investment/LogTimeTimingCard";
 
 interface LogTimeModalProps {
@@ -211,7 +212,15 @@ export function LogTimeModal({
     }
   };
 
-  const canSave = Boolean(selectedContact);
+  const canSave = useMemo(() => {
+    if (!selectedContact) return false;
+
+    const hasValidDuration =
+      resolveDurationMinutesFromParts(durationHours, durationMinutes) !== null ||
+      isAllDay;
+
+    return hasValidDuration;
+  }, [selectedContact, durationHours, durationMinutes, isAllDay]);
 
   if (!open) return null;
 
@@ -251,24 +260,13 @@ export function LogTimeModal({
             Add Time
           </h2>
 
-          <button
-            type="submit"
-            form="log-time-form"
-            disabled={isSaving || !canSave}
-            className={`meeting-modal-header-btn meeting-modal-save-btn transition-all duration-200 ${
-              canSave
-                ? "meeting-modal-save-btn--active"
-                : "pointer-events-none opacity-30"
-            } ${isSaving ? "opacity-80" : ""}`}
-            aria-label={isSaving ? "Saving time log" : "Save log"}
-            aria-disabled={!canSave || isSaving}
-          >
-            {isSaving ? (
-              <Loader2 className="h-5 w-5 animate-spin" strokeWidth={2.5} />
-            ) : (
-              <Check className="h-5 w-5" strokeWidth={2.5} />
-            )}
-          </button>
+          <MeetingModalSaveButton
+            formId="log-time-form"
+            isActive={canSave}
+            isSaving={isSaving}
+            savingLabel="Saving time log"
+            saveLabel="Save log"
+          />
         </header>
 
         <form
