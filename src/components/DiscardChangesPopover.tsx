@@ -46,7 +46,7 @@ export function DiscardChangesPopover({
           <button
             type="button"
             onClick={onDiscard}
-            className="mt-3 text-sm font-medium text-red-500 transition-colors hover:underline"
+            className="mt-3 flex w-full items-center justify-center rounded-full bg-gray-200/80 px-6 py-2.5 text-center font-semibold text-red-500 transition-all hover:bg-gray-300 active:scale-95 dark:bg-zinc-800/80 dark:hover:bg-zinc-700"
           >
             Discard Changes
           </button>
