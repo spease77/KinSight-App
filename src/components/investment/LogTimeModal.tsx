@@ -27,7 +27,7 @@ import {
   type DurationAdjustment,
   type MeetingFormat,
 } from "@/types/time-log";
-import { Plus, Search, X } from "lucide-react";
+import { Check, Loader2, Plus, Search, X } from "lucide-react";
 
 interface LogTimeModalProps {
   open: boolean;
@@ -214,10 +214,10 @@ export function LogTimeModal({
             type="button"
             onClick={handleClose}
             disabled={isSaving}
-            className="flex h-9 w-9 items-center justify-center rounded-full text-muted transition-colors hover:bg-card-hover hover:text-foreground disabled:opacity-40"
-            aria-label="Close"
+            className="edit-contact-header__btn edit-contact-header__btn--cancel"
+            aria-label="Cancel"
           >
-            <X className="h-5 w-5" strokeWidth={2.25} />
+            <X className="h-5 w-5" strokeWidth={2.5} />
           </button>
 
           <h2
@@ -227,13 +227,25 @@ export function LogTimeModal({
             Log Time
           </h2>
 
-          <div className="h-9 w-9" aria-hidden="true" />
+          <button
+            type="submit"
+            form="log-time-form"
+            disabled={isSaving}
+            className="edit-contact-header__btn edit-contact-header__btn--save"
+            aria-label={isSaving ? "Saving time log" : "Save log"}
+          >
+            {isSaving ? (
+              <Loader2 className="h-5 w-5 animate-spin" strokeWidth={2.5} />
+            ) : (
+              <Check className="h-5 w-5" strokeWidth={2.5} />
+            )}
+          </button>
         </header>
 
         <form
           id="log-time-form"
           onSubmit={(event) => void handleSubmit(event)}
-          className="contacts-scroll flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 py-4"
+          className="contacts-scroll flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 py-4 pb-6"
         >
           <div ref={containerRef} className="flex flex-col gap-4">
             {selectedContacts.length > 0 && (
@@ -374,25 +386,6 @@ export function LogTimeModal({
             )}
           </div>
         </form>
-
-        <footer className="flex shrink-0 gap-2 border-t border-border-subtle px-4 py-4">
-          <button
-            type="button"
-            onClick={handleClose}
-            disabled={isSaving}
-            className="ui-btn-outline-green flex-1 px-4 py-3 text-sm disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            form="log-time-form"
-            disabled={isSaving}
-            className="ui-btn-primary flex-1 px-4 py-3 text-sm disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {isSaving ? "Saving…" : "Save Log"}
-          </button>
-        </footer>
       </div>
     </div>
   );
