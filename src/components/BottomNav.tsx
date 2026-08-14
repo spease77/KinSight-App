@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { CalendarClock, Clock, Home, MessageSquare, Users } from "lucide-react";
+import { useSoftKeyboardOpen } from "@/hooks/useSoftKeyboardOpen";
 
 const TABS = [
   {
@@ -39,17 +40,15 @@ const TABS = [
 
 export function BottomNav() {
   const pathname = usePathname();
+  const keyboardOpen = useSoftKeyboardOpen();
 
   return (
     <nav
       aria-label="Main navigation"
-      className="
-        fixed inset-x-0 bottom-0 z-[100] border-t border-white/5
-        bg-main/95 backdrop-blur-md
-        [padding-bottom:env(safe-area-inset-bottom)]
-      "
+      aria-hidden={keyboardOpen}
+      className={`bottom-nav ${keyboardOpen ? "bottom-nav--keyboard-open" : ""}`}
     >
-      <div className="mx-auto flex max-w-lg items-stretch justify-around px-2 pt-2 pb-2.5">
+      <div className="bottom-nav__inner mx-auto flex max-w-lg items-stretch justify-around px-2">
         {TABS.map(({ href, label, icon: Icon, match }) => {
           const active = match(pathname);
 
@@ -57,17 +56,17 @@ export function BottomNav() {
             <Link
               key={href}
               href={href}
-              className={`bottom-nav__tab flex min-w-0 flex-1 flex-col items-center gap-1 rounded-xl px-2 py-1.5 transition-colors ${
-                active ? "bottom-nav__tab--active" : "hover:text-foreground"
+              tabIndex={keyboardOpen ? -1 : undefined}
+              className={`bottom-nav__tab flex min-w-0 flex-1 flex-col items-center gap-0.5 px-2 py-2 transition-colors ${
+                active ? "bottom-nav__tab--active" : ""
               }`}
             >
               <Icon
-                className="bottom-nav__icon h-5 w-5"
-                strokeWidth={active ? 2.25 : 2}
+                className="bottom-nav__icon h-6 w-6"
+                strokeWidth={active ? 2 : 1.75}
+                fill={active ? "currentColor" : "none"}
               />
-              <span
-                className={`bottom-nav__label text-[10px] font-normal tracking-wide`}
-              >
+              <span className="bottom-nav__label text-[10px] font-medium tracking-wide">
                 {label}
               </span>
             </Link>
