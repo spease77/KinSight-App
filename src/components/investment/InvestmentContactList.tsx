@@ -235,13 +235,6 @@ export function InvestmentContactList({
         )}
       </div>
 
-      <p className="type-meta px-1">
-        {searchQuery.trim()
-          ? `${filteredContacts.length} of ${trackedContacts.length}`
-          : trackedContacts.length}{" "}
-        {trackedContacts.length === 1 ? "contact" : "contacts"}
-      </p>
-
       <RelationshipTreeSortBar
         sortField={sortBy}
         sortDirection={sortDirection}

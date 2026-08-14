@@ -66,15 +66,17 @@ export function InvestmentPage() {
   return (
     <>
       <Header title="Time Log" headerActions={headerActions} />
-      <main className="flex flex-col gap-4 px-5 pb-6 pt-4">
-        <TimeInvestmentMilestoneCard
-          ref={milestoneRef}
-          contacts={selectedContacts}
-          refreshToken={refreshToken}
-        />
-        <p className="mb-1 text-center text-sm text-zinc-400">
-          Track interactions to maintain a strong bond.
-        </p>
+      <main className="flex flex-col gap-3 px-5 pb-6 pt-4">
+        <div className="flex flex-col">
+          <TimeInvestmentMilestoneCard
+            ref={milestoneRef}
+            contacts={selectedContacts}
+            refreshToken={refreshToken}
+          />
+          <p className="mt-2 mb-3 text-center text-sm text-zinc-400">
+            Track interactions to maintain a strong bond.
+          </p>
+        </div>
 
         {isLoading ? (
           <p className="type-meta text-center">Loading contacts…</p>
