@@ -78,7 +78,7 @@ export function ContactAvatar({
   lastName,
   avatarUrl,
   size = "sm",
-  placeholder = "silhouette",
+  placeholder = "initials",
   className = "",
 }: ContactAvatarProps) {
   const sizeClass = SIZE_CLASSES[size];
