@@ -48,7 +48,7 @@ export function MeetingTitleLocationCard({
           onChange={(event) => onTitleChange(event.target.value)}
           disabled={disabled}
           placeholder="Title"
-          className="meeting-borderless-input w-full bg-transparent text-[17px] text-foreground placeholder:text-muted focus:outline-none disabled:opacity-40"
+          className="meeting-borderless-input w-full bg-transparent text-[17px] text-foreground placeholder:text-zinc-500 focus:outline-none disabled:opacity-40 dark:placeholder:text-zinc-600"
           autoComplete="off"
         />
       </div>

@@ -5,7 +5,6 @@ import type { Contact, ContactDetail } from "@/types/contact";
 import {
   DEFAULT_MEETING_FORMAT,
   type MeetingFormatSegment,
-  buildAgendaMeetingTitle,
 } from "@/types/agenda-meeting";
 import { defaultMeetingStartLocal, defaultMeetingEndLocal } from "@/lib/calendar/datetime-local";
 import { splitDatetimeLocal } from "@/lib/calendar/meeting-picker";
@@ -87,11 +86,8 @@ export function LogTimeModal({
 
     const initialStartAt = defaultMeetingStartLocal();
     const initialEndAt = defaultMeetingEndLocal(initialStartAt);
-    const initialTitle = selectedContact
-      ? buildAgendaMeetingTitle(selectedContact.name, DEFAULT_MEETING_FORMAT)
-      : "";
 
-    setTitle(initialTitle);
+    setTitle("");
     setLocation("");
     setManualEmail("");
     setSelectedEmails([]);
@@ -105,7 +101,7 @@ export function LogTimeModal({
     setError(null);
 
     setBaseline({
-      title: initialTitle,
+      title: "",
       location: "",
       manualEmail: "",
       selectedEmails: [],
@@ -159,12 +155,6 @@ export function LogTimeModal({
       setContactEmailOptions([]);
       setIsLoadingContactEmails(true);
 
-      setTitle((current) =>
-        current.trim()
-          ? current
-          : buildAgendaMeetingTitle(contact.name, meetingFormat)
-      );
-
       try {
         const res = await fetch(`/api/contacts/${contact.id}`);
         const data = await readApiJson<{ contact?: ContactDetail }>(res);
@@ -177,7 +167,7 @@ export function LogTimeModal({
         setIsLoadingContactEmails(false);
       }
     },
-    [meetingFormat, onSelectedContactChange]
+    [onSelectedContactChange]
   );
 
   const handleClearContact = useCallback(() => {
