@@ -12,14 +12,15 @@ interface MeetingTitleLocationCardProps {
   selectedContact: Contact | null;
   onSelectContact: (contact: Contact) => void;
   onClearContact: () => void;
-  contactEmailOptions: ContactEmailOption[];
-  selectedEmails: string[];
-  onSelectedEmailsChange: (emails: string[]) => void;
-  manualEmail: string;
-  onManualEmailChange: (value: string) => void;
-  isLoadingContactEmails?: boolean;
   onTitleChange: (value: string) => void;
   onLocationChange: (value: string) => void;
+  showEmailSection?: boolean;
+  contactEmailOptions?: ContactEmailOption[];
+  selectedEmails?: string[];
+  onSelectedEmailsChange?: (emails: string[]) => void;
+  manualEmail?: string;
+  onManualEmailChange?: (value: string) => void;
+  isLoadingContactEmails?: boolean;
   disabled?: boolean;
 }
 
@@ -29,14 +30,15 @@ export function MeetingTitleLocationCard({
   selectedContact,
   onSelectContact,
   onClearContact,
-  contactEmailOptions,
-  selectedEmails,
-  onSelectedEmailsChange,
-  manualEmail,
-  onManualEmailChange,
-  isLoadingContactEmails = false,
   onTitleChange,
   onLocationChange,
+  showEmailSection = true,
+  contactEmailOptions = [],
+  selectedEmails = [],
+  onSelectedEmailsChange = () => {},
+  manualEmail = "",
+  onManualEmailChange = () => {},
+  isLoadingContactEmails = false,
   disabled = false,
 }: MeetingTitleLocationCardProps) {
   return (
@@ -73,19 +75,21 @@ export function MeetingTitleLocationCard({
         />
       </div>
 
-      <div className="px-4 py-3.5">
-        <MeetingContactEmailSelector
-          key={selectedContact?.id ?? "manual"}
-          selectedContact={selectedContact}
-          contactEmailOptions={contactEmailOptions}
-          selectedEmails={selectedEmails}
-          onSelectedEmailsChange={onSelectedEmailsChange}
-          manualEmail={manualEmail}
-          onManualEmailChange={onManualEmailChange}
-          isLoadingEmails={isLoadingContactEmails}
-          disabled={disabled}
-        />
-      </div>
+      {showEmailSection ? (
+        <div className="px-4 py-3.5">
+          <MeetingContactEmailSelector
+            key={selectedContact?.id ?? "manual"}
+            selectedContact={selectedContact}
+            contactEmailOptions={contactEmailOptions}
+            selectedEmails={selectedEmails}
+            onSelectedEmailsChange={onSelectedEmailsChange}
+            manualEmail={manualEmail}
+            onManualEmailChange={onManualEmailChange}
+            isLoadingEmails={isLoadingContactEmails}
+            disabled={disabled}
+          />
+        </div>
+      ) : null}
     </MeetingGroupedCard>
   );
 }

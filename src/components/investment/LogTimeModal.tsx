@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
-import type { Contact, ContactDetail } from "@/types/contact";
+import type { Contact } from "@/types/contact";
 import {
   DEFAULT_MEETING_FORMAT,
   type MeetingFormatSegment,
@@ -9,12 +9,6 @@ import {
 import { defaultMeetingStartLocal, defaultMeetingEndLocal } from "@/lib/calendar/datetime-local";
 import { splitDatetimeLocal } from "@/lib/calendar/meeting-picker";
 import { readApiJson } from "@/lib/api/read-json";
-import { isValidContactEmail } from "@/lib/calendar/calendar-attendees";
-import {
-  getContactEmailOptions,
-  resolveInitialSelectedEmails,
-  type ContactEmailOption,
-} from "@/lib/contacts/contact-emails";
 import { snapshotsEqual } from "@/lib/forms/compare-snapshots";
 import {
   composeLogTimeNotes,
@@ -31,8 +25,6 @@ import { MeetingModalCloseButton } from "@/components/agenda/MeetingModalCloseBu
 interface LogTimeFormSnapshot {
   title: string;
   location: string;
-  manualEmail: string;
-  selectedEmails: string[];
   isAllDay: boolean;
   startAt: string;
   endAt: string;
@@ -60,12 +52,6 @@ export function LogTimeModal({
   const [baseline, setBaseline] = useState<LogTimeFormSnapshot | null>(null);
   const [title, setTitle] = useState("");
   const [location, setLocation] = useState("");
-  const [manualEmail, setManualEmail] = useState("");
-  const [selectedEmails, setSelectedEmails] = useState<string[]>([]);
-  const [contactEmailOptions, setContactEmailOptions] = useState<
-    ContactEmailOption[]
-  >([]);
-  const [isLoadingContactEmails, setIsLoadingContactEmails] = useState(false);
   const [isAllDay, setIsAllDay] = useState(false);
   const [startAt, setStartAt] = useState(defaultMeetingStartLocal);
   const [endAt, setEndAt] = useState(() =>
@@ -89,10 +75,6 @@ export function LogTimeModal({
 
     setTitle("");
     setLocation("");
-    setManualEmail("");
-    setSelectedEmails([]);
-    setContactEmailOptions([]);
-    setIsLoadingContactEmails(false);
     setIsAllDay(false);
     setStartAt(initialStartAt);
     setEndAt(initialEndAt);
@@ -103,8 +85,6 @@ export function LogTimeModal({
     setBaseline({
       title: "",
       location: "",
-      manualEmail: "",
-      selectedEmails: [],
       isAllDay: false,
       startAt: initialStartAt,
       endAt: initialEndAt,
@@ -121,8 +101,6 @@ export function LogTimeModal({
     () => ({
       title,
       location,
-      manualEmail,
-      selectedEmails,
       isAllDay,
       startAt,
       endAt,
@@ -133,8 +111,6 @@ export function LogTimeModal({
     [
       title,
       location,
-      manualEmail,
-      selectedEmails,
       isAllDay,
       startAt,
       endAt,
@@ -148,46 +124,15 @@ export function LogTimeModal({
     baseline !== null && !snapshotsEqual(currentSnapshot, baseline);
 
   const handleSelectContact = useCallback(
-    async (contact: Contact) => {
+    (contact: Contact) => {
       onSelectedContactChange(contact);
-      setSelectedEmails([]);
-      setManualEmail("");
-      setContactEmailOptions([]);
-      setIsLoadingContactEmails(true);
-
-      try {
-        const res = await fetch(`/api/contacts/${contact.id}`);
-        const data = await readApiJson<{ contact?: ContactDetail }>(res);
-        const options = getContactEmailOptions(data.contact?.profile);
-        setContactEmailOptions(options);
-        setSelectedEmails(resolveInitialSelectedEmails(options));
-      } catch {
-        setContactEmailOptions([]);
-      } finally {
-        setIsLoadingContactEmails(false);
-      }
     },
     [onSelectedContactChange]
   );
 
   const handleClearContact = useCallback(() => {
     onSelectedContactChange(null);
-    setSelectedEmails([]);
-    setManualEmail("");
-    setContactEmailOptions([]);
-    setIsLoadingContactEmails(false);
   }, [onSelectedContactChange]);
-
-  const resolveInviteEmails = (): string[] => {
-    if (selectedContact) {
-      return selectedEmails
-        .map((email) => email.trim())
-        .filter((email) => isValidContactEmail(email));
-    }
-
-    const trimmed = manualEmail.trim();
-    return trimmed && isValidContactEmail(trimmed) ? [trimmed] : [];
-  };
 
   const dismissModal = () => {
     onClose();
@@ -230,15 +175,11 @@ export function LogTimeModal({
       return;
     }
 
-    const inviteEmails = resolveInviteEmails();
     const composedNotes = composeLogTimeNotes({
       title,
       location,
       meetingFormat,
-      userNotes:
-        inviteEmails.length > 0
-          ? `${notes.trim() ? `${notes.trim()}\n\n` : ""}Contact email: ${inviteEmails.join(", ")}`
-          : notes,
+      userNotes: notes,
     });
 
     setIsSaving(true);
@@ -322,14 +263,9 @@ export function LogTimeModal({
             selectedContact={selectedContact}
             onSelectContact={handleSelectContact}
             onClearContact={handleClearContact}
-            contactEmailOptions={contactEmailOptions}
-            selectedEmails={selectedEmails}
-            onSelectedEmailsChange={setSelectedEmails}
-            manualEmail={manualEmail}
-            onManualEmailChange={setManualEmail}
-            isLoadingContactEmails={isLoadingContactEmails}
             onTitleChange={setTitle}
             onLocationChange={setLocation}
+            showEmailSection={false}
             disabled={isSaving}
           />
 
