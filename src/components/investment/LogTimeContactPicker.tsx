@@ -35,6 +35,8 @@ interface LogTimeContactPickerProps {
   onContactsChange: (contacts: Contact[]) => void;
   onContactSelect?: (contact: Contact) => void;
   onLogged?: () => void;
+  showEntryForm: boolean;
+  onShowEntryFormChange: (show: boolean) => void;
 }
 
 export function LogTimeContactPicker({
@@ -42,6 +44,8 @@ export function LogTimeContactPicker({
   onContactsChange,
   onContactSelect,
   onLogged,
+  showEntryForm,
+  onShowEntryFormChange,
 }: LogTimeContactPickerProps) {
   const listboxId = useId();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -57,7 +61,6 @@ export function LogTimeContactPicker({
   const [meetingFormat, setMeetingFormat] =
     useState<MeetingFormat>(DEFAULT_MEETING_FORMAT);
   const [isSaving, setIsSaving] = useState(false);
-  const [showEntryForm, setShowEntryForm] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -86,6 +89,12 @@ export function LogTimeContactPicker({
     document.addEventListener("mousedown", handlePointerDown);
     return () => document.removeEventListener("mousedown", handlePointerDown);
   }, []);
+
+  useEffect(() => {
+    if (!showEntryForm) return;
+    setMessage(null);
+    setError(null);
+  }, [showEntryForm]);
 
   const addContact = (contact: Contact) => {
     if (selectedIds.has(contact.id)) return;
@@ -155,7 +164,7 @@ export function LogTimeContactPicker({
       setNotes("");
       setLoggedDate(todayForDateInput());
       setMeetingFormat(DEFAULT_MEETING_FORMAT);
-      setShowEntryForm(false);
+      onShowEntryFormChange(false);
 
       const action = formatLoggedDurationAction(durationMinutes);
       const contactLabel =
@@ -283,11 +292,11 @@ export function LogTimeContactPicker({
         )}
       </div>
 
-      <form
-        onSubmit={(event) => void handleSubmit(event)}
-        className="flex flex-col items-center gap-3"
-      >
-        {showEntryForm && (
+      {showEntryForm && (
+        <form
+          onSubmit={(event) => void handleSubmit(event)}
+          className="flex flex-col gap-3"
+        >
           <div className="flex w-full flex-col gap-2">
             <LogTimeMeetingFormatField
               value={meetingFormat}
@@ -316,29 +325,15 @@ export function LogTimeContactPicker({
               onChange={setNotes}
             />
           </div>
-        )}
-        {showEntryForm ? (
           <button
             type="submit"
             disabled={isSaving}
-            className="ui-btn-primary px-6 py-2.5 text-sm disabled:opacity-50"
+            className="ui-btn-primary self-start px-6 py-2.5 text-sm disabled:opacity-50"
           >
             {isSaving ? "Saving…" : "Log Time"}
           </button>
-        ) : (
-          <button
-            type="button"
-            onClick={() => {
-              setMessage(null);
-              setError(null);
-              setShowEntryForm(true);
-            }}
-            className="ui-btn-primary px-6 py-2.5 text-sm"
-          >
-            Log Time
-          </button>
-        )}
-      </form>
+        </form>
+      )}
 
       {isLoading && <p className="type-meta">Loading contacts…</p>}
 

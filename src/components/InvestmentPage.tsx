@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Clock } from "lucide-react";
 import type { Contact } from "@/types/contact";
 import { Header } from "@/components/Header";
 import { InvestmentContactList } from "@/components/investment/InvestmentContactList";
@@ -12,6 +13,7 @@ export function InvestmentPage() {
   const { contacts, isLoading } = useContacts();
   const [selectedContacts, setSelectedContacts] = useState<Contact[]>([]);
   const [refreshToken, setRefreshToken] = useState(0);
+  const [showLogTimeForm, setShowLogTimeForm] = useState(false);
   const milestoneRef = useRef<HTMLElement>(null);
   const skipSelectionScrollRef = useRef(true);
 
@@ -43,9 +45,24 @@ export function InvestmentPage() {
 
   const selectedContactIds = selectedContacts.map((contact) => contact.id);
 
+  const headerActions = (
+    <button
+      type="button"
+      onClick={() => setShowLogTimeForm(true)}
+      className="
+        ui-btn-primary flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium
+        active:scale-[0.98]
+      "
+      aria-expanded={showLogTimeForm}
+    >
+      <Clock className="h-3.5 w-3.5" strokeWidth={2} />
+      Log Time
+    </button>
+  );
+
   return (
     <>
-      <Header title="Time Log" />
+      <Header title="Time Log" headerActions={headerActions} />
       <main className="flex flex-col gap-6 px-5 pb-6 pt-4">
         <div className="flex flex-col gap-3">
           <TimeInvestmentMilestoneCard
@@ -65,6 +82,8 @@ export function InvestmentPage() {
           onContactsChange={setSelectedContacts}
           onContactSelect={handleContactSelect}
           onLogged={handleLogged}
+          showEntryForm={showLogTimeForm}
+          onShowEntryFormChange={setShowLogTimeForm}
         />
 
         {isLoading ? (
