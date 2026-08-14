@@ -19,6 +19,25 @@ export function meetingFormatFromSegment(
   }
 }
 
+export function resolveDurationMinutesFromRange(
+  startAt: string,
+  endAt: string
+): number | null {
+  const start = new Date(startAt);
+  const end = new Date(endAt);
+
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+    return null;
+  }
+
+  const diffMs = end.getTime() - start.getTime();
+  if (diffMs <= 0) {
+    return null;
+  }
+
+  return Math.round(diffMs / 60_000);
+}
+
 export function resolveDurationMinutesFromParts(
   durationHours: string,
   durationMinutes: string

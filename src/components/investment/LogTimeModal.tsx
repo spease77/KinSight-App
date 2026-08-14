@@ -7,7 +7,7 @@ import {
   type MeetingFormatSegment,
   buildAgendaMeetingTitle,
 } from "@/types/agenda-meeting";
-import { defaultMeetingStartLocal } from "@/lib/calendar/datetime-local";
+import { defaultMeetingStartLocal, defaultMeetingEndLocal } from "@/lib/calendar/datetime-local";
 import { splitDatetimeLocal } from "@/lib/calendar/meeting-picker";
 import { readApiJson } from "@/lib/api/read-json";
 import { isValidContactEmail } from "@/lib/calendar/calendar-attendees";
@@ -20,14 +20,14 @@ import { snapshotsEqual } from "@/lib/forms/compare-snapshots";
 import {
   composeLogTimeNotes,
   meetingFormatFromSegment,
-  resolveDurationMinutesFromParts,
+  resolveDurationMinutesFromRange,
 } from "@/lib/time-logs/log-time-form";
 import { MeetingFormatSegmentControl } from "@/components/agenda/MeetingFormatSegmentControl";
 import { MeetingGroupedCard } from "@/components/agenda/MeetingGroupedCard";
+import { MeetingTimingCard } from "@/components/agenda/MeetingTimingCard";
 import { MeetingTitleLocationCard } from "@/components/agenda/MeetingTitleLocationCard";
 import { MeetingModalSaveButton } from "@/components/agenda/MeetingModalSaveButton";
 import { MeetingModalCloseButton } from "@/components/agenda/MeetingModalCloseButton";
-import { LogTimeTimingCard } from "@/components/investment/LogTimeTimingCard";
 
 interface LogTimeFormSnapshot {
   title: string;
@@ -35,9 +35,8 @@ interface LogTimeFormSnapshot {
   manualEmail: string;
   selectedEmails: string[];
   isAllDay: boolean;
-  loggedAt: string;
-  durationHours: string;
-  durationMinutes: string;
+  startAt: string;
+  endAt: string;
   meetingFormat: MeetingFormatSegment;
   notes: string;
   contactId: string | null;
@@ -69,9 +68,10 @@ export function LogTimeModal({
   >([]);
   const [isLoadingContactEmails, setIsLoadingContactEmails] = useState(false);
   const [isAllDay, setIsAllDay] = useState(false);
-  const [loggedAt, setLoggedAt] = useState(defaultMeetingStartLocal);
-  const [durationHours, setDurationHours] = useState("");
-  const [durationMinutes, setDurationMinutes] = useState("30");
+  const [startAt, setStartAt] = useState(defaultMeetingStartLocal);
+  const [endAt, setEndAt] = useState(() =>
+    defaultMeetingEndLocal(defaultMeetingStartLocal())
+  );
   const [meetingFormat, setMeetingFormat] =
     useState<MeetingFormatSegment>(DEFAULT_MEETING_FORMAT);
   const [notes, setNotes] = useState("");
@@ -85,7 +85,8 @@ export function LogTimeModal({
       return;
     }
 
-    const initialLoggedAt = defaultMeetingStartLocal();
+    const initialStartAt = defaultMeetingStartLocal();
+    const initialEndAt = defaultMeetingEndLocal(initialStartAt);
     const initialTitle = selectedContact
       ? buildAgendaMeetingTitle(selectedContact.name, DEFAULT_MEETING_FORMAT)
       : "";
@@ -97,9 +98,8 @@ export function LogTimeModal({
     setContactEmailOptions([]);
     setIsLoadingContactEmails(false);
     setIsAllDay(false);
-    setLoggedAt(initialLoggedAt);
-    setDurationHours("");
-    setDurationMinutes("30");
+    setStartAt(initialStartAt);
+    setEndAt(initialEndAt);
     setMeetingFormat(DEFAULT_MEETING_FORMAT);
     setNotes("");
     setError(null);
@@ -110,9 +110,8 @@ export function LogTimeModal({
       manualEmail: "",
       selectedEmails: [],
       isAllDay: false,
-      loggedAt: initialLoggedAt,
-      durationHours: "",
-      durationMinutes: "30",
+      startAt: initialStartAt,
+      endAt: initialEndAt,
       meetingFormat: DEFAULT_MEETING_FORMAT,
       notes: "",
       contactId: selectedContact?.id ?? null,
@@ -129,9 +128,8 @@ export function LogTimeModal({
       manualEmail,
       selectedEmails,
       isAllDay,
-      loggedAt,
-      durationHours,
-      durationMinutes,
+      startAt,
+      endAt,
       meetingFormat,
       notes,
       contactId: selectedContact?.id ?? null,
@@ -142,9 +140,8 @@ export function LogTimeModal({
       manualEmail,
       selectedEmails,
       isAllDay,
-      loggedAt,
-      durationHours,
-      durationMinutes,
+      startAt,
+      endAt,
       meetingFormat,
       notes,
       selectedContact?.id,
@@ -206,6 +203,19 @@ export function LogTimeModal({
     onClose();
   };
 
+  const handleStartChange = (value: string) => {
+    setStartAt(value);
+    const currentEnd = new Date(endAt);
+    const nextStart = new Date(value);
+    if (
+      Number.isNaN(currentEnd.getTime()) ||
+      Number.isNaN(nextStart.getTime()) ||
+      currentEnd <= nextStart
+    ) {
+      setEndAt(defaultMeetingEndLocal(value));
+    }
+  };
+
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
     setError(null);
@@ -215,19 +225,16 @@ export function LogTimeModal({
       return;
     }
 
-    let durationTotal = resolveDurationMinutesFromParts(
-      durationHours,
-      durationMinutes
-    );
+    let durationTotal = resolveDurationMinutesFromRange(startAt, endAt);
     if (durationTotal === null && isAllDay) {
       durationTotal = 8 * 60;
     }
     if (durationTotal === null) {
-      setError("Enter a valid duration in hours and minutes.");
+      setError("Enter a valid start and end time.");
       return;
     }
 
-    const loggedDate = splitDatetimeLocal(loggedAt).date;
+    const loggedDate = splitDatetimeLocal(startAt).date;
     if (!loggedDate.trim()) {
       setError("Enter the date for this time entry.");
       return;
@@ -336,15 +343,13 @@ export function LogTimeModal({
             disabled={isSaving}
           />
 
-          <LogTimeTimingCard
-            loggedAt={loggedAt}
-            onLoggedAtChange={setLoggedAt}
-            durationHours={durationHours}
-            durationMinutes={durationMinutes}
-            onDurationHoursChange={setDurationHours}
-            onDurationMinutesChange={setDurationMinutes}
+          <MeetingTimingCard
             isAllDay={isAllDay}
             onAllDayChange={setIsAllDay}
+            startAt={startAt}
+            endAt={endAt}
+            onStartChange={handleStartChange}
+            onEndChange={setEndAt}
             disabled={isSaving}
           />
 
