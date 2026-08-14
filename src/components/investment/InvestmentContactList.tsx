@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { Search, X } from "lucide-react";
 import type { Contact } from "@/types/contact";
+import { filterContacts } from "@/lib/contacts/filter-contacts";
 import {
   type ContactSortDirection,
   type ContactSortField,
@@ -135,6 +137,7 @@ export function InvestmentContactList({
   const [sortBy, setSortBy] = useState<InvestmentSortField>("time");
   const [sortDirection, setSortDirection] =
     useState<ContactSortDirection>("desc");
+  const [searchQuery, setSearchQuery] = useState("");
   const { contacts: timeSummaries } = useInvestmentSummary(refreshToken);
 
   const timeMinutesByContactId = useMemo(() => {
@@ -169,15 +172,20 @@ export function InvestmentContactList({
     [contacts, timeMinutesByContactId]
   );
 
+  const filteredContacts = useMemo(
+    () => filterContacts(trackedContacts, searchQuery),
+    [trackedContacts, searchQuery]
+  );
+
   const sortedContacts = useMemo(
     () =>
       sortInvestmentContacts(
-        trackedContacts,
+        filteredContacts,
         sortBy,
         sortDirection,
         timeMinutesByContactId
       ),
-    [trackedContacts, sortBy, sortDirection, timeMinutesByContactId]
+    [filteredContacts, sortBy, sortDirection, timeMinutesByContactId]
   );
 
   if (contacts.length === 0) {
@@ -197,8 +205,40 @@ export function InvestmentContactList({
 
   return (
     <section aria-label="Contacts" className="flex flex-col gap-3">
+      <div className="relative">
+        <label htmlFor="investment-contact-search" className="sr-only">
+          Search contacts
+        </label>
+        <Search
+          className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-icon"
+          strokeWidth={2}
+          aria-hidden="true"
+        />
+        <input
+          id="investment-contact-search"
+          type="search"
+          value={searchQuery}
+          onChange={(event) => setSearchQuery(event.target.value)}
+          placeholder="Search contacts…"
+          autoComplete="off"
+          className="ui-input w-full py-2.5 pl-10 pr-10 text-sm"
+        />
+        {searchQuery.trim() && (
+          <button
+            type="button"
+            onClick={() => setSearchQuery("")}
+            className="absolute right-2 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-md text-muted hover:text-foreground"
+            aria-label="Clear search"
+          >
+            <X className="h-4 w-4" strokeWidth={2} />
+          </button>
+        )}
+      </div>
+
       <p className="type-meta px-1">
-        {trackedContacts.length}{" "}
+        {searchQuery.trim()
+          ? `${filteredContacts.length} of ${trackedContacts.length}`
+          : trackedContacts.length}{" "}
         {trackedContacts.length === 1 ? "contact" : "contacts"}
       </p>
 
@@ -211,16 +251,22 @@ export function InvestmentContactList({
       />
 
       <div className="contacts-scroll flex max-h-[min(52vh,28rem)] flex-col gap-2 overflow-y-auto pr-1">
-        {sortedContacts.map((contact) => (
-          <InvestmentContactRow
-            key={contact.id}
-            contact={contact}
-            sortBy={sortBy}
-            isSelected={selectedIdSet.has(contact.id)}
-            totalMinutes={timeMinutesByContactId.get(contact.id) ?? 0}
-            onSelect={onContactSelect}
-          />
-        ))}
+        {sortedContacts.length === 0 ? (
+          <p className="px-1 py-2 text-center text-sm text-muted">
+            No contacts match your search.
+          </p>
+        ) : (
+          sortedContacts.map((contact) => (
+            <InvestmentContactRow
+              key={contact.id}
+              contact={contact}
+              sortBy={sortBy}
+              isSelected={selectedIdSet.has(contact.id)}
+              totalMinutes={timeMinutesByContactId.get(contact.id) ?? 0}
+              onSelect={onContactSelect}
+            />
+          ))
+        )}
       </div>
     </section>
   );
