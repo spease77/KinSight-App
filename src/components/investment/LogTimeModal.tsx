@@ -304,38 +304,39 @@ export function LogTimeModal({
         aria-modal="true"
         aria-labelledby="log-time-title"
       >
-        <header className="flex shrink-0 items-center justify-between border-b border-border-green/50 bg-main px-4 py-3">
-          <button
-            type="button"
-            onClick={handleCloseRequest}
-            disabled={isSaving}
-            className="meeting-modal-header-btn text-muted transition-all duration-200 hover:text-foreground disabled:opacity-40"
-            aria-label="Cancel"
+        <div className="mx-auto flex h-full w-full max-w-lg flex-col">
+          <header className="flex shrink-0 items-center justify-between border-b border-border-green/50 bg-main px-4 py-3">
+            <button
+              type="button"
+              onClick={handleCloseRequest}
+              disabled={isSaving}
+              className="meeting-modal-header-btn text-muted transition-all duration-200 hover:text-foreground disabled:opacity-40"
+              aria-label="Cancel"
+            >
+              <X className="h-5 w-5" strokeWidth={2.25} />
+            </button>
+
+            <h2
+              id="log-time-title"
+              className="flex-1 text-center font-sans text-[17px] font-semibold tracking-tight text-foreground"
+            >
+              Log Time
+            </h2>
+
+            <MeetingModalSaveButton
+              formId="log-time-form"
+              isDirty={hasChanges}
+              isSaving={isSaving}
+              savingLabel="Saving time log"
+              saveLabel="Save log"
+            />
+          </header>
+
+          <form
+            id="log-time-form"
+            onSubmit={(event) => void handleSubmit(event)}
+            className="contacts-scroll flex flex-1 flex-col gap-3 overflow-y-auto px-4 py-4 pb-6 [&>*]:shrink-0"
           >
-            <X className="h-5 w-5" strokeWidth={2.25} />
-          </button>
-
-          <h2
-            id="log-time-title"
-            className="flex-1 text-center font-sans text-[17px] font-semibold tracking-tight text-foreground"
-          >
-            Log Time
-          </h2>
-
-          <MeetingModalSaveButton
-            formId="log-time-form"
-            isDirty={hasChanges}
-            isSaving={isSaving}
-            savingLabel="Saving time log"
-            saveLabel="Save log"
-          />
-        </header>
-
-        <form
-          id="log-time-form"
-          onSubmit={(event) => void handleSubmit(event)}
-          className="contacts-scroll flex flex-1 flex-col gap-3 overflow-y-auto px-4 py-4 pb-6 [&>*]:shrink-0"
-        >
           <MeetingFormatSegmentControl
             value={meetingFormat}
             onChange={setMeetingFormat}
@@ -396,7 +397,8 @@ export function LogTimeModal({
               {error}
             </p>
           ) : null}
-        </form>
+          </form>
+        </div>
       </div>
 
       {discardPromptOpen ? (
