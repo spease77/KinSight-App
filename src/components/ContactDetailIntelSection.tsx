@@ -60,21 +60,18 @@ export function ContactDetailIntelSection({
   return (
     <div className="contact-inset-groups">
       <ContactDetailInsetSection
-        title="Relationship & Company"
         rows={relationshipCompanyRows}
         contactId={contact.id}
         sourceMetadata={contact.sourceMetadata}
       />
 
       <ContactDetailInsetSection
-        title="Contact Info"
         rows={contactInfoRows}
         contactId={contact.id}
         sourceMetadata={contact.sourceMetadata}
       />
 
       <ContactDetailInsetSection
-        title="Interests & Important Dates"
         rows={interestsDatesRows}
         contactId={contact.id}
         sourceMetadata={contact.sourceMetadata}
