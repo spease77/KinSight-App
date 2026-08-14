@@ -210,7 +210,7 @@ export function EditContactView({
           </div>
         </section>
 
-        <EditContactSection title="Phone numbers">
+        <EditContactSection>
           <EditContactLabeledGroup
             group="phone"
             entries={state.phones}
@@ -221,7 +221,7 @@ export function EditContactView({
           />
         </EditContactSection>
 
-        <EditContactSection title="Emails">
+        <EditContactSection>
           <EditContactLabeledGroup
             group="email"
             entries={state.emails}
@@ -232,21 +232,21 @@ export function EditContactView({
           />
         </EditContactSection>
 
-        <EditContactSection title="Interests">
+        <EditContactSection>
           <EditContactInterestGroup
             entries={state.interests}
             onChange={(interests) => patchState({ interests })}
           />
         </EditContactSection>
 
-        <EditContactSection title="Family & relationships">
+        <EditContactSection>
           <EditContactRelatedGroup
             entries={state.related}
             onChange={(related) => patchState({ related })}
           />
         </EditContactSection>
 
-        <EditContactSection title="Important dates">
+        <EditContactSection>
           {state.dates.length === 0 ? (
             <EditContactKinSightTriggers
               grouped
@@ -279,21 +279,21 @@ export function EditContactView({
           )}
         </EditContactSection>
 
-        <EditContactSection title="Facts & notes">
+        <EditContactSection>
           <EditContactFactsGroup
             facts={state.facts}
             onChange={(facts) => patchState({ facts })}
           />
         </EditContactSection>
 
-        <EditContactSection title="Websites / links">
+        <EditContactSection>
           <EditContactUrlGroup
             entries={state.urls}
             onChange={(urls) => patchState({ urls })}
           />
         </EditContactSection>
 
-        <EditContactSection title="Addresses">
+        <EditContactSection>
           <EditContactLabeledGroup
             group="address"
             entries={state.addresses}
