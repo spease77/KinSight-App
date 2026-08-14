@@ -1,12 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, type CSSProperties } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import {
   AGENDA_GRID_SLOT_HEIGHT_PX,
   agendaGridBlockClass,
   buildAgendaGridSlots,
   formatAgendaSelectedDate,
+  getDayGridTimeRange,
   interactionsForDate,
   layoutGridEvents,
   scrollDayGridToTarget,
@@ -17,10 +18,10 @@ import {
 import type { ScheduledInteraction } from "@/types/scheduled-interaction";
 import {
   AGENDA_CALENDAR_FRAME,
+  AGENDA_DAY_PANEL_SHELL,
   AGENDA_DAY_TIME_SCROLL,
   AGENDA_ITEM_SELECTED_CLASS,
   AGENDA_PANEL_NAV_BUTTON,
-  AGENDA_PANEL_SHELL,
   AGENDA_PANEL_TITLE,
   AGENDA_GRID_BORDER_LINE,
 } from "@/components/agenda/agenda-panel-styles";
@@ -41,16 +42,25 @@ export function AgendaDayHourlyGrid({
   onInteractionSelect,
 }: AgendaDayHourlyGridProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const slots = useMemo(() => buildAgendaGridSlots(), []);
 
   const dayInteractions = useMemo(
     () => interactionsForDate(interactions, selectedDate),
     [interactions, selectedDate]
   );
 
-  const eventLayouts = useMemo(
-    () => layoutGridEvents(dayInteractions),
+  const timeRange = useMemo(
+    () => getDayGridTimeRange(dayInteractions),
     [dayInteractions]
+  );
+
+  const slots = useMemo(
+    () => buildAgendaGridSlots(timeRange),
+    [timeRange]
+  );
+
+  const eventLayouts = useMemo(
+    () => layoutGridEvents(dayInteractions, timeRange),
+    [dayInteractions, timeRange]
   );
 
   const selectedDateKey = toDateKey(selectedDate);
@@ -66,6 +76,7 @@ export function AgendaDayHourlyGrid({
       scrollDayGridToTarget({
         scrollContainer: container,
         dayInteractions,
+        range: timeRange,
         behavior: "auto",
       });
     };
@@ -77,7 +88,7 @@ export function AgendaDayHourlyGrid({
       window.cancelAnimationFrame(frameId);
       window.removeEventListener("resize", applyInitialScroll);
     };
-  }, [dayInteractions, dayInteractionSignature, selectedDateKey]);
+  }, [dayInteractions, dayInteractionSignature, selectedDateKey, timeRange]);
 
   const handleVerticalScrollEnd = useCallback(() => {
     const container = scrollContainerRef.current;
@@ -109,7 +120,7 @@ export function AgendaDayHourlyGrid({
   const gridHeight = slots.length * AGENDA_GRID_SLOT_HEIGHT_PX;
 
   return (
-    <section aria-label="Daily schedule grid" className={AGENDA_PANEL_SHELL}>
+    <section aria-label="Daily schedule grid" className={AGENDA_DAY_PANEL_SHELL}>
       <div className="flex items-center justify-between gap-2">
         <p className={AGENDA_PANEL_TITLE}>
           {formatAgendaSelectedDate(selectedDate)}
@@ -139,7 +150,15 @@ export function AgendaDayHourlyGrid({
         </div>
       </div>
 
-      <div className={`${AGENDA_CALENDAR_FRAME} agenda-calendar-body-band`}>
+      <div
+        className={`${AGENDA_CALENDAR_FRAME} agenda-calendar-body-band`}
+        style={
+          {
+            "--agenda-grid-start-hour": timeRange.startMinutes / 60,
+            "--agenda-grid-end-hour": timeRange.endMinutes / 60,
+          } as CSSProperties
+        }
+      >
         <div ref={scrollContainerRef} className={AGENDA_DAY_TIME_SCROLL}>
           <div
             className="relative"

@@ -13,6 +13,10 @@ export const AGENDA_GRID_BORDER_LINE = "border-agenda-grid-line";
 export const AGENDA_PANEL_SHELL =
   "ui-card flex flex-col gap-2 overflow-hidden p-3";
 
+/** Day panel stretches to fill remaining viewport height. */
+export const AGENDA_DAY_PANEL_SHELL =
+  "ui-card flex min-h-0 flex-1 flex-col gap-2 overflow-hidden p-3";
+
 export const AGENDA_PANEL_TITLE =
   "min-w-0 truncate font-mono text-xs font-medium uppercase tracking-[0.08em] text-foreground";
 
@@ -21,7 +25,7 @@ export const AGENDA_CALENDAR_FRAME =
   "agenda-calendar-frame flex min-h-0 flex-1 flex-col overflow-hidden";
 
 export const AGENDA_DAY_TIME_SCROLL =
-  "agenda-day-time-scroll vertical-time-container contacts-scroll min-h-0 w-full flex-1";
+  "agenda-day-time-scroll vertical-time-container contacts-scroll min-h-0 h-full w-full flex-1 pb-20";
 
 export const AGENDA_MONTH_GRID =
   "agenda-month-grid min-h-0 flex-1";

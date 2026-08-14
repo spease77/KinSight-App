@@ -192,8 +192,18 @@ export function AgendaPage() {
     </>
   );
 
+  const isDayView = timeFrame === "day";
+  const showEmptyStateMessage = !hasScheduledInView && (!isDayView || isSearchActive);
+
   return (
     <>
+      <div
+        className={
+          isDayView
+            ? "flex min-h-[calc(100dvh-4.75rem-env(safe-area-inset-bottom))] flex-col"
+            : undefined
+        }
+      >
       <Header title="Agenda" headerActions={headerActions} />
       <AgendaSearchBar
         open={isSearchOpen}
@@ -201,7 +211,13 @@ export function AgendaPage() {
         onQueryChange={setSearchQuery}
         onClose={handleSearchClose}
       />
-      <main className="flex flex-col gap-4 px-5 pb-6 pt-4">
+      <main
+        className={
+          isDayView
+            ? "flex min-h-0 flex-1 flex-col gap-2 px-5 pt-4"
+            : "flex flex-col gap-4 px-5 pb-6 pt-4"
+        }
+      >
         {isLoading ? (
           <p className="type-meta py-8 text-center">Loading agenda…</p>
         ) : error ? (
@@ -241,16 +257,17 @@ export function AgendaPage() {
                   onDateHeaderSelect={handleDateHeaderSelect}
                 />
               </>
-            ) : (
+            ) : showEmptyStateMessage ? (
               <p className="py-3 text-center text-sm text-muted">
                 {isSearchActive && hasTimeFrameResults
                   ? "No meetings match your search."
                   : "Nothing scheduled. Use '+' button or home mic to add."}
               </p>
-            )}
+            ) : null}
           </>
         )}
       </main>
+      </div>
 
       <AddMeetingModal
         open={isAddMeetingOpen}

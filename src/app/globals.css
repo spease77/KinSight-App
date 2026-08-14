@@ -521,7 +521,7 @@ b {
   display: block;
   min-height: 0;
   flex: 1 1 auto;
-  max-height: var(--agenda-week-viewport-height);
+  height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
   scroll-snap-type: y proximity;
