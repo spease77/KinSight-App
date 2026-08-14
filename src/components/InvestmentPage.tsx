@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Clock } from "lucide-react";
+import { UserPlus } from "lucide-react";
 import type { Contact } from "@/types/contact";
 import { Header } from "@/components/Header";
 import { InvestmentContactList } from "@/components/investment/InvestmentContactList";
@@ -46,18 +46,21 @@ export function InvestmentPage() {
   const selectedContactIds = selectedContacts.map((contact) => contact.id);
 
   const headerActions = (
-    <button
-      type="button"
-      onClick={() => setShowLogTimeForm(true)}
-      className="
-        ui-btn-primary flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium
-        active:scale-[0.98]
-      "
-      aria-expanded={showLogTimeForm}
-    >
-      <Clock className="h-3.5 w-3.5" strokeWidth={2} />
-      Log Time
-    </button>
+    <div className="flex shrink-0 items-center gap-1.5">
+      <button
+        type="button"
+        onClick={() => setShowLogTimeForm(true)}
+        className="
+          ui-btn-primary flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium
+          active:scale-[0.98]
+        "
+        aria-expanded={showLogTimeForm}
+        aria-label="Add time log entry"
+      >
+        <UserPlus className="h-3.5 w-3.5" strokeWidth={2} />
+        Add
+      </button>
+    </div>
   );
 
   return (
