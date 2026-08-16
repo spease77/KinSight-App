@@ -452,7 +452,8 @@ b {
   --safe-top: env(safe-area-inset-top, 0px);
   --bottom-nav-height: 4.75rem;
   padding-top: var(--safe-top);
-  min-height: 100dvh;
+  height: 100dvh;
+  max-height: 100dvh;
 }
 
 .border-agenda-grid-line {
@@ -2030,13 +2031,12 @@ b {
 
 /* ── Bottom navigation (inverted active icons with preserved stroke detail) ── */
 .bottom-nav {
-  position: fixed;
-  bottom: 0;
-  left: 50%;
-  z-index: 50;
+  right: 0;
+  left: 0;
+  margin-left: auto;
+  margin-right: auto;
   width: 100%;
   max-width: 32rem;
-  transform: translateX(-50%);
   border-top: none;
   background-color: color-mix(in srgb, var(--bg-main) 72%, transparent);
   -webkit-backdrop-filter: blur(12px);
@@ -2045,13 +2045,15 @@ b {
   transition:
     transform 0.2s ease,
     opacity 0.2s ease,
+    visibility 0.2s ease,
     background-color 0.2s ease;
 }
 
 .bottom-nav--keyboard-open {
-  transform: translate(-50%, 100%);
+  visibility: hidden;
   opacity: 0;
   pointer-events: none;
+  transform: translateY(100%);
 }
 
 .bottom-nav__inner {
