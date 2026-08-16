@@ -1,6 +1,6 @@
 "use client";
 
-import { forwardRef, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Check } from "lucide-react";
 import type { Contact } from "@/types/contact";
 import { formatContactDisplayName } from "@/lib/contacts/sort-contacts";
@@ -390,13 +390,10 @@ function MilestoneLadder({
   );
 }
 
-export const TimeInvestmentMilestoneCard = forwardRef<
-  HTMLElement,
-  TimeInvestmentMilestoneCardProps
->(function TimeInvestmentMilestoneCard(
-  { selectedContact = null, refreshToken = 0 },
-  ref
-) {
+export function TimeInvestmentMilestoneCard({
+  selectedContact = null,
+  refreshToken = 0,
+}: TimeInvestmentMilestoneCardProps) {
   const ringSize = useProgressRingSize();
   const { contacts: timeSummaries, isLoading, error } =
     useInvestmentSummary(refreshToken);
@@ -430,11 +427,10 @@ export const TimeInvestmentMilestoneCard = forwardRef<
 
   return (
     <section
-      ref={ref}
       aria-label={
         hasGoalContact ? `Rapport Goal for ${heading}` : "Rapport Goal"
       }
-      className="ui-card flex scroll-mt-24 flex-col gap-4 p-4 sm:gap-5 sm:p-6"
+      className="ui-card flex flex-col gap-4 p-4 sm:gap-5 sm:p-6"
     >
       <div className="flex items-baseline justify-between gap-3">
         <h2 className="type-section-title min-w-0 truncate font-sans text-[1.09375rem] tracking-tight text-foreground">
@@ -473,4 +469,4 @@ export const TimeInvestmentMilestoneCard = forwardRef<
       )}
     </section>
   );
-});
+}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Clock } from "lucide-react";
 import type { Contact } from "@/types/contact";
 import { Header } from "@/components/Header";
@@ -14,8 +14,6 @@ export function InvestmentPage() {
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [refreshToken, setRefreshToken] = useState(0);
   const [isLogTimeOpen, setIsLogTimeOpen] = useState(false);
-  const milestoneRef = useRef<HTMLElement>(null);
-  const skipSelectionScrollRef = useRef(true);
 
   const handleLogged = () => {
     setRefreshToken((current) => current + 1);
@@ -35,18 +33,6 @@ export function InvestmentPage() {
   const handleContactSelect = useCallback((contact: Contact) => {
     setSelectedContact(contact);
   }, []);
-
-  useEffect(() => {
-    if (skipSelectionScrollRef.current) {
-      skipSelectionScrollRef.current = false;
-      return;
-    }
-
-    milestoneRef.current?.scrollIntoView({
-      behavior: "smooth",
-      block: "start",
-    });
-  }, [selectedContact?.id]);
 
   const headerActions = (
     <div className="flex shrink-0 items-center gap-1.5">
@@ -72,7 +58,6 @@ export function InvestmentPage() {
       <main className="flex flex-col gap-3 px-5 pb-6 pt-4">
         <div className="flex flex-col">
           <TimeInvestmentMilestoneCard
-            ref={milestoneRef}
             selectedContact={selectedContact}
             refreshToken={refreshToken}
           />
