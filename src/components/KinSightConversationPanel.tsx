@@ -31,6 +31,7 @@ interface KinSightConversationPanelProps {
   replyValue: string;
   onReplyChange: (value: string) => void;
   onReplySubmit: () => void;
+  onReplyFocus?: () => void;
   chatError?: Error;
   conversationStarted?: boolean;
   onMicToggle?: () => void;
@@ -61,6 +62,7 @@ export function KinSightConversationPanel({
   replyValue,
   onReplyChange,
   onReplySubmit,
+  onReplyFocus,
   chatError,
   conversationStarted = false,
   onMicToggle,
@@ -147,6 +149,7 @@ export function KinSightConversationPanel({
           type="text"
           value={replyValue}
           onChange={(e) => onReplyChange(e.target.value)}
+          onFocus={onReplyFocus}
           placeholder={
             isLoading ? "KinSight is thinking…" : "Ask about a contact..."
           }

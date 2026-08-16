@@ -22,7 +22,12 @@ import { withMessageText } from "@/lib/ai/message-text";
 import { logMessageToKinSight } from "@/lib/kinsight/log-message";
 import type { MessageLogStatus } from "@/components/AssistantMessageBubble";
 import { useVoiceExperience } from "@/contexts/VoiceExperienceContext";
+import { useSoftKeyboardOpen } from "@/hooks/useSoftKeyboardOpen";
 import type { OsVoiceSource } from "@/lib/voice/os-voice-deeplink";
+
+function lockHomeScrollTop() {
+  document.querySelector<HTMLElement>(".app-scroll")?.scrollTo({ top: 0 });
+}
 
 interface DashboardProps {
   /** Bumps when the user returns to the Home tab from another screen. */
@@ -323,14 +328,55 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
     !isRecording && !isSpeaking && !isBusy && !isDetecting;
 
   const hasConversationStarted = conversationEngaged;
+  const keyboardOpen = useSoftKeyboardOpen();
+
+  useEffect(() => {
+    const scrollEl = document.querySelector<HTMLElement>(".app-scroll");
+    if (!scrollEl) return;
+
+    const shouldLock = !hasConversationStarted && keyboardOpen;
+    scrollEl.classList.toggle("home-scroll-locked", shouldLock);
+    if (shouldLock) {
+      lockHomeScrollTop();
+    }
+
+    return () => {
+      scrollEl.classList.remove("home-scroll-locked");
+    };
+  }, [hasConversationStarted, keyboardOpen]);
+
+  useEffect(() => {
+    if (hasConversationStarted) return;
+
+    const viewport = window.visualViewport;
+    if (!viewport) return;
+
+    const keepHeroPinned = () => {
+      lockHomeScrollTop();
+    };
+
+    viewport.addEventListener("resize", keepHeroPinned);
+    viewport.addEventListener("scroll", keepHeroPinned);
+
+    return () => {
+      viewport.removeEventListener("resize", keepHeroPinned);
+      viewport.removeEventListener("scroll", keepHeroPinned);
+    };
+  }, [hasConversationStarted]);
+
+  const handleReplyFocus = useCallback(() => {
+    if (!hasConversationStarted) {
+      lockHomeScrollTop();
+    }
+  }, [hasConversationStarted]);
 
   return (
     <>
       <div
         className={
           hasConversationStarted
-            ? "flex min-h-[calc(100dvh-4.75rem-env(safe-area-inset-bottom))] flex-col"
-            : undefined
+            ? "home-dashboard home-dashboard--conversation flex flex-col"
+            : "home-dashboard"
         }
       >
         <Header
@@ -342,7 +388,7 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
           className={`relative flex flex-col ${
             hasConversationStarted
               ? "min-h-0 flex-1"
-              : "gap-6 px-5 pb-6 pt-4"
+              : "home-dashboard__main justify-start gap-6 px-5 pb-6 pt-8 sm:pt-12"
           }`}
         >
           <section
@@ -350,7 +396,7 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
             className={`relative z-10 flex w-full flex-col ${
               hasConversationStarted
                 ? "min-h-0 flex-1 items-stretch"
-                : "items-center"
+                : "home-hero"
             }`}
           >
             {!hasConversationStarted && (
@@ -400,6 +446,7 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
               replyValue={replyText}
               onReplyChange={setReplyText}
               onReplySubmit={handleReplySubmit}
+              onReplyFocus={handleReplyFocus}
               chatError={chatError}
               conversationStarted={hasConversationStarted}
               onMicToggle={handleMicToggle}

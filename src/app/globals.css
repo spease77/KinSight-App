@@ -452,8 +452,13 @@ b {
   --safe-top: env(safe-area-inset-top, 0px);
   --bottom-nav-height: 4.75rem;
   padding-top: var(--safe-top);
-  height: 100dvh;
-  max-height: 100dvh;
+  min-height: 100svh;
+  height: 100svh;
+}
+
+.app-scroll.home-scroll-locked {
+  overflow: hidden;
+  overscroll-behavior: none;
 }
 
 .border-agenda-grid-line {
@@ -733,6 +738,29 @@ b {
       env(safe-area-inset-bottom, 0px)
   );
   transform: translateX(-50%);
+}
+
+.home-dashboard {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  min-height: min(100%, 100%);
+}
+
+.home-dashboard--conversation {
+  min-height: 0;
+  flex: 1 1 auto;
+}
+
+.home-dashboard__main {
+  flex: 0 0 auto;
+}
+
+.home-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
 }
 
 .home-ask-bar {

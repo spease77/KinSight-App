@@ -12,13 +12,13 @@ export function AppShell({ children }: AppShellProps) {
   return (
     <HomeSessionProvider>
       <VoiceExperienceRoot>
-        <div className="app-shell hotel-texture relative mx-auto flex h-dvh max-h-dvh max-w-lg flex-col overflow-hidden">
+        <div className="app-shell hotel-texture relative mx-auto flex min-h-svh max-w-lg flex-col overflow-hidden">
         <div
           className="app-bottom-glow pointer-events-none bg-gradient-to-t from-white/95 via-white/60 to-transparent dark:from-zinc-950/95 dark:via-zinc-950/60 dark:to-transparent"
           aria-hidden="true"
         />
 
-        <div className="relative z-10 min-h-0 flex-1 overflow-x-hidden overflow-y-auto pb-[calc(var(--bottom-nav-height,4.75rem)+env(safe-area-inset-bottom))]">
+        <div className="app-scroll relative z-10 min-h-0 flex-1 overflow-x-hidden overflow-y-auto pb-[calc(var(--bottom-nav-height,4.75rem)+env(safe-area-inset-bottom))]">
           {children}
         </div>
 
