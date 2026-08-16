@@ -2,12 +2,20 @@
 
 import type { CSSProperties } from "react";
 import { Ear, Mic } from "lucide-react";
+import type { MicrophoneAccessFailure } from "@/lib/audio/voice-support";
+import {
+  checkMicrophoneEnvironment,
+  parseMicrophoneAccessError,
+  requestMicrophoneStream,
+} from "@/lib/audio/voice-support";
 
 interface MicrophoneButtonProps {
   isRecording: boolean;
   isSpeaking?: boolean;
   isBusy?: boolean;
-  onToggle: () => void;
+  /** Called to stop recording, or to start with a user-gesture-acquired stream. */
+  onToggle: (stream?: MediaStream) => void;
+  onMicAccessFailure?: (failure: MicrophoneAccessFailure) => void;
   disabled?: boolean;
   variant?: "hero" | "compact";
   /** Real-time mic level from `useAudioVisualizer` (0–100). */
@@ -68,6 +76,7 @@ function MicToggleControl({
   isRecording,
   isBusy = false,
   onToggle,
+  onMicAccessFailure,
   disabled = false,
   variant = "hero",
   volumeLevel = 0,
@@ -76,6 +85,27 @@ function MicToggleControl({
 }) {
   const sizes = SIZE_CLASSES[variant];
   const { shell } = getMicVolumePresentation(volumeLevel, isRecording, variant);
+
+  const handleClick = () => {
+    if (disabled || isBusy) return;
+
+    if (isRecording) {
+      onToggle();
+      return;
+    }
+
+    const environment = checkMicrophoneEnvironment();
+    if (!environment.ok) {
+      onMicAccessFailure?.(environment.failure);
+      return;
+    }
+
+    // Invoke getUserMedia synchronously on the tap/click call stack (iOS Safari).
+    void requestMicrophoneStream().then(
+      (stream) => onToggle(stream),
+      (error) => onMicAccessFailure?.(parseMicrophoneAccessError(error))
+    );
+  };
 
   return (
     <div
@@ -106,7 +136,7 @@ function MicToggleControl({
 
       <button
         type="button"
-        onClick={onToggle}
+        onClick={handleClick}
         disabled={disabled || isBusy}
         aria-label={isRecording ? "Stop recording" : "Start recording"}
         aria-pressed={isRecording}
@@ -140,6 +170,7 @@ export function MicrophoneButton({
   isSpeaking = false,
   isBusy = false,
   onToggle,
+  onMicAccessFailure,
   disabled = false,
   variant = "hero",
   volumeLevel = 0,
@@ -150,6 +181,7 @@ export function MicrophoneButton({
         isRecording={isRecording}
         isBusy={isBusy}
         onToggle={onToggle}
+        onMicAccessFailure={onMicAccessFailure}
         disabled={disabled}
         variant="compact"
         volumeLevel={volumeLevel}
@@ -164,6 +196,7 @@ export function MicrophoneButton({
           isRecording={isRecording}
           isBusy={isBusy}
           onToggle={onToggle}
+          onMicAccessFailure={onMicAccessFailure}
           disabled={disabled}
           variant="hero"
           volumeLevel={volumeLevel}

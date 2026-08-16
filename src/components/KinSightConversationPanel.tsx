@@ -8,6 +8,7 @@ import { stripRecordingTag } from "@/lib/agent/extract-recording-id";
 import { AssistantMessageBubble, type MessageLogStatus } from "@/components/AssistantMessageBubble";
 import { messageHasLoggableIntelligence } from "@/lib/ai/loggable-message";
 import { MicrophoneButton } from "@/components/MicrophoneButton";
+import type { MicrophoneAccessFailure } from "@/lib/audio/voice-support";
 
 interface KinSightConversationPanelProps {
   transcript: string;
@@ -34,7 +35,8 @@ interface KinSightConversationPanelProps {
   onReplyFocus?: () => void;
   chatError?: Error;
   conversationStarted?: boolean;
-  onMicToggle?: () => void;
+  onMicToggle?: (stream?: MediaStream) => void;
+  onMicAccessFailure?: (failure: MicrophoneAccessFailure) => void;
   micDisabled?: boolean;
   isMicBusy?: boolean;
   volumeLevel?: number;
@@ -66,6 +68,7 @@ export function KinSightConversationPanel({
   chatError,
   conversationStarted = false,
   onMicToggle,
+  onMicAccessFailure,
   micDisabled = false,
   isMicBusy = false,
   volumeLevel = 0,
@@ -131,6 +134,7 @@ export function KinSightConversationPanel({
           isRecording={isRecording}
           isBusy={isMicBusy}
           onToggle={onMicToggle}
+          onMicAccessFailure={onMicAccessFailure}
           disabled={micDisabled}
           volumeLevel={volumeLevel}
         />

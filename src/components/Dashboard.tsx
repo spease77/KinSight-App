@@ -8,7 +8,9 @@ import { Header } from "@/components/Header";
 import { MicrophoneButton } from "@/components/MicrophoneButton";
 import { KinSightConversationPanel } from "@/components/KinSightConversationPanel";
 import { ProposedContactModal } from "@/components/ProposedContactModal";
+import { MicPermissionModal } from "@/components/MicPermissionModal";
 import { unlockSpeechSynthesis, stopSpeaking } from "@/lib/audio/speech";
+import type { MicrophoneAccessFailure } from "@/lib/audio/voice-support";
 import { voiceUnsupportedMessage } from "@/lib/audio/voice-support";
 import { useAgentSpeech } from "@/hooks/useAgentSpeech";
 import { useVoicePipeline } from "@/hooks/useVoicePipeline";
@@ -43,6 +45,8 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
   const [messageLogSuccessLabels, setMessageLogSuccessLabels] = useState<
     Record<string, string>
   >({});
+  const [micAccessFailure, setMicAccessFailure] =
+    useState<MicrophoneAccessFailure | null>(null);
 
   const transport = useMemo(
     () =>
@@ -134,10 +138,12 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
     unsupportedReason,
     transcript,
     error: voiceError,
+    permissionFailure,
     mediaStream,
     toggleRecording,
     beginRecording,
     clearTranscript,
+    clearPermissionFailure,
     setTranscriptText,
   } = useVoicePipeline({ onTranscriptReady: handleTranscriptReady });
 
@@ -314,15 +320,32 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
     [messages, router]
   );
 
-  const handleMicToggle = useCallback(() => {
-    // Synchronous on the tap call stack — required for iOS Safari audio unlock.
-    unlockSpeechSynthesis();
+  const handleMicToggle = useCallback(
+    (stream?: MediaStream) => {
+      // Synchronous on the tap call stack — required for iOS Safari audio unlock.
+      unlockSpeechSynthesis();
 
-    if (!isRecording) {
+      if (isRecording) {
+        toggleRecording();
+        return;
+      }
+
+      if (!stream) return;
+
       interruptSpeech();
-    }
-    toggleRecording();
-  }, [interruptSpeech, isRecording, toggleRecording]);
+      toggleRecording(stream);
+    },
+    [interruptSpeech, isRecording, toggleRecording]
+  );
+
+  const handleMicAccessFailure = useCallback(
+    (failure: MicrophoneAccessFailure) => {
+      setMicAccessFailure(failure);
+    },
+    []
+  );
+
+  const activeMicFailure = micAccessFailure ?? permissionFailure;
 
   const isMicIdle =
     !isRecording && !isSpeaking && !isBusy && !isDetecting;
@@ -406,7 +429,7 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
                   isSpeaking={isSpeaking}
                   isBusy={isBusy || isDetecting}
                   onToggle={handleMicToggle}
-                  disabled={supportChecked && !isSupported}
+                  onMicAccessFailure={handleMicAccessFailure}
                   volumeLevel={volumeLevel}
                 />
 
@@ -450,7 +473,8 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
               chatError={chatError}
               conversationStarted={hasConversationStarted}
               onMicToggle={handleMicToggle}
-              micDisabled={supportChecked && !isSupported}
+              onMicAccessFailure={handleMicAccessFailure}
+              micDisabled={false}
               isMicBusy={isBusy || isDetecting}
               volumeLevel={volumeLevel}
             />
@@ -467,13 +491,23 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
             )}
 
             {supportChecked && !isSupported && !hasConversationStarted && (
-              <p className="type-meta max-w-sm text-center">
+              <p className="type-meta max-w-sm text-center" role="status">
                 {voiceUnsupportedMessage(unsupportedReason)}
               </p>
             )}
           </section>
         </main>
       </div>
+
+      {activeMicFailure ? (
+        <MicPermissionModal
+          failure={activeMicFailure}
+          onDismiss={() => {
+            setMicAccessFailure(null);
+            clearPermissionFailure();
+          }}
+        />
+      ) : null}
 
       {currentItem && (
         <ProposedContactModal

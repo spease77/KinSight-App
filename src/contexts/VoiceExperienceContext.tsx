@@ -18,8 +18,8 @@ export type VoiceSessionSource = "os_shortcut";
 export type VoiceOverlayPhase = "hidden" | "listening" | "processing";
 
 export type VoicePipelineHandlers = {
-  beginRecording: () => Promise<void> | void;
-  toggleRecording: () => void;
+  beginRecording: (stream?: MediaStream) => Promise<void> | void;
+  toggleRecording: (stream?: MediaStream) => void;
   submitTextCommand: (text: string, source?: OsVoiceSource) => Promise<void> | void;
 };
 
