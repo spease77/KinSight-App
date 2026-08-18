@@ -55,7 +55,7 @@ export default function RootLayout({
       className={`${montserrat.variable} ${inter.variable}`}
       suppressHydrationWarning
     >
-      <body className="antialiased">
+      <body className="no-scrollbar antialiased">
         <Script
           id="theme-init"
           strategy="beforeInteractive"

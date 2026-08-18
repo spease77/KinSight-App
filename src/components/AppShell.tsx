@@ -18,7 +18,7 @@ export function AppShell({ children }: AppShellProps) {
           aria-hidden="true"
         />
 
-        <div className="app-scroll relative z-10 min-h-0 flex-1 overflow-x-hidden overflow-y-auto pb-[calc(var(--bottom-nav-height,4.75rem)+env(safe-area-inset-bottom))]">
+        <div className="app-scroll no-scrollbar relative z-10 min-h-0 flex-1 overflow-x-hidden overflow-y-auto pb-[calc(var(--bottom-nav-height,4.75rem)+env(safe-area-inset-bottom))]">
           {children}
         </div>
 
