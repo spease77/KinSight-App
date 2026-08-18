@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import { Inter, Montserrat } from "next/font/google";
+import { AppShell } from "@/components/AppShell";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { ToastViewport } from "@/components/ToastViewport";
 import { themeInitScript } from "@/lib/theme/theme";
@@ -62,7 +63,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: themeInitScript }}
         />
         <ThemeProvider>
-          {children}
+          <AppShell>{children}</AppShell>
           <ToastViewport />
         </ThemeProvider>
       </body>

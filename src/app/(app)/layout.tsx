@@ -1,4 +1,3 @@
-import { AppShell } from "@/components/AppShell";
 import { ContactsProvider } from "@/components/ContactsProvider";
 
 export default function AppLayout({
@@ -6,9 +5,5 @@ export default function AppLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <ContactsProvider>
-      <AppShell>{children}</AppShell>
-    </ContactsProvider>
-  );
+  return <ContactsProvider>{children}</ContactsProvider>;
 }

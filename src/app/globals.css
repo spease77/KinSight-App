@@ -352,7 +352,10 @@
 
 html {
   -webkit-tap-highlight-color: transparent;
+  height: 100dvh;
   min-height: 100dvh;
+  overflow: hidden;
+  overscroll-behavior-y: none;
 }
 
 body {
@@ -360,7 +363,10 @@ body {
   color: var(--text-body, var(--text-primary));
   font-family: var(--font-sans), system-ui, sans-serif;
   font-weight: 400;
+  height: 100dvh;
   min-height: 100dvh;
+  overflow: hidden;
+  overscroll-behavior-y: none;
   transition:
     background-color 0.2s ease,
     color 0.2s ease;
@@ -483,6 +489,10 @@ b {
   min-height: 100dvh;
   height: 100dvh;
   max-height: 100dvh;
+}
+
+.app-scroll {
+  overscroll-behavior-y: none;
 }
 
 .app-scroll.home-scroll-locked {
@@ -2108,7 +2118,7 @@ b {
   width: 100%;
   max-width: 32rem;
   border-top: none;
-  background-color: color-mix(in srgb, var(--bg-main) 72%, transparent);
+  background-color: color-mix(in srgb, var(--bg-main) 95%, transparent);
   -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
   padding-bottom: env(safe-area-inset-bottom, 0px);
