@@ -3919,6 +3919,20 @@ b {
 
 .data-management-sheet {
   animation: data-management-sheet-in 0.28s ease-out;
+  height: 100dvh;
+  max-height: 100dvh;
+}
+
+.data-management-sheet__scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+.data-management-sheet__header {
+  flex-shrink: 0;
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Bell, Database, Download, Loader2, X } from "lucide-react";
 import { CalendarIntegrationsSection } from "@/components/settings/CalendarIntegrationsSection";
@@ -16,6 +16,8 @@ export function DataManagementSheet({
   open,
   onClose,
 }: DataManagementSheetProps) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [headerScrolled, setHeaderScrolled] = useState(false);
   const {
     settings,
     isLoading,
@@ -23,6 +25,11 @@ export function DataManagementSheet({
     error,
     updateGlobalNotifications,
   } = useUserSettings();
+
+  const handleScroll = useCallback(() => {
+    const scrollTop = scrollRef.current?.scrollTop ?? 0;
+    setHeaderScrolled(scrollTop > 6);
+  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -33,6 +40,7 @@ export function DataManagementSheet({
 
     document.body.style.overflow = "hidden";
     window.addEventListener("keydown", handleKeyDown);
+    setHeaderScrolled(false);
 
     return () => {
       document.body.style.overflow = "";
@@ -55,32 +63,43 @@ export function DataManagementSheet({
         role="dialog"
         aria-modal="true"
         aria-labelledby="data-management-sheet-title"
-        className="data-management-sheet relative flex h-full w-full max-w-sm flex-col border-l border-border/80 bg-card shadow-2xl"
+        className="data-management-sheet relative flex h-[100dvh] max-h-[100dvh] w-full max-w-sm flex-col overflow-hidden border-l border-border/80 bg-card shadow-2xl"
       >
-        <div className="flex items-start justify-between gap-3 border-b border-border/60 px-5 py-5">
-          <div>
-            <p className="type-meta">Settings</p>
-            <h2
-              id="data-management-sheet-title"
-              className="mt-1 font-sans text-xl font-normal tracking-tight text-foreground"
-            >
-              Data Management
-            </h2>
-            <p className="mt-2 text-sm leading-relaxed text-muted">
-              Appearance, notifications, calendar integrations, and data export.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="shrink-0 rounded-lg p-1.5 text-muted transition-colors hover:bg-card-hover hover:text-foreground"
-            aria-label="Close"
+        <div
+          ref={scrollRef}
+          onScroll={handleScroll}
+          className="data-management-sheet__scroll no-scrollbar flex min-h-0 flex-1 flex-col overflow-y-auto [-webkit-overflow-scrolling:touch]"
+        >
+          <header
+            className={`data-management-sheet__header sticky top-0 z-20 flex shrink-0 items-start justify-between gap-3 px-5 pb-5 pt-[max(1.25rem,env(safe-area-inset-top,0px))] transition-[background-color,backdrop-filter,border-color,box-shadow] duration-200 ${
+              headerScrolled
+                ? "border-b border-border/60 bg-card/80 shadow-sm backdrop-blur-md"
+                : "border-b border-transparent bg-card"
+            }`}
           >
-            <X className="h-5 w-5" strokeWidth={2} />
-          </button>
-        </div>
+            <div className="min-w-0 pr-2">
+              <p className="type-meta">Settings</p>
+              <h2
+                id="data-management-sheet-title"
+                className="mt-1 font-sans text-xl font-normal tracking-tight text-foreground"
+              >
+                Data Management
+              </h2>
+              <p className="mt-2 text-sm leading-relaxed text-muted">
+                Appearance, notifications, calendar integrations, and data export.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              className="relative z-30 -mr-1 shrink-0 rounded-lg p-2 text-muted transition-colors hover:bg-card-hover hover:text-foreground"
+              aria-label="Close"
+            >
+              <X className="h-5 w-5" strokeWidth={2} />
+            </button>
+          </header>
 
-        <div className="flex flex-1 flex-col gap-5 overflow-y-auto px-5 py-6">
+          <div className="flex flex-col gap-5 px-5 pb-6 pt-2">
           <ThemeAppearanceSection />
 
           <section className="flex flex-col gap-3">
@@ -139,6 +158,7 @@ export function DataManagementSheet({
               Choose contacts, pick Excel or Markdown dossier formats, and
               generate a portable backup of your KinSight network.
             </p>
+          </div>
           </div>
         </div>
       </aside>
