@@ -9,8 +9,8 @@ export const AGENDA_WEEK_HORIZONTAL_SNAP_COUNT = 3;
 /** Seven day columns inside a viewport that shows five days at a time. */
 export const AGENDA_WEEK_DAYS_TRACK_WIDTH = `calc(100% * 7 / ${AGENDA_WEEK_VISIBLE_DAY_COUNT})`;
 
-export const AGENDA_GRID_START_HOUR = 6;
-export const AGENDA_GRID_END_HOUR = 21;
+export const AGENDA_GRID_START_HOUR = 0;
+export const AGENDA_GRID_END_HOUR = 24;
 export const AGENDA_DAY_DEFAULT_START_HOUR = 8;
 export const AGENDA_DAY_DEFAULT_END_HOUR = 17;
 export const AGENDA_GRID_SLOT_MINUTES = 30;
@@ -63,36 +63,11 @@ function getGridTimeBounds(range?: AgendaGridTimeRange): AgendaGridTimeRange {
 }
 
 export function getDayGridTimeRange(
-  dayInteractions: ScheduledInteraction[]
+  _dayInteractions: ScheduledInteraction[] = []
 ): AgendaGridTimeRange {
-  const defaultStartMinutes = AGENDA_DAY_DEFAULT_START_HOUR * 60;
-  const defaultEndMinutes = AGENDA_DAY_DEFAULT_END_HOUR * 60;
-
-  let startMinutes = defaultStartMinutes;
-  let endMinutes = defaultEndMinutes;
-
-  for (const interaction of dayInteractions) {
-    const scheduled = new Date(interaction.scheduledAt);
-    const eventStart =
-      scheduled.getHours() * 60 + scheduled.getMinutes();
-    const duration =
-      interaction.durationMinutes ?? AGENDA_GRID_DEFAULT_DURATION_MINUTES;
-    const eventEnd = eventStart + duration;
-
-    if (eventStart < defaultStartMinutes) {
-      startMinutes = Math.min(startMinutes, eventStart);
-    }
-
-    endMinutes = Math.max(endMinutes, eventEnd);
-  }
-
   return {
-    startMinutes:
-      Math.floor(startMinutes / AGENDA_GRID_SLOT_MINUTES) *
-      AGENDA_GRID_SLOT_MINUTES,
-    endMinutes:
-      Math.ceil(endMinutes / AGENDA_GRID_SLOT_MINUTES) *
-      AGENDA_GRID_SLOT_MINUTES,
+    startMinutes: AGENDA_GRID_START_HOUR * 60,
+    endMinutes: AGENDA_GRID_END_HOUR * 60,
   };
 }
 
@@ -118,8 +93,10 @@ export function buildAgendaGridSlots(
 }
 
 export function formatGridSlotLabel(minutesFromMidnight: number): string {
-  const hours = Math.floor(minutesFromMidnight / 60);
-  const minutes = minutesFromMidnight % 60;
+  const normalizedMinutes =
+    minutesFromMidnight >= 24 * 60 ? 0 : minutesFromMidnight;
+  const hours = Math.floor(normalizedMinutes / 60) % 24;
+  const minutes = normalizedMinutes % 60;
   const date = new Date(2000, 0, 1, hours, minutes, 0, 0);
 
   return new Intl.DateTimeFormat("en-US", {
@@ -347,34 +324,13 @@ export function getDayScrollTargetMinutes(
 
 export function getDayVerticalScrollTop(
   scrollContainer: HTMLElement,
-  dayInteractions: ScheduledInteraction[],
+  _dayInteractions: ScheduledInteraction[] = [],
   range?: AgendaGridTimeRange
 ): number {
-  const viewportHeight = scrollContainer.clientHeight;
-
-  if (dayInteractions.length === 0) {
-    return clampAgendaGridScrollTop(
-      agendaGridScrollTopForMinutes(
-        AGENDA_DEFAULT_EMPTY_SCROLL_HOUR * 60,
-        range
-      ),
-      scrollContainer
-    );
-  }
-
-  const targetMinutes = getDayScrollTargetMinutes(dayInteractions, range);
-  const slotElement = scrollContainer.querySelector<HTMLElement>(
-    `[data-agenda-slot-minutes="${targetMinutes}"]`
+  return clampAgendaGridScrollTop(
+    agendaGridScrollTopForMinutes(AGENDA_DEFAULT_EMPTY_SCROLL_HOUR * 60, range),
+    scrollContainer
   );
-
-  const rawTop = slotElement
-    ? getElementScrollTopWithinContainer(slotElement, scrollContainer)
-    : agendaGridScrollTopForMinutes(targetMinutes, range);
-
-  const centered =
-    rawTop - viewportHeight / 2 + AGENDA_GRID_SLOT_HEIGHT_PX / 2;
-
-  return clampAgendaGridScrollTop(centered, scrollContainer);
 }
 
 export function snapAgendaGridVerticalScroll(
@@ -492,31 +448,13 @@ export function getWeekHorizontalScrollLeft(
 
 export function getWeekVerticalScrollTop(
   scrollContainer: HTMLElement,
-  weekInteractions: ScheduledInteraction[],
-  reference = new Date()
+  _weekInteractions: ScheduledInteraction[] = [],
+  _reference = new Date()
 ): number {
-  const viewportHeight = scrollContainer.clientHeight;
-
-  if (weekInteractions.length === 0) {
-    const eightAmTop = agendaGridScrollTopForMinutes(
-      AGENDA_DEFAULT_EMPTY_SCROLL_HOUR * 60
-    );
-    return clampAgendaGridScrollTop(eightAmTop, scrollContainer);
-  }
-
-  const targetMinutes = getWeekScrollTargetMinutes(weekInteractions, reference);
-  const slotElement = scrollContainer.querySelector<HTMLElement>(
-    `[data-agenda-slot-minutes="${targetMinutes}"]`
+  return clampAgendaGridScrollTop(
+    agendaGridScrollTopForMinutes(AGENDA_DEFAULT_EMPTY_SCROLL_HOUR * 60),
+    scrollContainer
   );
-
-  const rawTop = slotElement
-    ? getElementScrollTopWithinContainer(slotElement, scrollContainer)
-    : agendaGridScrollTopForMinutes(targetMinutes);
-
-  const centered =
-    rawTop - viewportHeight / 2 + AGENDA_GRID_SLOT_HEIGHT_PX / 2;
-
-  return clampAgendaGridScrollTop(centered, scrollContainer);
 }
 
 export function scrollWeekVerticalToTarget(input: {

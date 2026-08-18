@@ -25,7 +25,7 @@ export const AGENDA_CALENDAR_FRAME =
   "agenda-calendar-frame flex min-h-0 flex-1 flex-col overflow-hidden";
 
 export const AGENDA_DAY_TIME_SCROLL =
-  "agenda-day-time-scroll vertical-time-container contacts-scroll min-h-0 h-full w-full flex-1 pb-20";
+  "agenda-day-time-scroll vertical-time-container contacts-scroll min-h-0 h-full w-full flex-1 overflow-y-auto [-webkit-overflow-scrolling:touch]";
 
 export const AGENDA_MONTH_GRID =
   "agenda-month-grid min-h-0 flex-1";
@@ -34,7 +34,7 @@ export const AGENDA_MONTH_GRID =
 export const AGENDA_WEEK_GRID_FRAME = AGENDA_CALENDAR_FRAME;
 export const AGENDA_WEEK_HEADER_BAND = "agenda-week-header-band flex shrink-0";
 export const AGENDA_WEEK_TIME_SCROLL =
-  "agenda-week-time-scroll vertical-time-container contacts-scroll flex min-h-0 min-w-0 flex-1";
+  "agenda-week-time-scroll vertical-time-container contacts-scroll flex min-h-0 min-w-0 flex-1 overflow-y-auto [-webkit-overflow-scrolling:touch]";
 export const AGENDA_WEEK_DAY_HEADER =
   "agenda-week-day-header sticky top-0 z-10 shrink-0 border-b bg-main text-center font-mono text-[10px] font-semibold uppercase tracking-wide transition-colors";
 

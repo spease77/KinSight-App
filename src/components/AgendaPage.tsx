@@ -48,6 +48,23 @@ export function AgendaPage() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const feedRef = useRef<HTMLDivElement>(null);
+  const [headerScrolled, setHeaderScrolled] = useState(false);
+
+  useEffect(() => {
+    const scrollEl = document.querySelector<HTMLElement>(".app-scroll");
+    if (!scrollEl) return;
+
+    const handleScroll = () => {
+      setHeaderScrolled(scrollEl.scrollTop > 6);
+    };
+
+    handleScroll();
+    scrollEl.addEventListener("scroll", handleScroll, { passive: true });
+
+    return () => {
+      scrollEl.removeEventListener("scroll", handleScroll);
+    };
+  }, [pathname, timeFrame]);
 
   const loadInteractions = useCallback(async () => {
     setIsLoading(true);
@@ -198,26 +215,43 @@ export function AgendaPage() {
   return (
     <>
       <div
-        className={
+        className={`agenda-page flex flex-col ${
           isDayView
-            ? "flex min-h-[calc(100dvh-4.75rem-env(safe-area-inset-bottom))] flex-col"
-            : undefined
-        }
+            ? "h-[calc(100dvh-var(--bottom-nav-height,4.75rem)-env(safe-area-inset-top,0px))] max-h-[calc(100dvh-var(--bottom-nav-height,4.75rem)-env(safe-area-inset-top,0px))]"
+            : "min-h-full"
+        }`}
       >
-      <Header title="Agenda" headerActions={headerActions} />
-      <AgendaSearchBar
-        open={isSearchOpen}
-        query={searchQuery}
-        onQueryChange={setSearchQuery}
-        onClose={handleSearchClose}
-      />
-      <main
-        className={
-          isDayView
-            ? "flex min-h-0 flex-1 flex-col gap-2 px-5 pt-4"
-            : "flex flex-col gap-4 px-5 pb-6 pt-4"
-        }
-      >
+        <div
+          className={`agenda-page-header ${
+            headerScrolled ? "agenda-page-header--scrolled" : ""
+          }`}
+        >
+          <Header
+            title="Agenda"
+            headerActions={headerActions}
+            sticky={false}
+          />
+          <AgendaSearchBar
+            open={isSearchOpen}
+            query={searchQuery}
+            onQueryChange={setSearchQuery}
+            onClose={handleSearchClose}
+          />
+          <div className="px-5 pb-2">
+            <AgendaTimeFrameSwitcher
+              timeFrame={timeFrame}
+              onTimeFrameChange={setTimeFrame}
+            />
+          </div>
+        </div>
+
+        <main
+          className={
+            isDayView
+              ? "flex min-h-0 flex-1 flex-col gap-2 px-5 pb-6"
+              : "flex flex-col gap-4 px-5 pb-6"
+          }
+        >
         {isLoading ? (
           <p className="type-meta py-8 text-center">Loading agenda…</p>
         ) : error ? (
@@ -226,11 +260,6 @@ export function AgendaPage() {
           </p>
         ) : (
           <>
-            <AgendaTimeFrameSwitcher
-              timeFrame={timeFrame}
-              onTimeFrameChange={setTimeFrame}
-            />
-
             <AgendaHourlyGrid
               selectedDate={selectedDate}
               timeFrame={timeFrame}
@@ -266,7 +295,7 @@ export function AgendaPage() {
             ) : null}
           </>
         )}
-      </main>
+        </main>
       </div>
 
       <AddMeetingModal

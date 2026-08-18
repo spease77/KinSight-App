@@ -520,6 +520,25 @@ b {
   grid-template-rows: repeat(6, minmax(0, 1fr));
 }
 
+.agenda-page-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  flex-shrink: 0;
+  background-color: var(--bg-main);
+  transition:
+    background-color 0.2s ease,
+    box-shadow 0.2s ease,
+    backdrop-filter 0.2s ease;
+}
+
+.agenda-page-header--scrolled {
+  background-color: color-mix(in srgb, var(--bg-main) 82%, transparent);
+  box-shadow: 0 1px 0 var(--border-subtle);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+
 .agenda-month-day-cell {
   display: flex;
   min-height: 0;
@@ -555,8 +574,8 @@ b {
   height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
-  scroll-snap-type: y proximity;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
 }
 
 .agenda-day-scroll-row {
@@ -565,8 +584,6 @@ b {
   min-height: var(--agenda-slot-height);
   max-height: var(--agenda-slot-height);
   flex-shrink: 0;
-  scroll-snap-align: start;
-  scroll-snap-stop: always;
 }
 
 .agenda-day-scroll-row .agenda-week-time-slot {
@@ -596,8 +613,8 @@ b {
 .agenda-week-body-band {
   --agenda-time-gutter-width: 60px;
   --agenda-slot-height: 36px;
-  --agenda-grid-start-hour: 6;
-  --agenda-grid-end-hour: 21;
+  --agenda-grid-start-hour: 0;
+  --agenda-grid-end-hour: 24;
   --agenda-grid-body-height: calc(
     ((var(--agenda-grid-end-hour) - var(--agenda-grid-start-hour)) * 2 + 1) *
       var(--agenda-slot-height)
@@ -623,8 +640,8 @@ b {
   max-height: var(--agenda-week-viewport-height);
   overflow-y: auto;
   overflow-x: hidden;
-  scroll-snap-type: y proximity;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
 }
 
 .agenda-week-scroll-content {
@@ -658,7 +675,6 @@ b {
   align-self: flex-start;
   overflow-x: auto;
   overflow-y: visible;
-  scroll-snap-type: x mandatory;
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-x: contain;
@@ -683,8 +699,7 @@ b {
 
 .agenda-week-time-slot,
 .time-grid-row {
-  scroll-snap-align: start;
-  scroll-snap-stop: always;
+  flex-shrink: 0;
 }
 
 .agenda-week-time-gutter {

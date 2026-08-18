@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, type CSSProperties } from "react";
+import { useLayoutEffect, useMemo, useRef, type CSSProperties } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import {
   AGENDA_GRID_SLOT_HEIGHT_PX,
@@ -12,7 +12,6 @@ import {
   layoutGridEvents,
   scrollDayGridToTarget,
   shiftSelectedDate,
-  snapAgendaGridVerticalScroll,
   toDateKey,
 } from "@/lib/agenda/hourly-grid";
 import type { ScheduledInteraction } from "@/types/scheduled-interaction";
@@ -68,7 +67,7 @@ export function AgendaDayHourlyGrid({
     .map((item) => `${item.id}:${item.scheduledAt}`)
     .join("|");
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const container = scrollContainerRef.current;
     if (!container) return;
 
@@ -81,41 +80,13 @@ export function AgendaDayHourlyGrid({
       });
     };
 
-    const frameId = window.requestAnimationFrame(applyInitialScroll);
+    applyInitialScroll();
     window.addEventListener("resize", applyInitialScroll);
 
     return () => {
-      window.cancelAnimationFrame(frameId);
       window.removeEventListener("resize", applyInitialScroll);
     };
   }, [dayInteractions, dayInteractionSignature, selectedDateKey, timeRange]);
-
-  const handleVerticalScrollEnd = useCallback(() => {
-    const container = scrollContainerRef.current;
-    if (!container) return;
-    snapAgendaGridVerticalScroll(container);
-  }, []);
-
-  useEffect(() => {
-    const container = scrollContainerRef.current;
-    if (!container) return;
-
-    container.addEventListener("scrollend", handleVerticalScrollEnd);
-
-    let scrollTimeout: number | undefined;
-    const handleScroll = () => {
-      window.clearTimeout(scrollTimeout);
-      scrollTimeout = window.setTimeout(handleVerticalScrollEnd, 120);
-    };
-
-    container.addEventListener("scroll", handleScroll, { passive: true });
-
-    return () => {
-      container.removeEventListener("scrollend", handleVerticalScrollEnd);
-      container.removeEventListener("scroll", handleScroll);
-      window.clearTimeout(scrollTimeout);
-    };
-  }, [handleVerticalScrollEnd, selectedDateKey]);
 
   const gridHeight = slots.length * AGENDA_GRID_SLOT_HEIGHT_PX;
 

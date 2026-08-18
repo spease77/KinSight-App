@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useCallback, useEffect, useMemo, useRef } from "react";
+import { Fragment, useCallback, useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import {
   AGENDA_GRID_SLOT_HEIGHT_PX,
@@ -13,7 +13,6 @@ import {
   layoutWeekGridEvents,
   scrollWeekGridToInitialPosition,
   shiftSelectedWeek,
-  snapWeekGridHorizontalScroll,
   syncWeekHorizontalScroll,
   toDateKey,
 } from "@/lib/agenda/hourly-grid";
@@ -95,7 +94,7 @@ export function AgendaWeekHourlyGrid({
     return elements;
   }, []);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const vertical = verticalScrollRef.current;
     const horizontal = horizontalScrollContainers();
     if (!vertical || horizontal.length === 0) return;
@@ -111,11 +110,10 @@ export function AgendaWeekHourlyGrid({
       });
     };
 
-    const frameId = window.requestAnimationFrame(applyInitialScroll);
+    applyInitialScroll();
     window.addEventListener("resize", applyInitialScroll);
 
     return () => {
-      window.cancelAnimationFrame(frameId);
       window.removeEventListener("resize", applyInitialScroll);
     };
   }, [
@@ -142,12 +140,6 @@ export function AgendaWeekHourlyGrid({
     [horizontalScrollContainers]
   );
 
-  const handleHorizontalScrollEnd = useCallback(() => {
-    const containers = horizontalScrollContainers();
-    if (containers.length === 0) return;
-    snapWeekGridHorizontalScroll(containers);
-  }, [horizontalScrollContainers]);
-
   useEffect(() => {
     const elements: HTMLDivElement[] = [];
     if (headerHorizontalScrollRef.current) {
@@ -172,32 +164,16 @@ export function AgendaWeekHourlyGrid({
 
     for (const element of elements) {
       element.addEventListener("scroll", onScroll, { passive: true });
-      element.addEventListener("scrollend", handleHorizontalScrollEnd);
       element.addEventListener("wheel", onWheel, { passive: false });
-    }
-
-    let scrollTimeout: number | undefined;
-    const onScrollSnapFallback = () => {
-      window.clearTimeout(scrollTimeout);
-      scrollTimeout = window.setTimeout(handleHorizontalScrollEnd, 120);
-    };
-
-    for (const element of elements) {
-      element.addEventListener("scroll", onScrollSnapFallback, {
-        passive: true,
-      });
     }
 
     return () => {
       for (const element of elements) {
         element.removeEventListener("scroll", onScroll);
-        element.removeEventListener("scrollend", handleHorizontalScrollEnd);
         element.removeEventListener("wheel", onWheel);
-        element.removeEventListener("scroll", onScrollSnapFallback);
       }
-      window.clearTimeout(scrollTimeout);
     };
-  }, [handleHorizontalScroll, handleHorizontalScrollEnd, weekScrollKey]);
+  }, [handleHorizontalScroll, weekScrollKey]);
 
   const gridHeight = slots.length * AGENDA_GRID_SLOT_HEIGHT_PX;
 
