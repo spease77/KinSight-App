@@ -352,6 +352,7 @@
 
 html {
   -webkit-tap-highlight-color: transparent;
+  min-height: 100dvh;
 }
 
 body {
@@ -476,10 +477,12 @@ b {
 
 .app-shell {
   --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
   --bottom-nav-height: 4.75rem;
   padding-top: var(--safe-top);
-  min-height: 100svh;
-  height: 100svh;
+  min-height: 100dvh;
+  height: 100dvh;
+  max-height: 100dvh;
 }
 
 .app-scroll.home-scroll-locked {
@@ -2081,10 +2084,12 @@ b {
 
 /* ── Bottom navigation (inverted active icons with preserved stroke detail) ── */
 .bottom-nav {
+  position: fixed;
   right: 0;
+  bottom: 0;
   left: 0;
-  margin-left: auto;
-  margin-right: auto;
+  z-index: 50;
+  margin: 0 auto;
   width: 100%;
   max-width: 32rem;
   border-top: none;
@@ -2109,6 +2114,7 @@ b {
 .bottom-nav__inner {
   display: grid;
   width: 100%;
+  min-height: var(--bottom-nav-height, 4.75rem);
   grid-template-columns: repeat(5, minmax(0, 1fr));
   align-items: stretch;
   padding-left: 0.5rem;

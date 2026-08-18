@@ -46,9 +46,7 @@ export function BottomNav() {
     <nav
       aria-label="Main navigation"
       aria-hidden={keyboardOpen}
-      className={`fixed bottom-0 left-0 right-0 z-50 bottom-nav ${
-        keyboardOpen ? "bottom-nav--keyboard-open" : ""
-      }`}
+      className={`bottom-nav ${keyboardOpen ? "bottom-nav--keyboard-open" : ""}`}
     >
       <div className="bottom-nav__inner">
         {TABS.map(({ href, label, icon: Icon, match }) => {
