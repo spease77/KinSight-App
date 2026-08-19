@@ -13,7 +13,7 @@ export function AppShell({ children }: AppShellProps) {
     <HomeSessionProvider>
       <VoiceExperienceRoot>
         <div className="app-viewport mx-auto flex h-[100dvh] w-screen max-w-lg flex-col overflow-hidden bg-main">
-          <main className="app-scroll no-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-none pb-24">
+          <main className="app-scroll no-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-y-auto pb-24">
             {children}
           </main>
           <BottomNav />

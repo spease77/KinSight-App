@@ -391,6 +391,25 @@ body,
   background: transparent;
 }
 
+* {
+  -webkit-overflow-scrolling: touch;
+}
+
+.overflow-y-auto,
+.overflow-y-scroll,
+main {
+  overscroll-behavior-y: auto !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+.contacts-scroll,
+.contact-quick-add-drawer__body,
+.label-picker-sheet__body,
+.data-management-sheet__scroll {
+  overscroll-behavior-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
@@ -491,7 +510,8 @@ b {
 }
 
 .app-scroll {
-  overscroll-behavior-y: none;
+  overscroll-behavior-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .app-scroll.home-scroll-locked {
@@ -584,7 +604,7 @@ b {
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
-  overscroll-behavior-y: contain;
+  overscroll-behavior-y: auto;
 }
 
 .agenda-day-scroll-row {
@@ -650,7 +670,7 @@ b {
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
-  overscroll-behavior-y: contain;
+  overscroll-behavior-y: auto;
 }
 
 .agenda-week-scroll-content {
@@ -686,7 +706,7 @@ b {
   overflow-y: visible;
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
-  overscroll-behavior-x: contain;
+  overscroll-behavior-x: auto;
 }
 
 .agenda-week-day-header-scroll::-webkit-scrollbar,
@@ -3946,7 +3966,7 @@ b {
   min-height: 0;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
+  overscroll-behavior-y: auto;
 }
 
 .data-management-sheet__header {
