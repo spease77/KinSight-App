@@ -2109,19 +2109,12 @@ b {
 
 /* ── Bottom navigation (inverted active icons with preserved stroke detail) ── */
 .bottom-nav {
-  position: fixed;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  z-index: 50;
   margin: 0 auto;
-  width: 100%;
   max-width: 32rem;
   border-top: none;
   background-color: color-mix(in srgb, var(--bg-main) 95%, transparent);
   -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
-  padding-bottom: env(safe-area-inset-bottom, 0px);
   transition:
     transform 0.2s ease,
     opacity 0.2s ease,
@@ -2139,11 +2132,8 @@ b {
 .bottom-nav__inner {
   display: grid;
   width: 100%;
-  min-height: var(--bottom-nav-height, 4.75rem);
   grid-template-columns: repeat(5, minmax(0, 1fr));
   align-items: stretch;
-  padding-left: 0.5rem;
-  padding-right: 0.5rem;
 }
 
 .bottom-nav__tab {
@@ -2154,7 +2144,7 @@ b {
   align-items: center;
   justify-content: center;
   gap: 0.125rem;
-  padding: 0.5rem 0;
+  padding: 0.25rem 0;
   box-sizing: border-box;
   transition: color 0.2s ease;
 }
