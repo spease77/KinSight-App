@@ -38,12 +38,10 @@ export function DataManagementSheet({
       if (event.key === "Escape") onClose();
     };
 
-    document.body.style.overflow = "hidden";
     window.addEventListener("keydown", handleKeyDown);
     setHeaderScrolled(false);
 
     return () => {
-      document.body.style.overflow = "";
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [open, onClose]);
