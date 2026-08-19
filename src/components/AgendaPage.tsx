@@ -217,7 +217,7 @@ export function AgendaPage() {
       <div
         className={`agenda-page flex flex-col ${
           isDayView
-            ? "h-[calc(100dvh-var(--bottom-nav-height,4.75rem)-env(safe-area-inset-top,0px))] max-h-[calc(100dvh-var(--bottom-nav-height,4.75rem)-env(safe-area-inset-top,0px))]"
+            ? "h-full max-h-full"
             : "min-h-full"
         }`}
       >

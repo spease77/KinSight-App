@@ -12,12 +12,14 @@ export function AppShell({ children }: AppShellProps) {
   return (
     <HomeSessionProvider>
       <VoiceExperienceRoot>
-        <div className="app-viewport mx-auto flex h-[100dvh] w-screen max-w-lg flex-col overflow-hidden bg-main">
-          <main className="app-scroll no-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-y-auto pb-24">
-            {children}
-          </main>
+        <>
+          <div className="app-viewport fixed inset-0 mx-auto flex w-full max-w-lg flex-col overflow-hidden bg-main">
+            <main className="app-scroll no-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-y-auto pb-24">
+              {children}
+            </main>
+          </div>
           <BottomNav />
-        </div>
+        </>
       </VoiceExperienceRoot>
     </HomeSessionProvider>
   );

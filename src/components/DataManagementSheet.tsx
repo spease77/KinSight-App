@@ -61,7 +61,7 @@ export function DataManagementSheet({
         role="dialog"
         aria-modal="true"
         aria-labelledby="data-management-sheet-title"
-        className="data-management-sheet relative flex h-[100dvh] max-h-[100dvh] w-full max-w-sm flex-col overflow-hidden border-l border-border/80 bg-card shadow-2xl"
+        className="data-management-sheet relative flex h-full max-h-full w-full max-w-sm flex-col overflow-hidden border-l border-border/80 bg-card shadow-2xl"
       >
         <div
           ref={scrollRef}

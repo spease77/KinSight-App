@@ -47,8 +47,8 @@ export function BottomNav() {
       aria-label="Main navigation"
       aria-hidden={keyboardOpen}
       inert={keyboardOpen ? true : undefined}
-      className={`bottom-nav fixed bottom-0 left-0 right-0 z-50 w-full px-4 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] ${
-        keyboardOpen ? "bottom-nav--keyboard-open translate-y-full" : ""
+      className={`bottom-nav fixed bottom-0 left-0 right-0 z-50 w-full px-4 pt-2 ${
+        keyboardOpen ? "bottom-nav--keyboard-open" : ""
       }`}
     >
       <div className="bottom-nav__inner">

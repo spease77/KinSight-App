@@ -18,7 +18,7 @@ export const AgendaFeed = forwardRef<HTMLDivElement, AgendaFeedProps>(
     return (
       <div
         ref={ref}
-        className="contacts-scroll flex max-h-[calc(100dvh-28rem)] flex-col gap-5 overflow-y-auto pr-1"
+        className="contacts-scroll flex max-h-[calc(100svh-28rem)] flex-col gap-5 overflow-y-auto pr-1"
       >
         {groups.map((group) => (
           <section

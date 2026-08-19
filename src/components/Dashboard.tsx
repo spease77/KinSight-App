@@ -352,6 +352,7 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
 
   const hasConversationStarted = conversationEngaged;
   const keyboardOpen = useSoftKeyboardOpen();
+  const hideHomeMic = !hasConversationStarted && keyboardOpen;
 
   useEffect(() => {
     const scrollEl = document.querySelector<HTMLElement>(".app-scroll");
@@ -399,7 +400,9 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
         className={
           hasConversationStarted
             ? "home-dashboard home-dashboard--conversation flex flex-col"
-            : "home-dashboard"
+            : hideHomeMic
+              ? "home-dashboard home-dashboard--keyboard-open"
+              : "home-dashboard"
         }
       >
         <Header
@@ -422,7 +425,7 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
                 : "home-hero"
             }`}
           >
-            {!hasConversationStarted && (
+            {!hasConversationStarted && !hideHomeMic && (
               <>
                 <MicrophoneButton
                   isRecording={isRecording}
