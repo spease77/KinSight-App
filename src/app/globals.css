@@ -1017,36 +1017,11 @@ html[data-standalone="true"] .app-viewport {
   flex-shrink: 0;
 }
 
-/* State A: pin KinSight branding from initial load (no jump on keyboard). */
-.home-dashboard--state-a .home-dashboard__header {
-  min-height: 6rem;
-}
-
-.home-dashboard--state-a .home-dashboard__header > header {
-  position: fixed;
-  top: var(--safe-top);
-  left: 50%;
-  z-index: 45;
-  width: min(100%, 32rem);
-  max-width: 32rem;
-  transform: translateX(-50%);
-  background-color: var(--bg-main);
-}
-
 .home-hero {
   display: flex;
   flex-direction: column;
   align-items: center;
   flex-shrink: 0;
-}
-
-.home-dashboard--keyboard-open .home-dashboard__main {
-  gap: 0.75rem;
-  padding-top: 1rem;
-}
-
-.home-dashboard--keyboard-open .home-hero {
-  align-items: stretch;
 }
 
 .home-ask-bar {
