@@ -104,11 +104,11 @@ function AgendaMonthBlock({
               <span
                 className={`agenda-month-day-number ${
                   cell.isToday
-                    ? "bg-[var(--contact-type-professional)] text-foreground"
+                    ? "agenda-month-day-number--today bg-[var(--contact-type-professional)] text-foreground"
                     : cell.isCurrentMonth
                       ? "text-foreground"
                       : "text-muted/50"
-                } ${isSelected && !cell.isToday ? "ring-2 ring-inset ring-accent-green-bright" : ""}`}
+                }`}
               >
                 {cell.dayOfMonth}
               </span>

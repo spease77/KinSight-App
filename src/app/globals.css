@@ -678,15 +678,18 @@ html[data-standalone="true"] .app-viewport {
 
 .agenda-month-day-number {
   display: flex;
-  height: 2.25rem;
-  width: 2.25rem;
   align-items: center;
   justify-content: center;
-  border-radius: 9999px;
   font-family: var(--font-sans), system-ui, sans-serif;
   font-size: 0.875rem;
   font-weight: 500;
   line-height: 1;
+}
+
+.agenda-month-day-number--today {
+  height: 2.25rem;
+  width: 2.25rem;
+  border-radius: 9999px;
 }
 
 .agenda-day-time-scroll {
