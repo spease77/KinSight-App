@@ -20,8 +20,8 @@ import type { ScheduledInteraction } from "@/types/scheduled-interaction";
 import {
   AGENDA_ITEM_SELECTED_CLASS,
   AGENDA_PANEL_NAV_BUTTON,
-  AGENDA_PANEL_SHELL,
   AGENDA_PANEL_TITLE,
+  AGENDA_TIMELINE_PANEL_SHELL,
   AGENDA_WEEK_DAY_HEADER,
   AGENDA_WEEK_GRID_FRAME,
   AGENDA_WEEK_HEADER_BAND,
@@ -178,7 +178,7 @@ export function AgendaWeekHourlyGrid({
   const gridHeight = slots.length * AGENDA_GRID_SLOT_HEIGHT_PX;
 
   return (
-    <section aria-label="Weekly schedule grid" className={AGENDA_PANEL_SHELL}>
+    <section aria-label="Weekly schedule grid" className={AGENDA_TIMELINE_PANEL_SHELL}>
       <div className="flex items-center justify-between gap-2">
         <p className={AGENDA_PANEL_TITLE}>
           {formatAgendaWeekRange(weekDays)}

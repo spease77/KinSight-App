@@ -3,7 +3,7 @@ import type { ScheduledInteraction } from "@/types/scheduled-interaction";
 import { isSameCalendarDay } from "@/lib/agenda/time-frame";
 
 export const AGENDA_TIME_GUTTER_WIDTH = "60px";
-export const AGENDA_WEEK_VISIBLE_DAY_COUNT = 5;
+export const AGENDA_WEEK_VISIBLE_DAY_COUNT = 7;
 export const AGENDA_WEEK_HORIZONTAL_SNAP_COUNT = 3;
 
 /** Seven day columns inside a viewport that shows five days at a time. */
@@ -95,15 +95,17 @@ export function buildAgendaGridSlots(
 export function formatGridSlotLabel(minutesFromMidnight: number): string {
   const normalizedMinutes =
     minutesFromMidnight >= 24 * 60 ? 0 : minutesFromMidnight;
-  const hours = Math.floor(normalizedMinutes / 60) % 24;
   const minutes = normalizedMinutes % 60;
-  const date = new Date(2000, 0, 1, hours, minutes, 0, 0);
 
-  return new Intl.DateTimeFormat("en-US", {
-    hour: "numeric",
-    minute: minutes === 0 ? undefined : "2-digit",
-    hour12: true,
-  }).format(date);
+  if (minutes !== 0) {
+    return "";
+  }
+
+  const hours = Math.floor(normalizedMinutes / 60) % 24;
+  if (hours === 0) return "12am";
+  if (hours === 12) return "12pm";
+  if (hours < 12) return `${hours}am`;
+  return `${hours - 12}pm`;
 }
 
 export function formatAgendaSelectedDate(date: Date): string {

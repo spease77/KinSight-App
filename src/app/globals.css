@@ -572,7 +572,8 @@ html[data-standalone="true"] .app-viewport {
 }
 
 .agenda-calendar-frame,
-.agenda-week-grid-frame {
+.agenda-week-grid-frame,
+.agenda-timeline-frame {
   display: flex;
   min-height: 0;
   flex: 1 1 auto;
@@ -694,7 +695,7 @@ html[data-standalone="true"] .app-viewport {
   );
   --agenda-week-header-height: 36px;
   --agenda-week-viewport-height: clamp(320px, 58vh, var(--agenda-grid-body-height));
-  --agenda-week-days-track-width: calc(100% * 7 / 5);
+  --agenda-week-days-track-width: calc(100% * 7 / 7);
 }
 
 .agenda-week-header-band {

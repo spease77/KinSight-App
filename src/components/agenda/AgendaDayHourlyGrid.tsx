@@ -16,8 +16,8 @@ import {
 } from "@/lib/agenda/hourly-grid";
 import type { ScheduledInteraction } from "@/types/scheduled-interaction";
 import {
-  AGENDA_CALENDAR_FRAME,
-  AGENDA_DAY_PANEL_SHELL,
+  AGENDA_TIMELINE_DAY_PANEL_SHELL,
+  AGENDA_TIMELINE_FRAME,
   AGENDA_DAY_TIME_SCROLL,
   AGENDA_ITEM_SELECTED_CLASS,
   AGENDA_PANEL_NAV_BUTTON,
@@ -91,7 +91,7 @@ export function AgendaDayHourlyGrid({
   const gridHeight = slots.length * AGENDA_GRID_SLOT_HEIGHT_PX;
 
   return (
-    <section aria-label="Daily schedule grid" className={AGENDA_DAY_PANEL_SHELL}>
+    <section aria-label="Daily schedule grid" className={AGENDA_TIMELINE_DAY_PANEL_SHELL}>
       <div className="flex items-center justify-between gap-2">
         <p className={AGENDA_PANEL_TITLE}>
           {formatAgendaSelectedDate(selectedDate)}
@@ -122,7 +122,7 @@ export function AgendaDayHourlyGrid({
       </div>
 
       <div
-        className={`${AGENDA_CALENDAR_FRAME} agenda-calendar-body-band`}
+        className={`${AGENDA_TIMELINE_FRAME} agenda-calendar-body-band`}
         style={
           {
             "--agenda-grid-start-hour": timeRange.startMinutes / 60,
