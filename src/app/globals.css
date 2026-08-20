@@ -517,13 +517,17 @@ b {
   background-color: var(--bg-main);
 }
 
-.app-viewport {
+:root {
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --bottom-nav-height: 4.75rem;
   --bottom-nav-clearance: calc(
-    var(--bottom-nav-height) + var(--safe-bottom) + 0.5rem
+    var(--bottom-nav-height) + var(--safe-bottom) + 0.75rem
   );
+}
+
+.app-viewport {
+  padding-top: var(--safe-top);
 }
 
 .app-scroll {

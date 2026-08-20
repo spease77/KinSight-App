@@ -23,7 +23,7 @@ export function DeleteContactConfirmModal({
 
   return (
     <div
-      className="fixed inset-0 z-[80] flex items-end justify-center bg-black/70 p-4 sm:items-center"
+      className="fixed inset-0 z-[80] flex items-center justify-center bg-black/70 px-4 pt-[max(1rem,env(safe-area-inset-top,0px))] pb-[max(1rem,env(safe-area-inset-bottom,0px))]"
       role="dialog"
       aria-modal="true"
       aria-labelledby="delete-contact-title"
@@ -32,7 +32,7 @@ export function DeleteContactConfirmModal({
       }}
     >
       <div
-        className="ui-card w-full max-w-md overflow-hidden shadow-2xl"
+        className="ui-card max-h-[min(100%,calc(100dvh-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px)-2rem))] w-full max-w-md overflow-y-auto shadow-2xl"
         onClick={(event) => event.stopPropagation()}
       >
         <div className="px-5 py-5">
