@@ -36,9 +36,11 @@ import {
 } from "@/lib/contacts/sort-contacts";
 import { snapshotsEqual } from "@/lib/forms/compare-snapshots";
 import { useContacts } from "@/hooks/useContacts";
+import { useEditContactScrollLock } from "@/hooks/useEditContactScrollLock";
 
 export function AddContactView() {
   const router = useRouter();
+  useEditContactScrollLock();
   const { upsertContact, reload } = useContacts();
   const photoActionsRef = useRef<AddContactPhotoActions | null>(null);
   const initialStateRef = useRef<EditContactFieldState>(
@@ -109,7 +111,7 @@ export function AddContactView() {
   };
 
   return (
-    <div className="edit-contact-page">
+    <div className="edit-contact-page edit-contact-page--sheet flex min-h-0 flex-1 flex-col">
       <header className="edit-contact-page__nav" aria-label="Add contact actions">
         <MeetingModalCloseButton
           hasChanges={hasChanges}
@@ -130,7 +132,7 @@ export function AddContactView() {
       </header>
 
       <EditContactDeleteProvider>
-        <div className="edit-contact-body">
+        <div className="edit-contact-body contacts-scroll min-h-0 flex-1 overflow-y-auto [&>*]:shrink-0">
           <AddContactPhotoSection
             firstName={state.firstName}
             lastName={state.lastName}

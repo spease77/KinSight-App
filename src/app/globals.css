@@ -580,6 +580,27 @@ html[data-standalone="true"] .app-viewport {
   padding-bottom: var(--bottom-nav-clearance);
 }
 
+/* Edit/add contact: pin nav in a flex column; only the form body scrolls. */
+.app-scroll.edit-contact-scroll-locked {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+.app-scroll.edit-contact-scroll-locked > .edit-contact-page--sheet {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  margin-bottom: calc(-1 * var(--bottom-nav-clearance));
+  padding-bottom: var(--bottom-nav-clearance);
+}
+
+.app-scroll.edit-contact-scroll-locked .edit-contact-page__nav {
+  padding: 0.75rem 1rem;
+}
+
 .border-agenda-grid-line {
   border-color: var(--agenda-grid-line);
 }
