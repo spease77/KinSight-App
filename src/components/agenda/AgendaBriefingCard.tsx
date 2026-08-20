@@ -15,11 +15,13 @@ import {
 interface AgendaBriefingCardProps {
   interaction: ScheduledInteraction;
   isSelected?: boolean;
+  onEdit?: (interaction: ScheduledInteraction) => void;
 }
 
 export function AgendaBriefingCard({
   interaction,
   isSelected = false,
+  onEdit,
 }: AgendaBriefingCardProps) {
   const eventTime = formatAgendaEventTime(interaction.scheduledAt);
   const isMockContact = interaction.contactId.startsWith("mock-");
@@ -30,7 +32,20 @@ export function AgendaBriefingCard({
       id={`agenda-event-${interaction.id}`}
       className={`ui-card flex scroll-mt-4 flex-col gap-3 px-4 py-4 transition-shadow ${
         isSelected ? AGENDA_ITEM_SELECTED_CLASS : ""
-      }`}
+      } ${onEdit ? "cursor-pointer" : ""}`}
+      onClick={onEdit ? () => onEdit(interaction) : undefined}
+      onKeyDown={
+        onEdit
+          ? (event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                onEdit(interaction);
+              }
+            }
+          : undefined
+      }
+      role={onEdit ? "button" : undefined}
+      tabIndex={onEdit ? 0 : undefined}
     >
       <div className="flex items-start gap-3">
         <time
@@ -49,6 +64,7 @@ export function AgendaBriefingCard({
             <Link
               href={`/contacts/${interaction.contactId}`}
               className="block truncate font-sans text-base font-medium text-foreground transition-colors hover:text-accent-green"
+              onClick={(event) => event.stopPropagation()}
             >
               {interaction.contactName}
             </Link>

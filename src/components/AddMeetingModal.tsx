@@ -7,11 +7,13 @@ import {
   type MeetingFormatSegment,
   buildAgendaMeetingTitle,
   composeMeetingNotes,
+  parseMeetingNotes,
 } from "@/types/agenda-meeting";
 import {
   datetimeLocalToIso,
   defaultMeetingEndLocal,
   defaultMeetingStartLocal,
+  isoToDatetimeLocal,
 } from "@/lib/calendar/datetime-local";
 import { readApiJson } from "@/lib/api/read-json";
 import { isValidContactEmail } from "@/lib/calendar/calendar-attendees";
@@ -49,13 +51,18 @@ interface AddMeetingModalProps {
   open: boolean;
   onClose: () => void;
   onSaved?: (interaction: ScheduledInteraction) => void;
+  onDeleted?: () => void;
+  interaction?: ScheduledInteraction | null;
 }
 
 export function AddMeetingModal({
   open,
   onClose,
   onSaved,
+  onDeleted,
+  interaction = null,
 }: AddMeetingModalProps) {
+  const isEditMode = interaction != null;
   const [entered, setEntered] = useState(false);
   const [baseline, setBaseline] = useState<MeetingFormSnapshot | null>(null);
   const [title, setTitle] = useState("");
@@ -78,6 +85,7 @@ export function AddMeetingModal({
   const [notes, setNotes] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     if (!open) {
@@ -86,41 +94,115 @@ export function AddMeetingModal({
       return;
     }
 
-    const start = defaultMeetingStartLocal();
-    const end = defaultMeetingEndLocal(start);
+    let cancelled = false;
 
-    setTitle("");
-    setLocation("");
-    setManualEmail("");
-    setSelectedEmails([]);
-    setContactEmailOptions([]);
-    setIsLoadingContactEmails(false);
-    setSelectedContact(null);
-    setIsAllDay(false);
-    setStartAt(start);
-    setEndAt(end);
-    setMeetingFormat(DEFAULT_MEETING_FORMAT);
-    setPushToExternalCalendar(true);
-    setNotes("");
-    setError(null);
+    const initializeForm = async () => {
+      if (isEditMode && interaction) {
+        const parsedNotes = parseMeetingNotes(interaction.notes);
+        const start = isoToDatetimeLocal(interaction.scheduledAt);
+        const end = defaultMeetingEndLocal(start);
 
-    setBaseline({
-      title: "",
-      location: "",
-      manualEmail: "",
-      selectedEmails: [],
-      isAllDay: false,
-      startAt: start,
-      endAt: end,
-      meetingFormat: DEFAULT_MEETING_FORMAT,
-      pushToExternalCalendar: true,
-      notes: "",
-      contactId: null,
-    });
+        setTitle(interaction.title);
+        setLocation(parsedNotes.location);
+        setManualEmail("");
+        setSelectedEmails([]);
+        setContactEmailOptions([]);
+        setIsLoadingContactEmails(true);
+        setSelectedContact(null);
+        setIsAllDay(false);
+        setStartAt(start);
+        setEndAt(end);
+        setMeetingFormat(parsedNotes.meetingFormat);
+        setPushToExternalCalendar(interaction.source !== "kinsight");
+        setNotes(parsedNotes.userNotes);
+        setError(null);
+
+        let resolvedContactId = interaction.contactId;
+        let resolvedEmails: string[] = [];
+
+        try {
+          const res = await fetch(`/api/contacts/${interaction.contactId}`);
+          const data = await readApiJson<{ contact?: ContactDetail }>(res);
+          if (cancelled) return;
+
+          if (data.contact) {
+            setSelectedContact(data.contact);
+            resolvedContactId = data.contact.id;
+            const options = getContactEmailOptions(data.contact.profile);
+            setContactEmailOptions(options);
+            resolvedEmails = resolveInitialSelectedEmails(options);
+            setSelectedEmails(resolvedEmails);
+          }
+        } catch {
+          if (!cancelled) {
+            setContactEmailOptions([]);
+          }
+        } finally {
+          if (!cancelled) {
+            setIsLoadingContactEmails(false);
+          }
+        }
+
+        if (cancelled) return;
+
+        setBaseline({
+          title: interaction.title,
+          location: parsedNotes.location,
+          manualEmail: "",
+          selectedEmails: resolvedEmails,
+          isAllDay: false,
+          startAt: start,
+          endAt: end,
+          meetingFormat: parsedNotes.meetingFormat,
+          pushToExternalCalendar: interaction.source !== "kinsight",
+          notes: parsedNotes.userNotes,
+          contactId: resolvedContactId,
+        });
+        return;
+      }
+
+      const start = defaultMeetingStartLocal();
+      const end = defaultMeetingEndLocal(start);
+
+      setTitle("");
+      setLocation("");
+      setManualEmail("");
+      setSelectedEmails([]);
+      setContactEmailOptions([]);
+      setIsLoadingContactEmails(false);
+      setSelectedContact(null);
+      setIsAllDay(false);
+      setStartAt(start);
+      setEndAt(end);
+      setMeetingFormat(DEFAULT_MEETING_FORMAT);
+      setPushToExternalCalendar(true);
+      setNotes("");
+      setError(null);
+
+      setBaseline({
+        title: "",
+        location: "",
+        manualEmail: "",
+        selectedEmails: [],
+        isAllDay: false,
+        startAt: start,
+        endAt: end,
+        meetingFormat: DEFAULT_MEETING_FORMAT,
+        pushToExternalCalendar: true,
+        notes: "",
+        contactId: null,
+      });
+    };
+
+    void initializeForm();
 
     const frame = requestAnimationFrame(() => setEntered(true));
-    return () => cancelAnimationFrame(frame);
-  }, [open]);
+
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(frame);
+    };
+  }, [open, isEditMode, interaction]);
 
   const currentSnapshot = useMemo<MeetingFormSnapshot>(
     () => ({
@@ -265,6 +347,33 @@ export function AddMeetingModal({
     try {
       const composedNotes = composeMeetingNotes(meetingFormat, notes, location);
 
+      if (isEditMode && interaction) {
+        const res = await fetch(`/api/scheduled-interactions/${interaction.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contactId: selectedContact.id,
+            scheduledAt,
+            title: trimmedTitle,
+            notes: composedNotes,
+          }),
+        });
+
+        const data = await readApiJson<{
+          interaction?: ScheduledInteraction;
+          error?: string;
+        }>(res);
+
+        if (!res.ok || !data.interaction) {
+          throw new Error(data.error ?? "Could not save meeting.");
+        }
+
+        showSuccessToast("Meeting updated.");
+        onSaved?.(data.interaction);
+        dismissModal();
+        return;
+      }
+
       const res = await fetch("/api/scheduled-interactions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -315,46 +424,88 @@ export function AddMeetingModal({
     }
   };
 
+  const handleDelete = async () => {
+    if (!interaction || isDeleting || isSaving) return;
+
+    const confirmed = window.confirm(
+      "Delete this meeting from KinSight? This cannot be undone."
+    );
+    if (!confirmed) return;
+
+    setIsDeleting(true);
+    setError(null);
+
+    try {
+      const res = await fetch(`/api/scheduled-interactions/${interaction.id}`, {
+        method: "DELETE",
+      });
+      const data = await readApiJson<{ error?: string }>(res);
+
+      if (!res.ok) {
+        throw new Error(data.error ?? "Could not delete meeting.");
+      }
+
+      showSuccessToast("Meeting deleted.");
+      onDeleted?.();
+      dismissModal();
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Could not delete meeting."
+      );
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   if (!open) return null;
+
+  const modalTitleId = isEditMode ? "edit-meeting-title" : "add-meeting-title";
+  const modalTitle = isEditMode ? "Edit Event" : "New Event";
+  const formId = isEditMode ? "edit-meeting-form" : "add-meeting-form";
 
   return (
     <div
-      className={`fixed inset-0 z-40 flex h-dvh flex-col bg-main transition-opacity duration-200 ${
+      className={`fixed inset-0 z-50 flex h-dvh flex-col bg-main transition-opacity duration-200 ${
         entered ? "opacity-100" : "opacity-0"
       }`}
       role="dialog"
       aria-modal="true"
-      aria-labelledby="add-meeting-title"
+      aria-labelledby={modalTitleId}
     >
-      <div className="mx-auto flex h-full w-full max-w-lg flex-col">
-        <header className="flex shrink-0 items-center justify-between border-b border-border-green/50 bg-main px-4 py-3">
+      <div className="edit-contact-page mx-auto flex h-full w-full max-w-lg flex-col">
+        <header
+          className="edit-contact-page__nav"
+          aria-label={isEditMode ? "Edit meeting actions" : "Add meeting actions"}
+        >
           <MeetingModalCloseButton
             hasChanges={hasChanges}
-            disabled={isSaving}
+            disabled={isSaving || isDeleting}
             onClose={dismissModal}
             onDiscard={dismissModal}
           />
 
           <h2
-            id="add-meeting-title"
-            className="flex-1 text-center font-sans text-[17px] font-semibold tracking-tight text-foreground"
+            id={modalTitleId}
+            className="pointer-events-none absolute left-1/2 max-w-[50%] -translate-x-1/2 truncate text-center font-sans text-[17px] font-semibold tracking-tight text-foreground"
           >
-            New Event
+            {modalTitle}
           </h2>
 
-          <MeetingModalSaveButton
-            formId="add-meeting-form"
-            isDirty={hasChanges}
-            isSaving={isSaving}
-            savingLabel="Saving event"
-            saveLabel="Save event"
-          />
+          <div className="pointer-events-auto">
+            <MeetingModalSaveButton
+              formId={formId}
+              isDirty={hasChanges}
+              isSaving={isSaving}
+              savingLabel={isEditMode ? "Saving event" : "Saving event"}
+              saveLabel={isEditMode ? "Save event" : "Save event"}
+            />
+          </div>
         </header>
 
         <form
-          id="add-meeting-form"
+          id={formId}
           onSubmit={(event) => void handleSave(event)}
-          className="contacts-scroll flex flex-1 flex-col gap-3 overflow-y-auto px-4 py-4 pb-6 [&>*]:shrink-0"
+          className="edit-contact-body contacts-scroll flex-1 overflow-y-auto [&>*]:shrink-0"
         >
           <MeetingFormatSegmentControl
             value={meetingFormat}
@@ -442,6 +593,19 @@ export function AddMeetingModal({
             <p className="px-1 text-sm text-red-400" role="alert">
               {error}
             </p>
+          ) : null}
+
+          {isEditMode ? (
+            <div className="mt-4 mb-8 flex justify-center px-1">
+              <button
+                type="button"
+                onClick={() => void handleDelete()}
+                disabled={isSaving || isDeleting}
+                className="w-full rounded-2xl bg-red-600 px-4 py-3.5 text-center text-sm font-medium text-white transition-colors hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                {isDeleting ? "Deleting…" : "Delete Meeting"}
+              </button>
+            </div>
           ) : null}
         </form>
       </div>

@@ -6,6 +6,14 @@ export function toDatetimeLocalValue(date: Date): string {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
+export function isoToDatetimeLocal(iso: string): string {
+  const parsed = new Date(iso);
+  if (Number.isNaN(parsed.getTime())) {
+    return defaultMeetingStartLocal();
+  }
+  return toDatetimeLocalValue(parsed);
+}
+
 export function datetimeLocalToIso(value: string): string {
   const parsed = new Date(value);
   if (Number.isNaN(parsed.getTime())) {

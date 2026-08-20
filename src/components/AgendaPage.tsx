@@ -45,6 +45,8 @@ export function AgendaPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isAddMeetingOpen, setIsAddMeetingOpen] = useState(false);
+  const [editingInteraction, setEditingInteraction] =
+    useState<ScheduledInteraction | null>(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const feedRef = useRef<HTMLDivElement>(null);
@@ -174,10 +176,25 @@ export function AgendaPage() {
     [agendaInteractions, scrollToInteraction]
   );
 
+  const closeMeetingModal = useCallback(() => {
+    setIsAddMeetingOpen(false);
+    setEditingInteraction(null);
+  }, []);
+
+  const handleInteractionEdit = useCallback(
+    (interaction: ScheduledInteraction) => {
+      if (interaction.contactId.startsWith("mock-")) return;
+      setEditingInteraction(interaction);
+    },
+    []
+  );
+
   const handleDateHeaderSelect = useCallback((dateKey: string) => {
     setSelectedDate(dateFromKey(dateKey));
     setSelectedInteractionId(null);
   }, []);
+
+  const isMeetingModalOpen = isAddMeetingOpen || editingInteraction != null;
 
   const hasScheduledInView = searchedInteractions.length > 0;
   const hasTimeFrameResults = filteredInteractions.length > 0;
@@ -284,6 +301,7 @@ export function AgendaPage() {
                   groups={filteredGroups}
                   selectedInteractionId={selectedInteractionId}
                   onDateHeaderSelect={handleDateHeaderSelect}
+                  onInteractionEdit={handleInteractionEdit}
                 />
               </>
             ) : showEmptyStateMessage ? (
@@ -299,9 +317,13 @@ export function AgendaPage() {
       </div>
 
       <AddMeetingModal
-        open={isAddMeetingOpen}
-        onClose={() => setIsAddMeetingOpen(false)}
+        open={isMeetingModalOpen}
+        interaction={editingInteraction}
+        onClose={closeMeetingModal}
         onSaved={() => {
+          void loadInteractions();
+        }}
+        onDeleted={() => {
           void loadInteractions();
         }}
       />

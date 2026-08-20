@@ -525,3 +525,249 @@ export async function createAgendaItem(input: {
 
 }
 
+
+
+export async function updateAgendaItem(
+
+  id: string,
+
+  input: {
+
+    contactId?: string;
+
+    scheduledAt?: string;
+
+    title?: string;
+
+    notes?: string | null;
+
+  }
+
+): Promise<{
+
+  interaction?: ScheduledInteraction;
+
+  error?: string;
+
+  setupRequired?: boolean;
+
+}> {
+
+  const updates: Record<string, unknown> = {};
+
+
+
+  if (input.title !== undefined) {
+
+    const title = input.title.trim();
+
+    if (!title) {
+
+      return { error: "Agenda item title is required." };
+
+    }
+
+    updates.title = title;
+
+  }
+
+
+
+  if (input.scheduledAt !== undefined) {
+
+    const scheduledDate = new Date(input.scheduledAt);
+
+    if (Number.isNaN(scheduledDate.getTime())) {
+
+      return { error: "scheduledAt must be a valid ISO 8601 date-time." };
+
+    }
+
+    updates.scheduled_at = scheduledDate.toISOString();
+
+  }
+
+
+
+  if (input.notes !== undefined) {
+
+    updates.notes = input.notes?.trim() || null;
+
+  }
+
+
+
+  if (input.contactId !== undefined) {
+
+    updates.contact_id = input.contactId;
+
+  }
+
+
+
+  if (Object.keys(updates).length === 0) {
+
+    return { error: "No updates provided." };
+
+  }
+
+
+
+  try {
+
+    const supabase = createServerSupabase();
+
+
+
+    const { data, error } = await supabase
+
+      .from("scheduled_interactions")
+
+      .update(updates as never)
+
+      .eq("id", id)
+
+      .select(SCHEDULED_INTERACTION_SELECT)
+
+      .single();
+
+
+
+    if (error) {
+
+      if (isScheduledInteractionsTableMissing(error.message)) {
+
+        return {
+
+          setupRequired: true,
+
+          error:
+
+            "Agenda is not set up yet — run migration 015_scheduled_interactions.sql",
+
+        };
+
+      }
+
+
+
+      console.error("scheduled_interactions update error:", error.message);
+
+      return { error: error.message };
+
+    }
+
+
+
+    const interaction = mapRow(data as ScheduledInteractionRow);
+
+    if (!interaction) {
+
+      return { error: "Could not load the updated agenda item." };
+
+    }
+
+
+
+    return { interaction };
+
+  } catch (err) {
+
+    console.error("scheduled_interactions update error:", err);
+
+    return {
+
+      error:
+
+        err instanceof Error
+
+          ? err.message
+
+          : "Could not update agenda item.",
+
+    };
+
+  }
+
+}
+
+
+
+export async function deleteAgendaItem(id: string): Promise<{
+
+  success: boolean;
+
+  error?: string;
+
+  setupRequired?: boolean;
+
+}> {
+
+  try {
+
+    const supabase = createServerSupabase();
+
+
+
+    const { error } = await supabase
+
+      .from("scheduled_interactions")
+
+      .delete()
+
+      .eq("id", id);
+
+
+
+    if (error) {
+
+      if (isScheduledInteractionsTableMissing(error.message)) {
+
+        return {
+
+          success: false,
+
+          setupRequired: true,
+
+          error:
+
+            "Agenda is not set up yet — run migration 015_scheduled_interactions.sql",
+
+        };
+
+      }
+
+
+
+      console.error("scheduled_interactions delete error:", error.message);
+
+      return { success: false, error: error.message };
+
+    }
+
+
+
+    return { success: true };
+
+  } catch (err) {
+
+    console.error("scheduled_interactions delete error:", err);
+
+    return {
+
+      success: false,
+
+      error:
+
+        err instanceof Error
+
+          ? err.message
+
+          : "Could not delete agenda item.",
+
+    };
+
+  }
+
+}
+

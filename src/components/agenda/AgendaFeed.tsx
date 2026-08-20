@@ -3,16 +3,18 @@
 import { forwardRef } from "react";
 import { AgendaBriefingCard } from "@/components/agenda/AgendaBriefingCard";
 import type { AgendaDateGroup } from "@/lib/agenda/time-frame";
+import type { ScheduledInteraction } from "@/types/scheduled-interaction";
 
 interface AgendaFeedProps {
   groups: AgendaDateGroup[];
   selectedInteractionId: string | null;
   onDateHeaderSelect?: (dateKey: string) => void;
+  onInteractionEdit?: (interaction: ScheduledInteraction) => void;
 }
 
 export const AgendaFeed = forwardRef<HTMLDivElement, AgendaFeedProps>(
   function AgendaFeed(
-    { groups, selectedInteractionId, onDateHeaderSelect },
+    { groups, selectedInteractionId, onDateHeaderSelect, onInteractionEdit },
     ref
   ) {
     return (
@@ -39,6 +41,7 @@ export const AgendaFeed = forwardRef<HTMLDivElement, AgendaFeedProps>(
                   <AgendaBriefingCard
                     interaction={item}
                     isSelected={selectedInteractionId === item.id}
+                    onEdit={onInteractionEdit}
                   />
                 </li>
               ))}

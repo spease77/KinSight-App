@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Check, Loader2, Send } from "lucide-react";
 import { Header } from "@/components/Header";
+import { useSoftKeyboardOpen } from "@/hooks/useSoftKeyboardOpen";
 
 const SUBMITTED_RESET_MS = 3000;
 
@@ -12,6 +13,9 @@ export function FeedbackPage() {
   const [message, setMessage] = useState("");
   const [submitState, setSubmitState] = useState<SubmitState>("idle");
   const [error, setError] = useState<string | null>(null);
+  const [textareaFocused, setTextareaFocused] = useState(false);
+  const keyboardOpen = useSoftKeyboardOpen();
+  const hidePageTitle = textareaFocused || keyboardOpen;
 
   useEffect(() => {
     if (submitState !== "submitted") return;
@@ -60,13 +64,15 @@ export function FeedbackPage() {
 
   return (
     <>
-      <Header title="Feedback" />
+      {!hidePageTitle ? <Header title="Feedback" /> : null}
       <main className="flex flex-col gap-6 px-5 pb-6 pt-4">
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           <label className="flex min-h-[min(50vh,22rem)] flex-col">
             <textarea
               value={message}
               onChange={(e) => setMessage(e.target.value)}
+              onFocus={() => setTextareaFocused(true)}
+              onBlur={() => setTextareaFocused(false)}
               placeholder="Tell us what's working, what's not, or what you'd like KinSight to do next."
               rows={10}
               disabled={isSending || isSubmitted}

@@ -77,16 +77,13 @@ export function KinSightConversationPanel({
 }: KinSightConversationPanelProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const replyInputRef = useRef<HTMLInputElement>(null);
-  const askBarRef = useRef<HTMLFormElement>(null);
   const [isClient, setIsClient] = useState(false);
-
-  const scrollAskBarIntoView = () => {
-    askBarRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
-  };
 
   useEffect(() => {
     if (!conversationStarted && keyboardOpen) {
-      requestAnimationFrame(scrollAskBarIntoView);
+      requestAnimationFrame(() => {
+        replyInputRef.current?.focus({ preventScroll: true });
+      });
     }
   }, [conversationStarted, keyboardOpen]);
 
@@ -129,9 +126,8 @@ export function KinSightConversationPanel({
 
   const askBarForm = (
     <form
-      ref={askBarRef}
       onSubmit={handleReplySubmit}
-      onClick={(e) => {
+      onPointerDown={(e) => {
         if ((e.target as HTMLElement).closest("button")) return;
         focusReplyInput();
       }}
@@ -169,9 +165,6 @@ export function KinSightConversationPanel({
           onChange={(e) => onReplyChange(e.target.value)}
           onFocus={() => {
             onReplyFocus?.();
-            if (!conversationStarted) {
-              requestAnimationFrame(scrollAskBarIntoView);
-            }
           }}
           placeholder={
             isLoading ? "KinSight is thinking…" : "Ask about a contact..."
@@ -331,12 +324,14 @@ export function KinSightConversationPanel({
 
       {conversationStarted ? (
         <div className="home-composer-dock mt-auto shrink-0">{askBarForm}</div>
-      ) : keyboardOpen ? (
-        <div className="home-composer-dock home-composer-dock--keyboard-open shrink-0">
+      ) : (
+        <div
+          className={`home-composer-dock shrink-0${
+            keyboardOpen ? " home-composer-dock--keyboard-open" : ""
+          }`}
+        >
           {askBarForm}
         </div>
-      ) : (
-        askBarForm
       )}
 
       {statusLabel && !conversationStarted && (

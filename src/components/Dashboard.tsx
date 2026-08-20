@@ -356,9 +356,7 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
         className={
           hasConversationStarted
             ? "home-dashboard home-dashboard--conversation flex flex-col"
-            : hideHomeMic
-              ? "home-dashboard home-dashboard--keyboard-open"
-              : "home-dashboard"
+            : "home-dashboard"
         }
       >
         <Header

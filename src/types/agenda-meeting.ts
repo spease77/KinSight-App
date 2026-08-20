@@ -69,3 +69,60 @@ export function composeMeetingNotes(
 
   return lines.join("\n").trim() || null;
 }
+
+export function parseMeetingNotes(notes: string | null): {
+  meetingFormat: MeetingFormatSegment;
+  location: string;
+  userNotes: string;
+} {
+  if (!notes?.trim()) {
+    return {
+      meetingFormat: DEFAULT_MEETING_FORMAT,
+      location: "",
+      userNotes: "",
+    };
+  }
+
+  const lines = notes.split("\n");
+  let meetingFormat: MeetingFormatSegment = DEFAULT_MEETING_FORMAT;
+  let location = "";
+  const userNoteLines: string[] = [];
+  let reachedUserNotes = false;
+
+  for (const line of lines) {
+    if (!reachedUserNotes && line.startsWith("Format: ")) {
+      const label = line.slice("Format: ".length).trim();
+      const match = AGENDA_MEETING_TYPE_OPTIONS.find(
+        (option) => option.label === label
+      );
+      if (match && isMeetingFormatSegment(match.value)) {
+        meetingFormat = match.value;
+      }
+      continue;
+    }
+
+    if (!reachedUserNotes && line.startsWith("Location: ")) {
+      location = line.slice("Location: ".length).trim();
+      continue;
+    }
+
+    if (!reachedUserNotes && line === "") {
+      reachedUserNotes = true;
+      continue;
+    }
+
+    userNoteLines.push(line);
+  }
+
+  return {
+    meetingFormat,
+    location,
+    userNotes: userNoteLines.join("\n").trim(),
+  };
+}
+
+function isMeetingFormatSegment(
+  value: AgendaMeetingType
+): value is MeetingFormatSegment {
+  return MEETING_FORMAT_SEGMENTS.some((segment) => segment.value === value);
+}
