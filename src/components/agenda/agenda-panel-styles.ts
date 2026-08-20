@@ -17,9 +17,12 @@ export const AGENDA_PANEL_SHELL =
 export const AGENDA_DAY_PANEL_SHELL =
   "ui-card flex min-h-0 flex-1 flex-col gap-2 overflow-hidden p-3";
 
-/** Day/week timeline views — no card frame so the grid uses page margins. */
+/** Day/week/month views — no card frame so the grid uses page margins. */
 export const AGENDA_TIMELINE_PANEL_SHELL =
   "flex flex-col gap-2 overflow-hidden";
+
+/** Month calendar — same borderless shell as day/week timeline views. */
+export const AGENDA_MONTH_PANEL_SHELL = AGENDA_TIMELINE_PANEL_SHELL;
 
 export const AGENDA_TIMELINE_DAY_PANEL_SHELL =
   "flex min-h-0 flex-1 flex-col gap-2 overflow-hidden";
@@ -53,7 +56,7 @@ export const AGENDA_WEEK_DAY_HEADER =
 export const AGENDA_TIME_LABEL = "agenda-week-time-slot";
 
 export const AGENDA_MONTH_WEEKDAY =
-  "py-1.5 text-center font-mono text-[11px] font-semibold uppercase tracking-wide text-muted";
+  "py-2 text-center font-mono text-xs font-semibold uppercase tracking-wide text-muted";
 
 export const AGENDA_PANEL_NAV_BUTTON =
   "flex h-8 w-8 items-center justify-center rounded-lg text-icon transition-colors hover:bg-accent-green-muted hover:text-foreground";

@@ -158,7 +158,7 @@ function SortToggle({
 
   return (
     <div
-      className="ui-card flex flex-wrap items-center gap-2 p-1"
+      className="flex flex-wrap items-center gap-2"
       role="group"
       aria-label="Sort contacts by"
     >
@@ -376,7 +376,7 @@ export function ContactList({
         <ul
           className={
             fullPage
-              ? "contact-list-card ui-card"
+              ? "contact-list-card"
               : "contact-list-card ui-card contacts-scroll max-h-[38vh] overflow-y-auto pr-1 sm:max-h-[42vh]"
           }
         >

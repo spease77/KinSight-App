@@ -12,12 +12,12 @@ import {
 } from "@/lib/agenda/month-grid";
 import type { ScheduledInteraction } from "@/types/scheduled-interaction";
 import {
-  AGENDA_CALENDAR_FRAME,
   AGENDA_MONTH_GRID,
+  AGENDA_MONTH_PANEL_SHELL,
   AGENDA_MONTH_WEEKDAY,
   AGENDA_PANEL_NAV_BUTTON,
-  AGENDA_PANEL_SHELL,
   AGENDA_PANEL_TITLE,
+  AGENDA_TIMELINE_FRAME,
 } from "@/components/agenda/agenda-panel-styles";
 
 interface AgendaMonthCalendarGridProps {
@@ -47,7 +47,7 @@ export function AgendaMonthCalendarGrid({
   const selectedDateKey = toDateKey(selectedDate);
 
   return (
-    <section aria-label="Monthly calendar" className={AGENDA_PANEL_SHELL}>
+    <section aria-label="Monthly calendar" className={AGENDA_MONTH_PANEL_SHELL}>
       <div className="flex items-center justify-between gap-2">
         <p className={AGENDA_PANEL_TITLE}>
           {formatAgendaMonthLabel(selectedDate)}
@@ -77,7 +77,7 @@ export function AgendaMonthCalendarGrid({
         </div>
       </div>
 
-      <div className={`${AGENDA_CALENDAR_FRAME} agenda-calendar-body-band`}>
+      <div className={`${AGENDA_TIMELINE_FRAME} agenda-calendar-body-band`}>
         <div className="agenda-month-weekday-row">
           {MONTH_WEEKDAY_LABELS.map((label) => (
             <div key={label} className={AGENDA_MONTH_WEEKDAY}>
