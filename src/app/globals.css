@@ -1038,10 +1038,17 @@ html[data-standalone="true"] .app-viewport {
   border: 1.5px solid var(--border-subtle);
   background-color: var(--bg-elevated);
   padding: 0.625rem 1rem;
+  touch-action: manipulation;
   transition:
     border-color 0.15s ease,
     box-shadow 0.15s ease,
     background-color 0.15s ease;
+}
+
+.home-ask-bar__field {
+  display: flex;
+  min-height: 0;
+  align-items: center;
 }
 
 .home-ask-bar:focus-within {

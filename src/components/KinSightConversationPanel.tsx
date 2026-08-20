@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useRef, useState } from "react";
+import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import type { UIMessage } from "ai";
 import { Mic, Plus, Send, User, Volume2, VolumeX } from "lucide-react";
 import { getMessageText } from "@/lib/ai/message-text";
@@ -36,8 +36,8 @@ interface KinSightConversationPanelProps {
   onReplyBlur?: () => void;
   chatError?: Error;
   conversationStarted?: boolean;
-  /** True when ask bar is focused or soft keyboard is open (State A layout). */
-  composerActive?: boolean;
+  /** True when the composer dock should pin above the soft keyboard. */
+  dockKeyboardOpen?: boolean;
   onMicToggle?: (stream?: MediaStream) => void;
   onMicAccessFailure?: (failure: MicrophoneAccessFailure) => void;
   micDisabled?: boolean;
@@ -71,7 +71,7 @@ export function KinSightConversationPanel({
   onReplyBlur,
   chatError,
   conversationStarted = false,
-  composerActive = false,
+  dockKeyboardOpen = false,
   onMicToggle,
   onMicAccessFailure,
   micDisabled = false,
@@ -86,12 +86,28 @@ export function KinSightConversationPanel({
     setIsClient(true);
   }, []);
 
-  const focusReplyInput = () => {
-    if (isLoading) return;
-    const input = replyInputRef.current;
-    if (!input || document.activeElement === input) return;
-    input.focus({ preventScroll: true });
-  };
+  const composerActivationPendingRef = useRef(false);
+
+  const scheduleComposerActivation = useCallback(() => {
+    if (!onReplyFocus) return;
+
+    composerActivationPendingRef.current = true;
+
+    const activate = () => {
+      if (!composerActivationPendingRef.current) return;
+      composerActivationPendingRef.current = false;
+      onReplyFocus();
+    };
+
+    // Defer layout shifts until the tap gesture finishes — iOS drops focus
+    // when the dock jumps to fixed positioning mid-gesture.
+    window.addEventListener("pointerup", activate, { once: true, capture: true });
+    window.addEventListener("touchend", activate, { once: true, capture: true });
+  }, [onReplyFocus]);
+
+  const cancelComposerActivation = useCallback(() => {
+    composerActivationPendingRef.current = false;
+  }, []);
 
   const isProcessing =
     isTranscribing || isAgentResponding || isDetectingContacts;
@@ -123,15 +139,6 @@ export function KinSightConversationPanel({
   const askBarForm = (
     <form
       onSubmit={handleReplySubmit}
-      onPointerDown={(e) => {
-        if ((e.target as HTMLElement).closest("button")) return;
-        // Synchronous focus on the user-gesture stack (required for iOS keyboard).
-        focusReplyInput();
-      }}
-      onClick={(e) => {
-        if ((e.target as HTMLElement).closest("button")) return;
-        focusReplyInput();
-      }}
       className={
         conversationStarted
           ? "home-ask-bar home-ask-bar--conversation"
@@ -159,33 +166,37 @@ export function KinSightConversationPanel({
         </button>
       )}
       {isClient ? (
-        <input
-          ref={replyInputRef}
-          type="text"
-          value={replyValue}
-          onChange={(e) => onReplyChange(e.target.value)}
-          onFocus={() => {
-            onReplyFocus?.();
-          }}
-          onBlur={() => {
-            onReplyBlur?.();
-          }}
-          placeholder={
-            isLoading ? "KinSight is thinking…" : "Ask about a contact..."
-          }
-          disabled={isLoading}
-          enterKeyHint="send"
-          inputMode="text"
-          autoComplete="off"
-          autoCorrect="off"
-          autoCapitalize="off"
-          spellCheck={false}
-          name="kinsight-ask"
-          data-1p-ignore="true"
-          data-lpignore="true"
-          suppressHydrationWarning
-          className="min-w-0 flex-1 border-0 bg-transparent px-1 py-2 text-base text-foreground placeholder:text-muted focus:outline-none disabled:opacity-50 sm:text-sm"
-        />
+        <label className="home-ask-bar__field min-w-0 flex-1 cursor-text">
+          <input
+            ref={replyInputRef}
+            id="kinsight-ask"
+            type="text"
+            value={replyValue}
+            onChange={(e) => onReplyChange(e.target.value)}
+            onFocus={() => {
+              scheduleComposerActivation();
+            }}
+            onBlur={() => {
+              cancelComposerActivation();
+              onReplyBlur?.();
+            }}
+            placeholder={
+              isLoading ? "KinSight is thinking…" : "Ask about a contact..."
+            }
+            disabled={isLoading}
+            enterKeyHint="send"
+            inputMode="text"
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="off"
+            spellCheck={false}
+            name="kinsight-ask"
+            data-1p-ignore="true"
+            data-lpignore="true"
+            suppressHydrationWarning
+            className="w-full min-w-0 border-0 bg-transparent px-1 py-2 text-base text-foreground placeholder:text-muted focus:outline-none disabled:opacity-50 sm:text-sm"
+          />
+        </label>
       ) : (
         <div
           className="min-w-0 flex-1 px-1 py-2 text-base text-muted sm:text-sm"
@@ -331,7 +342,7 @@ export function KinSightConversationPanel({
       ) : (
         <div
           className={`home-composer-dock shrink-0${
-            composerActive ? " home-composer-dock--keyboard-open" : ""
+            dockKeyboardOpen ? " home-composer-dock--keyboard-open" : ""
           }`}
         >
           {askBarForm}
