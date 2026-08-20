@@ -351,6 +351,19 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
   const [askBarFocused, setAskBarFocused] = useState(false);
   const composerActive = keyboardOpen || askBarFocused;
   const hideHomeMic = !hasConversationStarted && composerActive;
+  const pinHomeHeader = !hasConversationStarted && composerActive;
+
+  useEffect(() => {
+    const scrollEl = document.querySelector<HTMLElement>(".app-scroll");
+    if (!scrollEl) return;
+
+    const shouldLock = !hasConversationStarted && composerActive;
+    scrollEl.classList.toggle("home-scroll-locked", shouldLock);
+
+    return () => {
+      scrollEl.classList.remove("home-scroll-locked");
+    };
+  }, [composerActive, hasConversationStarted]);
 
   return (
     <>
@@ -363,10 +376,19 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
               : "home-dashboard"
         }
       >
-        <Header
-          showNewSession={hasConversationStarted}
-          onNewSession={resetToStateA}
-        />
+        <div
+          className={
+            pinHomeHeader
+              ? "home-dashboard__header home-dashboard__header--pinned"
+              : "home-dashboard__header"
+          }
+        >
+          <Header
+            showNewSession={hasConversationStarted}
+            onNewSession={resetToStateA}
+            sticky={!pinHomeHeader}
+          />
+        </div>
 
         <main
           className={`relative flex flex-col ${

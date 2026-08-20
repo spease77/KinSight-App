@@ -869,6 +869,26 @@ html[data-standalone="true"] .app-viewport {
   flex: 0 0 auto;
 }
 
+.home-dashboard__header {
+  flex-shrink: 0;
+}
+
+/* Pin KinSight branding above the keyboard; mic hero hides separately. */
+.home-dashboard__header--pinned {
+  min-height: 6rem;
+}
+
+.home-dashboard__header--pinned > header {
+  position: fixed;
+  top: var(--safe-top);
+  left: 50%;
+  z-index: 45;
+  width: min(100%, 32rem);
+  max-width: 32rem;
+  transform: translateX(-50%);
+  background-color: var(--bg-main);
+}
+
 .home-hero {
   display: flex;
   flex-direction: column;
