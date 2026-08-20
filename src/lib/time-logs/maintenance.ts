@@ -77,7 +77,7 @@ export function maintenanceBadgeLabel(status: ContactMaintenanceStatus): string 
   }
 
   if (status.isOverdue) {
-    return "▲ Overdue (Touch Base)";
+    return `▲ >${MAINTENANCE_WINDOW_DAYS} Days - Touch Base!`;
   }
 
   return `● Active (${status.daysLeft} days left)`;
