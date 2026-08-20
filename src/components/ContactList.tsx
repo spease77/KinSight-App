@@ -342,12 +342,6 @@ export function ContactList({
         </div>
       )}
 
-      {!showHeading && (
-        <p className="type-meta px-1">
-          {contacts.length} {contacts.length === 1 ? "contact" : "contacts"}
-        </p>
-      )}
-
       {searchable && contacts.length > 0 && (
         <ContactSearch
           value={searchQuery}
