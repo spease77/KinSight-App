@@ -563,6 +563,23 @@ html[data-standalone="true"] .app-viewport {
   overscroll-behavior: none;
 }
 
+/* Agenda calendars fill the viewport; extend through app-scroll bottom padding. */
+.app-scroll.agenda-scroll-locked {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+.app-scroll.agenda-scroll-locked > .agenda-page {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  margin-bottom: calc(-1 * var(--bottom-nav-clearance));
+  padding-bottom: var(--bottom-nav-clearance);
+}
+
 .border-agenda-grid-line {
   border-color: var(--agenda-grid-line);
 }
@@ -590,6 +607,8 @@ html[data-standalone="true"] .app-viewport {
 
 .agenda-month-grid {
   display: grid;
+  min-height: 0;
+  flex: 1 1 auto;
   grid-template-columns: repeat(7, minmax(0, 1fr));
   grid-template-rows: repeat(6, minmax(0, 1fr));
 }

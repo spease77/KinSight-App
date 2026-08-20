@@ -53,6 +53,19 @@ export function AgendaPage() {
   const [headerScrolled, setHeaderScrolled] = useState(false);
 
   useEffect(() => {
+    if (pathname !== "/agenda") return;
+
+    const scrollEl = document.querySelector<HTMLElement>(".app-scroll");
+    if (!scrollEl) return;
+
+    scrollEl.classList.add("agenda-scroll-locked");
+
+    return () => {
+      scrollEl.classList.remove("agenda-scroll-locked");
+    };
+  }, [pathname]);
+
+  useEffect(() => {
     const scrollEl = document.querySelector<HTMLElement>(".app-scroll");
     if (!scrollEl) return;
 
@@ -232,13 +245,7 @@ export function AgendaPage() {
 
   return (
     <>
-      <div
-        className={`agenda-page flex flex-col ${
-          isTimelineView
-            ? "h-full max-h-full"
-            : "min-h-full"
-        }`}
-      >
+      <div className="agenda-page flex min-h-0 flex-1 flex-col">
         <div
           className={`agenda-page-header ${
             headerScrolled ? "agenda-page-header--scrolled" : ""
@@ -263,13 +270,7 @@ export function AgendaPage() {
           </div>
         </div>
 
-        <main
-          className={
-            isTimelineView
-              ? "flex min-h-0 flex-1 flex-col gap-2 px-5 pb-0"
-              : "flex flex-col gap-4 px-5 pb-6"
-          }
-        >
+        <main className="flex min-h-0 flex-1 flex-col gap-2 px-5 pb-0">
         {isLoading ? (
           <p className="type-meta py-8 text-center">Loading agenda…</p>
         ) : error ? (
