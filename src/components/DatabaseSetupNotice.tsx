@@ -1,10 +1,8 @@
+import { SUPABASE_SQL_EDITOR_URL } from "@/lib/supabase/sql-editor-url";
+
 interface DatabaseSetupNoticeProps {
-
   error: string;
-
 }
-
-
 
 export function DatabaseSetupNotice({ error }: DatabaseSetupNoticeProps) {
 
@@ -50,7 +48,7 @@ export function DatabaseSetupNotice({ error }: DatabaseSetupNoticeProps) {
 
           <a
 
-            href="https://supabase.com/dashboard/project/owmtlvpmqupantyjglwy/sql/new"
+            href={SUPABASE_SQL_EDITOR_URL}
 
             target="_blank"
 
