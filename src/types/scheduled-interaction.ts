@@ -1,7 +1,7 @@
 import type { BehavioralProfileTag } from "@/lib/psychological-profile";
 import type { ContactType } from "@/lib/contacts/contact-type";
 
-export type AgendaTimeFrame = "day" | "week" | "month";
+export type AgendaTimeFrame = "day" | "week" | "month" | "list";
 
 export const AGENDA_TIME_FRAME_OPTIONS: {
   value: AgendaTimeFrame;
@@ -10,6 +10,7 @@ export const AGENDA_TIME_FRAME_OPTIONS: {
   { value: "day", label: "Day" },
   { value: "week", label: "Week" },
   { value: "month", label: "Month" },
+  { value: "list", label: "List" },
 ];
 
 export const DEFAULT_AGENDA_TIME_FRAME: AgendaTimeFrame = "week";

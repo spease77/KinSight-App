@@ -6,6 +6,7 @@ import { Plus, Search } from "lucide-react";
 import { Header } from "@/components/Header";
 import { AgendaFeed } from "@/components/agenda/AgendaFeed";
 import { AgendaHourlyGrid } from "@/components/agenda/AgendaHourlyGrid";
+import { AgendaListView } from "@/components/agenda/AgendaListView";
 import { AgendaSearchBar } from "@/components/agenda/AgendaSearchBar";
 import { AgendaTimeFrameSwitcher } from "@/components/agenda/AgendaTimeFrameSwitcher";
 import { AddMeetingModal } from "@/components/AddMeetingModal";
@@ -138,6 +139,9 @@ export function AgendaPage() {
   );
 
   const filteredInteractions = useMemo(() => {
+    if (timeFrame === "list") {
+      return agendaInteractions;
+    }
     if (timeFrame === "day") {
       return filterInteractionsForTimeFrame(
         agendaInteractions,
@@ -241,8 +245,9 @@ export function AgendaPage() {
 
   const isCalendarView =
     timeFrame === "day" || timeFrame === "week" || timeFrame === "month";
+  const isListView = timeFrame === "list";
   const showEmptyStateMessage =
-    !hasScheduledInView && (!isCalendarView || isSearchActive);
+    !hasScheduledInView && (!isCalendarView || isSearchActive) && !isListView;
 
   return (
     <>
@@ -280,40 +285,54 @@ export function AgendaPage() {
           </p>
         ) : (
           <>
-            <AgendaHourlyGrid
-              selectedDate={selectedDate}
-              timeFrame={timeFrame}
-              interactions={
-                isSearchActive ? searchedInteractions : agendaInteractions
-              }
-              selectedInteractionId={selectedInteractionId}
-              onSelectedDateChange={setSelectedDate}
-              onInteractionSelect={handleInteractionSelect}
-            />
-
-            {hasScheduledInView ? (
+            {isListView ? (
+              <AgendaListView
+                interactions={searchedInteractions}
+                onInteractionEdit={handleInteractionEdit}
+                emptyMessage={
+                  isSearchActive && agendaInteractions.length > 0
+                    ? "No meetings match your search."
+                    : undefined
+                }
+              />
+            ) : (
               <>
-                <div
-                  className="border-t border-border-green/60"
-                  role="separator"
-                  aria-hidden="true"
+                <AgendaHourlyGrid
+                  selectedDate={selectedDate}
+                  timeFrame={timeFrame}
+                  interactions={
+                    isSearchActive ? searchedInteractions : agendaInteractions
+                  }
+                  selectedInteractionId={selectedInteractionId}
+                  onSelectedDateChange={setSelectedDate}
+                  onInteractionSelect={handleInteractionSelect}
                 />
 
-                <AgendaFeed
-                  ref={feedRef}
-                  groups={filteredGroups}
-                  selectedInteractionId={selectedInteractionId}
-                  onDateHeaderSelect={handleDateHeaderSelect}
-                  onInteractionEdit={handleInteractionEdit}
-                />
+                {hasScheduledInView ? (
+                  <>
+                    <div
+                      className="border-t border-border-green/60"
+                      role="separator"
+                      aria-hidden="true"
+                    />
+
+                    <AgendaFeed
+                      ref={feedRef}
+                      groups={filteredGroups}
+                      selectedInteractionId={selectedInteractionId}
+                      onDateHeaderSelect={handleDateHeaderSelect}
+                      onInteractionEdit={handleInteractionEdit}
+                    />
+                  </>
+                ) : showEmptyStateMessage ? (
+                  <p className="py-3 text-center text-sm text-muted">
+                    {isSearchActive && hasTimeFrameResults
+                      ? "No meetings match your search."
+                      : "Nothing scheduled. Use '+' button or home mic to add."}
+                  </p>
+                ) : null}
               </>
-            ) : showEmptyStateMessage ? (
-              <p className="py-3 text-center text-sm text-muted">
-                {isSearchActive && hasTimeFrameResults
-                  ? "No meetings match your search."
-                  : "Nothing scheduled. Use '+' button or home mic to add."}
-              </p>
-            ) : null}
+            )}
           </>
         )}
         </main>

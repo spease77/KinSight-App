@@ -16,7 +16,7 @@ export function AgendaTimeFrameSwitcher({
 }: AgendaTimeFrameSwitcherProps) {
   return (
     <div
-      className="grid grid-cols-3 gap-0.5 rounded-xl border-[1.5px] border-border-green bg-elevated p-0.5"
+      className="grid grid-cols-4 gap-0.5 rounded-xl border-[1.5px] border-border-green bg-elevated p-0.5"
       role="tablist"
       aria-label="Agenda time frame"
     >

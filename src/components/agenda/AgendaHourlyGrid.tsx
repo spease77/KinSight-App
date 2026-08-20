@@ -23,6 +23,10 @@ export function AgendaHourlyGrid({
   onSelectedDateChange,
   onInteractionSelect,
 }: AgendaHourlyGridProps) {
+  if (timeFrame === "list") {
+    return null;
+  }
+
   if (timeFrame === "week") {
     return (
       <AgendaWeekHourlyGrid
