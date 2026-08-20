@@ -3,6 +3,7 @@ import Script from "next/script";
 import { Inter, Montserrat } from "next/font/google";
 import { AppShell } from "@/components/AppShell";
 import { BottomNav } from "@/components/BottomNav";
+import { StandaloneViewportSync } from "@/components/StandaloneViewportSync";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { ToastViewport } from "@/components/ToastViewport";
 import { themeInitScript } from "@/lib/theme/theme";
@@ -70,6 +71,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: standaloneViewportScript }}
         />
         <ThemeProvider>
+          <StandaloneViewportSync />
           <AppShell>{children}</AppShell>
           <BottomNav />
           <ToastViewport />

@@ -381,14 +381,12 @@ body {
 @media (display-mode: standalone), (display-mode: fullscreen) {
   html,
   body {
-    height: var(--app-height, 100dvh);
     min-height: var(--app-height, 100dvh);
   }
 }
 
 html[data-standalone="true"],
 html[data-standalone="true"] body {
-  height: var(--app-height, 100dvh);
   min-height: var(--app-height, 100dvh);
 }
 
