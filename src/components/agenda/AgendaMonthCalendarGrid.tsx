@@ -27,11 +27,11 @@ import type { ScheduledInteraction } from "@/types/scheduled-interaction";
 import {
   AGENDA_MONTH_BLOCK_LABEL,
   AGENDA_MONTH_GRID,
+  AGENDA_MONTH_NAV_HEADER,
   AGENDA_MONTH_PANEL_SHELL,
   AGENDA_MONTH_SCROLL,
   AGENDA_MONTH_WEEKDAY,
   AGENDA_PANEL_NAV_BUTTON,
-  AGENDA_PANEL_TITLE,
   AGENDA_TIMELINE_FRAME,
 } from "@/components/agenda/agenda-panel-styles";
 
@@ -144,7 +144,6 @@ export function AgendaMonthCalendarGrid({
   const [months, setMonths] = useState(() =>
     buildMonthWindow(selectedDate, INITIAL_MONTH_BUFFER, INITIAL_MONTH_BUFFER)
   );
-  const [displayMonth, setDisplayMonth] = useState(selectedDate);
 
   const eventsByDate = useMemo(
     () => interactionsByDateKey(interactions),
@@ -152,7 +151,6 @@ export function AgendaMonthCalendarGrid({
   );
 
   const selectedDateKey = toDateKey(selectedDate);
-  const displayMonthLabel = formatAgendaMonthLabel(displayMonth);
 
   const setMonthBlockRef = useCallback(
     (monthStart: Date) => (node: HTMLDivElement | null) => {
@@ -174,6 +172,47 @@ export function AgendaMonthCalendarGrid({
       }
     },
     [onInteractionSelect, onSelectedDateChange]
+  );
+
+  const scrollToMonthBlock = useCallback((monthStart: Date) => {
+    const scrollEl = scrollRef.current;
+    const monthKey = monthAnchorKey(monthStart);
+    const block = monthBlockRefs.current.get(monthKey);
+    if (!scrollEl || !block) return false;
+
+    isProgrammaticScrollRef.current = true;
+    scrollEl.scrollTop = block.offsetTop;
+    trackedMonthKeyRef.current = monthKey;
+
+    window.setTimeout(() => {
+      isProgrammaticScrollRef.current = false;
+    }, 120);
+
+    return true;
+  }, []);
+
+  const navigateMonth = useCallback(
+    (direction: -1 | 1) => {
+      const targetDate = shiftSelectedMonth(selectedDate, direction);
+      const targetMonthStart = startOfCalendarMonth(targetDate);
+      const monthKey = monthAnchorKey(targetMonthStart);
+      const block = monthBlockRefs.current.get(monthKey);
+
+      if (!block) {
+        trackedMonthKeyRef.current = monthKey;
+        onSelectedDateChange(targetDate);
+        setMonths(
+          buildMonthWindow(targetDate, INITIAL_MONTH_BUFFER, INITIAL_MONTH_BUFFER)
+        );
+        hasInitialScrolledRef.current = false;
+        return;
+      }
+
+      trackedMonthKeyRef.current = monthKey;
+      onSelectedDateChange(targetDate);
+      scrollToMonthBlock(targetMonthStart);
+    },
+    [onSelectedDateChange, scrollToMonthBlock, selectedDate]
   );
 
   const prependMonths = useCallback(() => {
@@ -245,35 +284,28 @@ export function AgendaMonthCalendarGrid({
     const block = monthBlockRefs.current.get(monthKey);
 
     if (scrollEl && block) {
-      scrollEl.scrollTop = block.offsetTop;
+      scrollToMonthBlock(startOfCalendarMonth(selectedDate));
       hasInitialScrolledRef.current = true;
-      trackedMonthKeyRef.current = monthKey;
-      setDisplayMonth(startOfCalendarMonth(selectedDate));
     }
-  }, [months, selectedDate]);
+  }, [months, scrollToMonthBlock, selectedDate]);
 
   useEffect(() => {
     const monthKey = monthAnchorKey(selectedDate);
     if (monthKey === trackedMonthKeyRef.current) return;
 
     trackedMonthKeyRef.current = monthKey;
-    setDisplayMonth(startOfCalendarMonth(selectedDate));
 
     const scrollEl = scrollRef.current;
     const block = monthBlockRefs.current.get(monthKey);
 
     if (scrollEl && block) {
-      isProgrammaticScrollRef.current = true;
-      scrollEl.scrollTop = block.offsetTop;
-      window.setTimeout(() => {
-        isProgrammaticScrollRef.current = false;
-      }, 120);
+      scrollToMonthBlock(startOfCalendarMonth(selectedDate));
       return;
     }
 
     setMonths(buildMonthWindow(selectedDate, INITIAL_MONTH_BUFFER, INITIAL_MONTH_BUFFER));
     hasInitialScrolledRef.current = false;
-  }, [selectedDate]);
+  }, [scrollToMonthBlock, selectedDate]);
 
   useEffect(() => {
     const scrollEl = scrollRef.current;
@@ -303,13 +335,12 @@ export function AgendaMonthCalendarGrid({
         trackedMonthKeyRef.current = monthKey;
         const [year, monthIndex] = monthKey.split("-").map(Number);
         const monthStart = new Date(year, monthIndex, 1, 0, 0, 0, 0);
-        setDisplayMonth(monthStart);
         onSelectedDateChange(alignDateToMonth(selectedDate, monthStart));
       },
       {
         root: scrollEl,
         threshold: [0.35, 0.5, 0.65],
-        rootMargin: "-8% 0px -55% 0px",
+        rootMargin: "0px 0px -55% 0px",
       }
     );
 
@@ -322,31 +353,23 @@ export function AgendaMonthCalendarGrid({
 
   return (
     <section aria-label="Monthly calendar" className={AGENDA_MONTH_PANEL_SHELL}>
-      <div className="flex shrink-0 items-center justify-between gap-2">
-        <p className={AGENDA_PANEL_TITLE}>{displayMonthLabel}</p>
-
-        <div className="flex shrink-0 items-center gap-1">
-          <button
-            type="button"
-            onClick={() =>
-              onSelectedDateChange(shiftSelectedMonth(selectedDate, -1))
-            }
-            className={AGENDA_PANEL_NAV_BUTTON}
-            aria-label="Previous month"
-          >
-            <ChevronLeft className="h-4 w-4" strokeWidth={2} />
-          </button>
-          <button
-            type="button"
-            onClick={() =>
-              onSelectedDateChange(shiftSelectedMonth(selectedDate, 1))
-            }
-            className={AGENDA_PANEL_NAV_BUTTON}
-            aria-label="Next month"
-          >
-            <ChevronRight className="h-4 w-4" strokeWidth={2} />
-          </button>
-        </div>
+      <div className={AGENDA_MONTH_NAV_HEADER}>
+        <button
+          type="button"
+          onClick={() => navigateMonth(-1)}
+          className={AGENDA_PANEL_NAV_BUTTON}
+          aria-label="Previous month"
+        >
+          <ChevronLeft className="h-4 w-4" strokeWidth={2} />
+        </button>
+        <button
+          type="button"
+          onClick={() => navigateMonth(1)}
+          className={AGENDA_PANEL_NAV_BUTTON}
+          aria-label="Next month"
+        >
+          <ChevronRight className="h-4 w-4" strokeWidth={2} />
+        </button>
       </div>
 
       <div className={`${AGENDA_TIMELINE_FRAME} agenda-calendar-body-band`}>

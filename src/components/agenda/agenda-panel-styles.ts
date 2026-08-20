@@ -67,6 +67,10 @@ export const AGENDA_MONTH_WEEKDAY =
 export const AGENDA_PANEL_NAV_BUTTON =
   "flex h-8 w-8 items-center justify-center rounded-lg text-icon transition-colors hover:bg-accent-green-muted hover:text-foreground";
 
+/** Month view — blank sticky row; prev/next arrows only (labels live in scroll blocks). */
+export const AGENDA_MONTH_NAV_HEADER =
+  "agenda-month-nav-header flex shrink-0 items-center justify-end gap-1 bg-main";
+
 /** Inset ring stays inside the card so parent overflow does not clip selection. */
 export const AGENDA_ITEM_SELECTED_CLASS =
   "ring-2 ring-inset ring-accent-green-bright";
