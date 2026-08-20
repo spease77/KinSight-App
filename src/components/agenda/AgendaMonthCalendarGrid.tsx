@@ -25,6 +25,7 @@ import {
 } from "@/lib/agenda/month-grid";
 import type { ScheduledInteraction } from "@/types/scheduled-interaction";
 import {
+  AGENDA_MONTH_BLOCK_LABEL,
   AGENDA_MONTH_GRID,
   AGENDA_MONTH_PANEL_SHELL,
   AGENDA_MONTH_SCROLL,
@@ -70,6 +71,10 @@ function AgendaMonthBlock({
       className="agenda-month-block"
       data-month-key={monthAnchorKey(monthStart)}
     >
+      <p className={AGENDA_MONTH_BLOCK_LABEL}>
+        {formatAgendaMonthLabel(monthStart)}
+      </p>
+
       <div className="agenda-month-weekday-row">
         {MONTH_WEEKDAY_LABELS.map((label) => (
           <div key={label} className={AGENDA_MONTH_WEEKDAY}>

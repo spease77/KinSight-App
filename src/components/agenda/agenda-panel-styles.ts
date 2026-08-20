@@ -58,6 +58,9 @@ export const AGENDA_WEEK_DAY_HEADER =
 /** Shared hour labels in day/week timeline grids (styled in globals.css). */
 export const AGENDA_TIME_LABEL = "agenda-week-time-slot";
 
+export const AGENDA_MONTH_BLOCK_LABEL =
+  "agenda-month-block-label shrink-0 font-mono text-xs font-medium uppercase tracking-[0.08em] text-foreground";
+
 export const AGENDA_MONTH_WEEKDAY =
   "py-2 text-center font-mono text-xs font-semibold uppercase tracking-wide text-muted";
 

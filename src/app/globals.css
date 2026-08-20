@@ -614,7 +614,9 @@ html[data-standalone="true"] .app-viewport {
 }
 
 .agenda-month-scroll {
-  display: block;
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
   min-height: 0;
   flex: 1 1 auto;
   height: 100%;
@@ -622,10 +624,17 @@ html[data-standalone="true"] .app-viewport {
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: auto;
+  padding-block: 0.25rem 1rem;
 }
 
 .agenda-month-block {
+  display: flex;
+  flex-direction: column;
   flex-shrink: 0;
+}
+
+.agenda-month-block-label {
+  padding-block: 0.25rem 0.625rem;
 }
 
 .agenda-month-grid--scroll {
