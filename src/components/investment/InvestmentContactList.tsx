@@ -232,6 +232,7 @@ export function InvestmentContactList({
       </div>
 
       <RelationshipTreeSortBar
+        variant="plain"
         sortField={sortBy}
         sortDirection={sortDirection}
         fields={INVESTMENT_CONTACT_SORT_FIELDS}

@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowDownAZ, ArrowUpAZ } from "lucide-react";
+import { ArrowDownAZ, ArrowUpAZ, Clock } from "lucide-react";
 
 interface RelationshipTreeSortBarProps<T extends string> {
   sortField: T;
@@ -8,6 +8,7 @@ interface RelationshipTreeSortBarProps<T extends string> {
   fields: readonly { value: T; label: string }[];
   onSortFieldChange: (field: T) => void;
   onSortDirectionToggle: () => void;
+  variant?: "card" | "plain";
 }
 
 export function RelationshipTreeSortBar<T extends string>({
@@ -16,13 +17,19 @@ export function RelationshipTreeSortBar<T extends string>({
   fields,
   onSortFieldChange,
   onSortDirectionToggle,
+  variant = "card",
 }: RelationshipTreeSortBarProps<T>) {
   const DirectionIcon = sortDirection === "asc" ? ArrowDownAZ : ArrowUpAZ;
   const directionLabel = sortDirection === "asc" ? "A to Z" : "Z to A";
+  const isPlain = variant === "plain";
 
   return (
     <div
-      className="ui-card flex flex-wrap items-center gap-2 p-1"
+      className={
+        isPlain
+          ? "flex flex-nowrap items-center gap-1 border-y border-border/60 py-1.5"
+          : "ui-card flex flex-wrap items-center gap-2 p-1"
+      }
       role="group"
       aria-label="Sort contacts"
     >
@@ -31,12 +38,15 @@ export function RelationshipTreeSortBar<T extends string>({
         onClick={onSortDirectionToggle}
         aria-label={`Sort ${directionLabel}. Tap to reverse.`}
         title={`Sort ${directionLabel}`}
-        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-icon transition-colors hover:bg-accent-green-muted hover:text-foreground"
+        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-icon transition-colors hover:bg-accent-green-muted hover:text-foreground${
+          isPlain ? " ml-1" : ""
+        }`}
       >
         <DirectionIcon className="h-4 w-4" strokeWidth={2} />
       </button>
       {fields.map((field) => {
         const active = sortField === field.value;
+        const isTimeField = field.value === "time";
 
         return (
           <button
@@ -44,13 +54,32 @@ export function RelationshipTreeSortBar<T extends string>({
             type="button"
             onClick={() => onSortFieldChange(field.value)}
             aria-pressed={active}
-            className={`rounded-lg px-3 py-1.5 text-xs font-normal transition-colors ${
-              active
-                ? "ui-badge-green px-2.5 py-1 text-xs"
-                : "text-muted hover:text-foreground"
-            }`}
+            aria-label={isTimeField && isPlain ? "Time" : undefined}
+            className={
+              isPlain
+                ? isTimeField
+                  ? `flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors ${
+                      active
+                        ? "ui-badge-green"
+                        : "text-muted hover:text-foreground"
+                    }`
+                  : `min-w-0 flex-1 whitespace-nowrap rounded-lg px-1.5 py-1.5 text-xs font-normal transition-colors ${
+                      active
+                        ? "ui-badge-green px-2 py-1 text-xs"
+                        : "text-muted hover:text-foreground"
+                    }`
+                : `rounded-lg px-3 py-1.5 text-xs font-normal transition-colors ${
+                    active
+                      ? "ui-badge-green px-2.5 py-1 text-xs"
+                      : "text-muted hover:text-foreground"
+                  }`
+            }
           >
-            {field.label}
+            {isTimeField && isPlain ? (
+              <Clock className="h-3.5 w-3.5" strokeWidth={2} aria-hidden="true" />
+            ) : (
+              field.label
+            )}
           </button>
         );
       })}
