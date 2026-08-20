@@ -27,7 +27,7 @@ export function RelationshipTreeSortBar<T extends string>({
     <div
       className={
         isPlain
-          ? "flex flex-nowrap items-center gap-1 border-y border-border/60 py-1.5"
+          ? "flex flex-nowrap items-center gap-1"
           : "ui-card flex flex-wrap items-center gap-2 p-1"
       }
       role="group"

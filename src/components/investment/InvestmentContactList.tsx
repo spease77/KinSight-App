@@ -95,32 +95,32 @@ function InvestmentContactRow({
   const displayName = formatContactDisplayName(contact.name, displayField);
 
   return (
-    <button
-      type="button"
-      onClick={() => onSelect(contact)}
-      aria-pressed={isSelected}
-      className={`flex w-full cursor-pointer items-center gap-3 rounded-lg border px-3.5 py-3 text-left transition-colors ${
-        isSelected
-          ? "border-indigo-500/50 bg-indigo-950/20"
-          : "border-border/60 bg-card-hover/50 hover:bg-card-hover"
-      }`}
-    >
-      <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-center gap-2">
-          <p className="truncate font-sans text-sm text-foreground">
-            {displayName}
-          </p>
-          {contact.relationshipLabel && (
-            <span className="ui-badge-green shrink-0 px-2 py-0.5 text-[10px]">
-              {contact.relationshipLabel}
-            </span>
-          )}
+    <li>
+      <button
+        type="button"
+        onClick={() => onSelect(contact)}
+        aria-pressed={isSelected}
+        className={`contact-list-row group flex w-full cursor-pointer touch-manipulation items-center gap-4 py-3 text-left active:scale-[0.99]${
+          isSelected ? " bg-indigo-950/20" : ""
+        }`}
+      >
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="truncate font-sans text-sm font-normal text-foreground">
+              {displayName}
+            </p>
+            {contact.relationshipLabel && (
+              <span className="ui-badge-green shrink-0 px-2 py-0.5 text-[10px]">
+                {contact.relationshipLabel}
+              </span>
+            )}
+          </div>
         </div>
-      </div>
-      <span className="shrink-0 font-mono text-xs text-muted tabular-nums">
-        {formatDurationMinutes(totalMinutes)}
-      </span>
-    </button>
+        <span className="shrink-0 font-mono text-xs text-muted tabular-nums">
+          {formatDurationMinutes(totalMinutes)}
+        </span>
+      </button>
+    </li>
   );
 }
 
@@ -240,13 +240,13 @@ export function InvestmentContactList({
         onSortDirectionToggle={handleDirectionToggle}
       />
 
-      <div className="contacts-scroll flex max-h-[min(52vh,28rem)] flex-col gap-2 overflow-y-auto pr-1">
-        {sortedContacts.length === 0 ? (
-          <p className="px-1 py-2 text-center text-sm text-muted">
-            No contacts match your search.
-          </p>
-        ) : (
-          sortedContacts.map((contact) => (
+      {sortedContacts.length === 0 ? (
+        <p className="px-1 py-2 text-center text-sm text-muted">
+          No contacts match your search.
+        </p>
+      ) : (
+        <ul className="contact-list-card contacts-scroll max-h-[min(52vh,28rem)] overflow-y-auto pr-1">
+          {sortedContacts.map((contact) => (
             <InvestmentContactRow
               key={contact.id}
               contact={contact}
@@ -255,9 +255,9 @@ export function InvestmentContactList({
               totalMinutes={timeMinutesByContactId.get(contact.id) ?? 0}
               onSelect={onContactSelect}
             />
-          ))
-        )}
-      </div>
+          ))}
+        </ul>
+      )}
     </section>
   );
 }
