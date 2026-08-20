@@ -698,8 +698,16 @@ html[data-standalone="true"] .app-viewport {
 }
 
 .agenda-month-grid--scroll {
+  display: flex;
   flex: none;
-  grid-template-rows: repeat(6, minmax(2.75rem, auto));
+  flex-direction: column;
+}
+
+.agenda-month-grid-week {
+  display: grid;
+  flex-shrink: 0;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-template-rows: minmax(2.75rem, auto);
 }
 
 .agenda-page-header {
@@ -732,7 +740,8 @@ html[data-standalone="true"] .app-viewport {
   border-left: 1px solid var(--agenda-grid-line);
 }
 
-.agenda-month-day-cell:nth-child(7n + 1) {
+.agenda-month-day-cell:nth-child(7n + 1),
+.agenda-month-grid-week .agenda-month-day-cell:first-child {
   border-left: none;
 }
 

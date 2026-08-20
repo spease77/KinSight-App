@@ -19,6 +19,7 @@ import {
   getTodayDateKey,
   interactionsByDateKey,
   monthAnchorKey,
+  MONTH_GRID_WEEKS,
   MONTH_WEEKDAY_LABELS,
   shiftSelectedMonth,
   startOfCalendarMonth,
@@ -39,6 +40,32 @@ import {
 const INITIAL_MONTH_BUFFER = 4;
 const LOAD_MONTH_BATCH = 3;
 const EDGE_THRESHOLD_PX = 480;
+
+/** Snap scroll so the month label sits at the scroll top and day 1's row aligns below the weekday band. */
+function getMonthSnapScrollTop(
+  scrollEl: HTMLElement,
+  block: HTMLElement
+): number {
+  const label = block.querySelector<HTMLElement>(".agenda-month-block-label");
+  const weekdayRow = block.querySelector<HTMLElement>(".agenda-month-weekday-row");
+  const firstDayRow = block.querySelector<HTMLElement>("[data-first-day-row]");
+
+  const scrollRect = scrollEl.getBoundingClientRect();
+
+  if (!label || !weekdayRow || !firstDayRow) {
+    const blockRect = block.getBoundingClientRect();
+    return scrollEl.scrollTop + (blockRect.top - scrollRect.top);
+  }
+
+  const headerHeight = label.offsetHeight + weekdayRow.offsetHeight;
+  const firstDayRowRect = firstDayRow.getBoundingClientRect();
+
+  return (
+    scrollEl.scrollTop +
+    (firstDayRowRect.top - scrollRect.top) -
+    headerHeight
+  );
+}
 
 interface AgendaMonthCalendarGridProps {
   selectedDate: Date;
@@ -70,6 +97,13 @@ function AgendaMonthBlock({
     [monthKey, monthStart]
   );
 
+  const firstDayWeekIndex = useMemo(
+    () =>
+      monthCells.find((cell) => cell.isCurrentMonth && cell.dayOfMonth === 1)
+        ?.weekIndex ?? 0,
+    [monthCells]
+  );
+
   return (
     <div
       ref={blockRef}
@@ -89,45 +123,60 @@ function AgendaMonthBlock({
       </div>
 
       <div className={`${AGENDA_MONTH_GRID} agenda-month-grid--scroll`}>
-        {monthCells.map((cell) => {
-          const dayEvents = eventsByDate.get(cell.dateKey) ?? [];
-          const isSelected = cell.dateKey === selectedDateKey;
-          const isToday = cell.dateKey === todayKey;
-          const hasEvents = dayEvents.length > 0;
+        {Array.from({ length: MONTH_GRID_WEEKS }, (_, weekIndex) => (
+          <div
+            key={weekIndex}
+            className="agenda-month-grid-week"
+            {...(weekIndex === firstDayWeekIndex
+              ? { "data-first-day-row": true }
+              : {})}
+          >
+            {monthCells
+              .slice(weekIndex * 7, weekIndex * 7 + 7)
+              .map((cell) => {
+                const dayEvents = eventsByDate.get(cell.dateKey) ?? [];
+                const isSelected = cell.dateKey === selectedDateKey;
+                const isToday = cell.dateKey === todayKey;
+                const hasEvents = dayEvents.length > 0;
+                const isFirstOfMonth =
+                  cell.isCurrentMonth && cell.dayOfMonth === 1;
 
-          return (
-            <button
-              key={cell.dateKey}
-              type="button"
-              onClick={() => onDaySelect(cell, dayEvents)}
-              className={`agenda-month-day-cell transition-colors hover:bg-card-hover ${
-                isSelected ? "bg-accent-green-muted/20" : ""
-              }`}
-              aria-pressed={isSelected}
-              aria-label={`${cell.dayOfMonth}${hasEvents ? `, ${dayEvents.length} events` : ""}`}
-              aria-current={isToday ? "date" : undefined}
-            >
-              <span
-                className={`agenda-month-day-number ${
-                  isToday
-                    ? "agenda-month-day-number--today bg-[var(--contact-type-professional)] text-foreground"
-                    : cell.isCurrentMonth
-                      ? "text-foreground"
-                      : "text-muted/50"
-                }`}
-              >
-                {cell.dayOfMonth}
-              </span>
+                return (
+                  <button
+                    key={cell.dateKey}
+                    type="button"
+                    onClick={() => onDaySelect(cell, dayEvents)}
+                    className={`agenda-month-day-cell transition-colors hover:bg-card-hover ${
+                      isSelected ? "bg-accent-green-muted/20" : ""
+                    }`}
+                    aria-pressed={isSelected}
+                    aria-label={`${cell.dayOfMonth}${hasEvents ? `, ${dayEvents.length} events` : ""}`}
+                    aria-current={isToday ? "date" : undefined}
+                    {...(isFirstOfMonth ? { "data-first-of-month": true } : {})}
+                  >
+                    <span
+                      className={`agenda-month-day-number ${
+                        isToday
+                          ? "agenda-month-day-number--today bg-[var(--contact-type-professional)] text-foreground"
+                          : cell.isCurrentMonth
+                            ? "text-foreground"
+                            : "text-muted/50"
+                      }`}
+                    >
+                      {cell.dayOfMonth}
+                    </span>
 
-              {hasEvents && (
-                <span
-                  className="h-1.5 w-1.5 rounded-full bg-accent-green-bright"
-                  aria-hidden="true"
-                />
-              )}
-            </button>
-          );
-        })}
+                    {hasEvents && (
+                      <span
+                        className="h-1.5 w-1.5 rounded-full bg-accent-green-bright"
+                        aria-hidden="true"
+                      />
+                    )}
+                  </button>
+                );
+              })}
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -188,7 +237,7 @@ export function AgendaMonthCalendarGrid({
     if (!scrollEl || !block) return false;
 
     isProgrammaticScrollRef.current = true;
-    scrollEl.scrollTop = block.offsetTop;
+    scrollEl.scrollTop = getMonthSnapScrollTop(scrollEl, block);
     trackedMonthKeyRef.current = monthKey;
 
     window.setTimeout(() => {
