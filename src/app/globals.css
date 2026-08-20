@@ -824,7 +824,7 @@ html[data-standalone="true"] .app-viewport {
     ((var(--agenda-grid-end-hour) - var(--agenda-grid-start-hour)) * 2 + 1) *
       var(--agenda-slot-height)
   );
-  --agenda-week-header-height: 36px;
+  --agenda-week-header-height: 44px;
   --agenda-week-days-track-width: calc(100% * 7 / 7);
 }
 
@@ -932,6 +932,24 @@ html[data-standalone="true"] .app-viewport {
   min-width: var(--agenda-time-gutter-width);
   max-width: var(--agenda-time-gutter-width);
   flex-shrink: 0;
+}
+
+.agenda-week-day-letter {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+}
+
+.agenda-week-day-number {
+  margin-top: 0.125rem;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.1;
+  color: var(--text-primary);
 }
 
 .agenda-week-time-slot,

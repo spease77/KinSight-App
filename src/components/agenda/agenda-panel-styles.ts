@@ -5,7 +5,7 @@ export {
   AGENDA_WEEK_VISIBLE_DAY_COUNT,
 } from "@/lib/agenda/hourly-grid";
 
-export const AGENDA_WEEK_HEADER_HEIGHT_PX = 36;
+export const AGENDA_WEEK_HEADER_HEIGHT_PX = 44;
 
 export const AGENDA_GRID_BORDER_HEADER = "border-agenda-grid-header";
 export const AGENDA_GRID_BORDER_LINE = "border-agenda-grid-line";
@@ -53,7 +53,7 @@ export const AGENDA_WEEK_HEADER_BAND = "agenda-week-header-band flex shrink-0";
 export const AGENDA_WEEK_TIME_SCROLL =
   "agenda-week-time-scroll vertical-time-container contacts-scroll min-h-0 h-full min-w-0 w-full flex-1 overflow-y-auto [-webkit-overflow-scrolling:touch]";
 export const AGENDA_WEEK_DAY_HEADER =
-  "agenda-week-day-header sticky top-0 z-10 shrink-0 border-b bg-main text-center font-mono text-[10px] font-semibold tracking-wide transition-colors";
+  "agenda-week-day-header sticky top-0 z-10 flex shrink-0 flex-col items-center justify-center gap-0 border-b bg-main text-center transition-colors";
 
 /** Shared hour labels in day/week timeline grids (styled in globals.css). */
 export const AGENDA_TIME_LABEL = "agenda-week-time-slot";

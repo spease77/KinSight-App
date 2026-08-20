@@ -247,9 +247,19 @@ export function AgendaWeekHourlyGrid({
                           gridRow: 1,
                           height: AGENDA_WEEK_HEADER_HEIGHT_PX,
                         }}
+                        aria-label={day.date.toLocaleDateString("en-US", {
+                          weekday: "long",
+                          month: "long",
+                          day: "numeric",
+                        })}
                         aria-pressed={isSelected}
                       >
-                        {day.label}
+                        <span className="agenda-week-day-letter">
+                          {day.weekdayLetter}
+                        </span>
+                        <span className="agenda-week-day-number">
+                          {day.dayNumber}
+                        </span>
                       </button>
                     );
                   })}

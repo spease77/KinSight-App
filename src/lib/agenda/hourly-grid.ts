@@ -46,14 +46,13 @@ export type AgendaWeekDay = {
   date: Date;
   dateKey: string;
   dayIndex: number;
-  label: string;
+  weekdayLetter: string;
+  dayNumber: number;
 };
 
 export type AgendaWeekGridEventLayout = AgendaGridEventLayout & {
   dayIndex: number;
 };
-
-export const WEEK_DAY_LABELS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"] as const;
 
 function getGridTimeBounds(range?: AgendaGridTimeRange): AgendaGridTimeRange {
   return {
@@ -198,7 +197,7 @@ export function getCalendarWeekDays(reference: Date): AgendaWeekDay[] {
   const sunday = new Date(ref);
   sunday.setDate(ref.getDate() - ref.getDay());
 
-  return WEEK_DAY_LABELS.map((label, dayIndex) => {
+  return Array.from({ length: 7 }, (_, dayIndex) => {
     const date = new Date(sunday);
     date.setDate(sunday.getDate() + dayIndex);
 
@@ -206,7 +205,8 @@ export function getCalendarWeekDays(reference: Date): AgendaWeekDay[] {
       date,
       dateKey: toDateKey(date),
       dayIndex,
-      label,
+      weekdayLetter: date.toLocaleDateString("en-US", { weekday: "narrow" }),
+      dayNumber: date.getDate(),
     };
   });
 }
