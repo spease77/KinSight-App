@@ -19,7 +19,7 @@ export const AGENDA_DAY_PANEL_SHELL =
 
 /** Day/week/month views — no card frame so the grid uses page margins. */
 export const AGENDA_TIMELINE_PANEL_SHELL =
-  "flex flex-col gap-2 overflow-hidden";
+  "flex min-h-0 flex-1 flex-col gap-2 overflow-hidden";
 
 /** Month calendar — same borderless shell as day/week timeline views. */
 export const AGENDA_MONTH_PANEL_SHELL = AGENDA_TIMELINE_PANEL_SHELL;
@@ -48,7 +48,7 @@ export const AGENDA_MONTH_GRID =
 export const AGENDA_WEEK_GRID_FRAME = AGENDA_TIMELINE_FRAME;
 export const AGENDA_WEEK_HEADER_BAND = "agenda-week-header-band flex shrink-0";
 export const AGENDA_WEEK_TIME_SCROLL =
-  "agenda-week-time-scroll vertical-time-container contacts-scroll flex min-h-0 min-w-0 flex-1 overflow-y-auto [-webkit-overflow-scrolling:touch]";
+  "agenda-week-time-scroll vertical-time-container contacts-scroll min-h-0 h-full min-w-0 w-full flex-1 overflow-y-auto [-webkit-overflow-scrolling:touch]";
 export const AGENDA_WEEK_DAY_HEADER =
   "agenda-week-day-header sticky top-0 z-10 shrink-0 border-b bg-main text-center font-mono text-[10px] font-semibold tracking-wide transition-colors";
 

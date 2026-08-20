@@ -226,14 +226,15 @@ export function AgendaPage() {
     </>
   );
 
-  const isDayView = timeFrame === "day";
-  const showEmptyStateMessage = !hasScheduledInView && (!isDayView || isSearchActive);
+  const isTimelineView = timeFrame === "day" || timeFrame === "week";
+  const showEmptyStateMessage =
+    !hasScheduledInView && (!isTimelineView || isSearchActive);
 
   return (
     <>
       <div
         className={`agenda-page flex flex-col ${
-          isDayView
+          isTimelineView
             ? "h-full max-h-full"
             : "min-h-full"
         }`}
@@ -264,8 +265,8 @@ export function AgendaPage() {
 
         <main
           className={
-            isDayView
-              ? "flex min-h-0 flex-1 flex-col gap-2 px-5 pb-6"
+            isTimelineView
+              ? "flex min-h-0 flex-1 flex-col gap-2 px-5 pb-0"
               : "flex flex-col gap-4 px-5 pb-6"
           }
         >

@@ -694,7 +694,6 @@ html[data-standalone="true"] .app-viewport {
       var(--agenda-slot-height)
   );
   --agenda-week-header-height: 36px;
-  --agenda-week-viewport-height: clamp(320px, 58vh, var(--agenda-grid-body-height));
   --agenda-week-days-track-width: calc(100% * 7 / 7);
 }
 
@@ -711,7 +710,7 @@ html[data-standalone="true"] .app-viewport {
   display: block;
   min-height: 0;
   flex: 1 1 auto;
-  max-height: var(--agenda-week-viewport-height);
+  height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
