@@ -1,4 +1,5 @@
 import type { ScheduledInteraction } from "@/types/scheduled-interaction";
+import { isSameCalendarDay } from "@/lib/agenda/time-frame";
 import { toDateKey } from "@/lib/agenda/hourly-grid";
 
 export const MONTH_WEEKDAY_LABELS = [
@@ -30,6 +31,12 @@ function startOfToday(): Date {
   return today;
 }
 
+export function getTodayDateKey(reference = new Date()): string {
+  const today = new Date(reference);
+  today.setHours(0, 0, 0, 0);
+  return toDateKey(today);
+}
+
 export function formatAgendaMonthLabel(date: Date): string {
   return new Intl.DateTimeFormat("en-US", {
     month: "long",
@@ -47,7 +54,7 @@ export function getCalendarMonthGrid(reference: Date): AgendaMonthCell[] {
   const gridStart = new Date(firstOfMonth);
   gridStart.setDate(firstOfMonth.getDate() - firstOfMonth.getDay());
 
-  const todayKey = toDateKey(startOfToday());
+  const today = startOfToday();
   const cells: AgendaMonthCell[] = [];
 
   for (let index = 0; index < MONTH_GRID_DAYS; index += 1) {
@@ -60,7 +67,7 @@ export function getCalendarMonthGrid(reference: Date): AgendaMonthCell[] {
       dateKey,
       dayOfMonth: date.getDate(),
       isCurrentMonth: date.getMonth() === month,
-      isToday: dateKey === todayKey,
+      isToday: isSameCalendarDay(date, today),
       weekIndex: Math.floor(index / 7),
       dayIndex: index % 7,
     });

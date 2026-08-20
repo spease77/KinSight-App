@@ -16,6 +16,7 @@ import {
   buildMonthWindow,
   formatAgendaMonthLabel,
   getCalendarMonthGrid,
+  getTodayDateKey,
   interactionsByDateKey,
   monthAnchorKey,
   MONTH_WEEKDAY_LABELS,
@@ -49,12 +50,16 @@ interface AgendaMonthCalendarGridProps {
 
 function AgendaMonthBlock({
   monthStart,
+  monthKey,
+  todayKey,
   eventsByDate,
   selectedDateKey,
   onDaySelect,
   blockRef,
 }: {
   monthStart: Date;
+  monthKey: string;
+  todayKey: string;
   eventsByDate: Map<string, ScheduledInteraction[]>;
   selectedDateKey: string;
   onDaySelect: (cell: AgendaMonthCell, dayEvents: ScheduledInteraction[]) => void;
@@ -62,7 +67,7 @@ function AgendaMonthBlock({
 }) {
   const monthCells = useMemo(
     () => getCalendarMonthGrid(monthStart),
-    [monthStart]
+    [monthKey, monthStart]
   );
 
   return (
@@ -87,6 +92,7 @@ function AgendaMonthBlock({
         {monthCells.map((cell) => {
           const dayEvents = eventsByDate.get(cell.dateKey) ?? [];
           const isSelected = cell.dateKey === selectedDateKey;
+          const isToday = cell.dateKey === todayKey;
           const hasEvents = dayEvents.length > 0;
 
           return (
@@ -99,11 +105,11 @@ function AgendaMonthBlock({
               }`}
               aria-pressed={isSelected}
               aria-label={`${cell.dayOfMonth}${hasEvents ? `, ${dayEvents.length} events` : ""}`}
-              aria-current={cell.isToday ? "date" : undefined}
+              aria-current={isToday ? "date" : undefined}
             >
               <span
                 className={`agenda-month-day-number ${
-                  cell.isToday
+                  isToday
                     ? "agenda-month-day-number--today bg-[var(--contact-type-professional)] text-foreground"
                     : cell.isCurrentMonth
                       ? "text-foreground"
@@ -151,6 +157,7 @@ export function AgendaMonthCalendarGrid({
   );
 
   const selectedDateKey = toDateKey(selectedDate);
+  const todayKey = getTodayDateKey();
 
   const setMonthBlockRef = useCallback(
     (monthStart: Date) => (node: HTMLDivElement | null) => {
@@ -378,16 +385,22 @@ export function AgendaMonthCalendarGrid({
           className={AGENDA_MONTH_SCROLL}
           onScroll={handleScroll}
         >
-          {months.map((monthStart) => (
-            <AgendaMonthBlock
-              key={monthAnchorKey(monthStart)}
-              monthStart={monthStart}
-              eventsByDate={eventsByDate}
-              selectedDateKey={selectedDateKey}
-              onDaySelect={handleDaySelect}
-              blockRef={setMonthBlockRef(monthStart)}
-            />
-          ))}
+          {months.map((monthStart) => {
+            const monthKey = monthAnchorKey(monthStart);
+
+            return (
+              <AgendaMonthBlock
+                key={monthKey}
+                monthStart={monthStart}
+                monthKey={monthKey}
+                todayKey={todayKey}
+                eventsByDate={eventsByDate}
+                selectedDateKey={selectedDateKey}
+                onDaySelect={handleDaySelect}
+                blockRef={setMonthBlockRef(monthStart)}
+              />
+            );
+          })}
         </div>
       </div>
     </section>
