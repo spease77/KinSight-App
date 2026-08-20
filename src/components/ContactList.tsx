@@ -106,7 +106,7 @@ function ContactCard({
   if (!contactHref) {
     return (
       <li>
-        <div className="contact-list-row flex w-full items-center gap-4 px-4 py-3 text-left">
+        <div className="contact-list-row flex w-full items-center gap-4 py-3 text-left">
           {cardBody}
         </div>
       </li>
@@ -119,7 +119,7 @@ function ContactCard({
         href={contactHref}
         prefetch
         aria-label={`View ${displayName}`}
-        className="contact-list-row group flex w-full cursor-pointer touch-manipulation items-center gap-4 px-4 py-3 text-left active:scale-[0.99]"
+        className="contact-list-row group flex w-full cursor-pointer touch-manipulation items-center gap-4 py-3 text-left active:scale-[0.99]"
         onClick={(event) => {
           if (
             event.defaultPrevented ||
