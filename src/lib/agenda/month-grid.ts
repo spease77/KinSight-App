@@ -69,23 +69,55 @@ export function getCalendarMonthGrid(reference: Date): AgendaMonthCell[] {
   return cells;
 }
 
-export function shiftSelectedMonth(
-  date: Date,
-  direction: -1 | 1
-): Date {
-  const day = date.getDate();
+export function startOfCalendarMonth(date: Date): Date {
   const next = new Date(date);
   next.setDate(1);
-  next.setMonth(next.getMonth() + direction);
+  next.setHours(0, 0, 0, 0);
+  return next;
+}
 
+export function monthAnchorKey(date: Date): string {
+  return `${date.getFullYear()}-${date.getMonth()}`;
+}
+
+export function addCalendarMonths(date: Date, delta: number): Date {
+  const next = startOfCalendarMonth(date);
+  next.setMonth(next.getMonth() + delta);
+  return next;
+}
+
+export function buildMonthWindow(
+  center: Date,
+  monthsBefore: number,
+  monthsAfter: number
+): Date[] {
+  const anchor = startOfCalendarMonth(center);
+  const months: Date[] = [];
+
+  for (let offset = -monthsBefore; offset <= monthsAfter; offset += 1) {
+    months.push(addCalendarMonths(anchor, offset));
+  }
+
+  return months;
+}
+
+export function alignDateToMonth(date: Date, monthStart: Date): Date {
+  const day = date.getDate();
+  const next = startOfCalendarMonth(monthStart);
   const lastDayOfMonth = new Date(
     next.getFullYear(),
     next.getMonth() + 1,
     0
   ).getDate();
   next.setDate(Math.min(day, lastDayOfMonth));
-  next.setHours(0, 0, 0, 0);
   return next;
+}
+
+export function shiftSelectedMonth(
+  date: Date,
+  direction: -1 | 1
+): Date {
+  return alignDateToMonth(date, addCalendarMonths(date, direction));
 }
 
 export function interactionsByDateKey(

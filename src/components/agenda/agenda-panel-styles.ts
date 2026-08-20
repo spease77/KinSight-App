@@ -44,6 +44,9 @@ export const AGENDA_DAY_TIME_SCROLL =
 export const AGENDA_MONTH_GRID =
   "agenda-month-grid min-h-0 flex-1";
 
+export const AGENDA_MONTH_SCROLL =
+  "agenda-month-scroll vertical-time-container contacts-scroll min-h-0 h-full w-full flex-1 overflow-y-auto [-webkit-overflow-scrolling:touch]";
+
 /** Week grid sits directly in the shell — no nested inner card. */
 export const AGENDA_WEEK_GRID_FRAME = AGENDA_TIMELINE_FRAME;
 export const AGENDA_WEEK_HEADER_BAND = "agenda-week-header-band flex shrink-0";

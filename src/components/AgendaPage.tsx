@@ -239,9 +239,10 @@ export function AgendaPage() {
     </>
   );
 
-  const isTimelineView = timeFrame === "day" || timeFrame === "week";
+  const isCalendarView =
+    timeFrame === "day" || timeFrame === "week" || timeFrame === "month";
   const showEmptyStateMessage =
-    !hasScheduledInView && (!isTimelineView || isSearchActive);
+    !hasScheduledInView && (!isCalendarView || isSearchActive);
 
   return (
     <>

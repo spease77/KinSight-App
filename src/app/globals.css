@@ -613,6 +613,26 @@ html[data-standalone="true"] .app-viewport {
   grid-template-rows: repeat(6, minmax(0, 1fr));
 }
 
+.agenda-month-scroll {
+  display: block;
+  min-height: 0;
+  flex: 1 1 auto;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: auto;
+}
+
+.agenda-month-block {
+  flex-shrink: 0;
+}
+
+.agenda-month-grid--scroll {
+  flex: none;
+  grid-template-rows: repeat(6, minmax(2.75rem, auto));
+}
+
 .agenda-page-header {
   position: sticky;
   top: 0;
