@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { CalendarClock, Clock, Home, MessageSquare, Users } from "lucide-react";
 import { useSoftKeyboardOpen } from "@/hooks/useSoftKeyboardOpen";
 
@@ -41,8 +43,13 @@ const TABS = [
 export function BottomNav() {
   const pathname = usePathname();
   const keyboardOpen = useSoftKeyboardOpen();
+  const [mounted, setMounted] = useState(false);
 
-  return (
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const nav = (
     <nav
       aria-label="Main navigation"
       aria-hidden={keyboardOpen}
@@ -79,4 +86,10 @@ export function BottomNav() {
       </div>
     </nav>
   );
+
+  if (!mounted) {
+    return null;
+  }
+
+  return createPortal(nav, document.body);
 }

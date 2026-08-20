@@ -377,6 +377,21 @@ body {
     color 0.2s ease;
 }
 
+/* iOS Home Screen / standalone: use physical screen height, not Safari chrome inset */
+@media (display-mode: standalone), (display-mode: fullscreen) {
+  html,
+  body {
+    height: var(--app-height, 100dvh);
+    min-height: var(--app-height, 100dvh);
+  }
+}
+
+html[data-standalone="true"],
+html[data-standalone="true"] body {
+  height: var(--app-height, 100dvh);
+  min-height: var(--app-height, 100dvh);
+}
+
 /* Hide scrollbars globally while preserving scroll (touch, wheel, trackpad). */
 html,
 body,
@@ -508,11 +523,15 @@ b {
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --bottom-nav-height: 4.75rem;
+  --bottom-nav-clearance: calc(
+    var(--bottom-nav-height) + var(--safe-bottom) + 0.5rem
+  );
 }
 
 .app-scroll {
   overscroll-behavior-y: auto;
   -webkit-overflow-scrolling: touch;
+  padding-bottom: var(--bottom-nav-clearance);
 }
 
 .app-scroll.home-scroll-locked {
@@ -2151,6 +2170,18 @@ b {
     opacity 0.2s ease,
     visibility 0.2s ease,
     background-color 0.2s ease;
+}
+
+@media (display-mode: standalone), (display-mode: fullscreen) {
+  .bottom-nav {
+    bottom: 0;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+}
+
+html[data-standalone="true"] .bottom-nav {
+  bottom: 0;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 .bottom-nav--keyboard-open {

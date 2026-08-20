@@ -2,9 +2,11 @@ import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import { Inter, Montserrat } from "next/font/google";
 import { AppShell } from "@/components/AppShell";
+import { BottomNav } from "@/components/BottomNav";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { ToastViewport } from "@/components/ToastViewport";
 import { themeInitScript } from "@/lib/theme/theme";
+import { standaloneViewportScript } from "@/lib/viewport/standalone-viewport";
 import "./globals.css";
 const montserrat = Montserrat({
   subsets: ["latin"],
@@ -62,8 +64,14 @@ export default function RootLayout({
           strategy="beforeInteractive"
           dangerouslySetInnerHTML={{ __html: themeInitScript }}
         />
+        <Script
+          id="standalone-viewport"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{ __html: standaloneViewportScript }}
+        />
         <ThemeProvider>
           <AppShell>{children}</AppShell>
+          <BottomNav />
           <ToastViewport />
         </ThemeProvider>
       </body>
