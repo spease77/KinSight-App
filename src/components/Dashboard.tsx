@@ -353,14 +353,29 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
   const hideHomeMic = !hasConversationStarted && composerActive;
 
   useEffect(() => {
+    const shouldLock = !hasConversationStarted && composerActive;
+    if (!shouldLock) return;
+
     const scrollEl = document.querySelector<HTMLElement>(".app-scroll");
     if (!scrollEl) return;
 
-    const shouldLock = !hasConversationStarted && composerActive;
-    scrollEl.classList.toggle("home-scroll-locked", shouldLock);
+    scrollEl.classList.add("home-scroll-locked");
+
+    const lockScroll = () => {
+      scrollEl.scrollTop = 0;
+      window.scrollTo(0, 0);
+    };
+
+    lockScroll();
+
+    const viewport = window.visualViewport;
+    viewport?.addEventListener("resize", lockScroll);
+    viewport?.addEventListener("scroll", lockScroll);
 
     return () => {
       scrollEl.classList.remove("home-scroll-locked");
+      viewport?.removeEventListener("resize", lockScroll);
+      viewport?.removeEventListener("scroll", lockScroll);
     };
   }, [composerActive, hasConversationStarted]);
 
@@ -371,14 +386,15 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
           hasConversationStarted
             ? "home-dashboard home-dashboard--conversation flex flex-col"
             : composerActive
-              ? "home-dashboard home-dashboard--keyboard-open"
-              : "home-dashboard"
+              ? "home-dashboard home-dashboard--state-a home-dashboard--keyboard-open"
+              : "home-dashboard home-dashboard--state-a"
         }
       >
         <div className="home-dashboard__header">
           <Header
             showNewSession={hasConversationStarted}
             onNewSession={resetToStateA}
+            sticky={hasConversationStarted}
           />
         </div>
 
@@ -444,7 +460,13 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
               replyValue={replyText}
               onReplyChange={setReplyText}
               onReplySubmit={handleReplySubmit}
-              onReplyFocus={() => setAskBarFocused(true)}
+              onReplyFocus={() => {
+                setAskBarFocused(true);
+                const scrollEl =
+                  document.querySelector<HTMLElement>(".app-scroll");
+                if (scrollEl) scrollEl.scrollTop = 0;
+                window.scrollTo(0, 0);
+              }}
               onReplyBlur={() => setAskBarFocused(false)}
               chatError={chatError}
               conversationStarted={hasConversationStarted}

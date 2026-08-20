@@ -559,8 +559,19 @@ html[data-standalone="true"] .app-viewport {
 }
 
 .app-scroll.home-scroll-locked {
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
   overscroll-behavior: none;
+}
+
+.app-scroll.home-scroll-locked > .home-dashboard {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  margin-bottom: calc(-1 * var(--bottom-nav-clearance));
+  padding-bottom: var(--bottom-nav-clearance);
 }
 
 /* Agenda calendars fill the viewport; extend through app-scroll bottom padding. */
@@ -1004,6 +1015,22 @@ html[data-standalone="true"] .app-viewport {
 
 .home-dashboard__header {
   flex-shrink: 0;
+}
+
+/* State A: pin KinSight branding from initial load (no jump on keyboard). */
+.home-dashboard--state-a .home-dashboard__header {
+  min-height: 6rem;
+}
+
+.home-dashboard--state-a .home-dashboard__header > header {
+  position: fixed;
+  top: var(--safe-top);
+  left: 50%;
+  z-index: 45;
+  width: min(100%, 32rem);
+  max-width: 32rem;
+  transform: translateX(-50%);
+  background-color: var(--bg-main);
 }
 
 .home-hero {
