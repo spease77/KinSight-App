@@ -601,6 +601,35 @@ html[data-standalone="true"] .app-viewport {
   padding: 0.75rem 1rem;
 }
 
+/* Feedback: pin header + textarea; keyboard overlays without shifting layout. */
+.app-scroll.feedback-scroll-locked {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+.app-scroll.feedback-scroll-locked > .feedback-page {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  margin-bottom: calc(-1 * var(--bottom-nav-clearance));
+  padding-bottom: var(--bottom-nav-clearance);
+}
+
+.feedback-page__header {
+  flex-shrink: 0;
+}
+
+.feedback-page__body {
+  flex: 0 0 auto;
+}
+
+.feedback-page__textarea {
+  min-height: min(29vh, 13rem);
+}
+
 .border-agenda-grid-line {
   border-color: var(--agenda-grid-line);
 }

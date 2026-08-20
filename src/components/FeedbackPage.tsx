@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Check, Loader2, Send } from "lucide-react";
 import { Header } from "@/components/Header";
-import { useSoftKeyboardOpen } from "@/hooks/useSoftKeyboardOpen";
+import { useFeedbackScrollLock } from "@/hooks/useFeedbackScrollLock";
 
 const SUBMITTED_RESET_MS = 3000;
 
@@ -14,8 +14,8 @@ export function FeedbackPage() {
   const [submitState, setSubmitState] = useState<SubmitState>("idle");
   const [error, setError] = useState<string | null>(null);
   const [textareaFocused, setTextareaFocused] = useState(false);
-  const keyboardOpen = useSoftKeyboardOpen();
-  const hidePageTitle = textareaFocused || keyboardOpen;
+
+  useFeedbackScrollLock(textareaFocused);
 
   useEffect(() => {
     if (submitState !== "submitted") return;
@@ -62,21 +62,30 @@ export function FeedbackPage() {
   const isSubmitted = submitState === "submitted";
   const isSending = submitState === "sending";
 
+  const handleTextareaFocus = () => {
+    setTextareaFocused(true);
+    const scrollEl = document.querySelector<HTMLElement>(".app-scroll");
+    if (scrollEl) scrollEl.scrollTop = 0;
+    window.scrollTo(0, 0);
+  };
+
   return (
-    <>
-      {!hidePageTitle ? <Header title="Feedback" /> : null}
-      <main className="flex flex-col gap-6 px-5 pb-6 pt-4">
+    <div className="feedback-page flex min-h-0 flex-1 flex-col">
+      <div className="feedback-page__header shrink-0">
+        <Header title="Feedback" sticky={false} />
+      </div>
+      <main className="feedback-page__body flex flex-col gap-6 px-5 pb-6 pt-4">
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-          <label className="flex min-h-[min(50vh,22rem)] flex-col">
+          <label className="flex flex-col">
             <textarea
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              onFocus={() => setTextareaFocused(true)}
+              onFocus={handleTextareaFocus}
               onBlur={() => setTextareaFocused(false)}
               placeholder="Tell us what's working, what's not, or what you'd like KinSight to do next."
-              rows={10}
+              rows={7}
               disabled={isSending || isSubmitted}
-              className="app-field-input app-field-input--neutral min-h-[min(44vh,20rem)] flex-1 resize-none text-sm disabled:opacity-60"
+              className="feedback-page__textarea app-field-input app-field-input--neutral w-full resize-none text-sm disabled:opacity-60"
             />
           </label>
 
@@ -108,6 +117,6 @@ export function FeedbackPage() {
           </div>
         </form>
       </main>
-    </>
+    </div>
   );
 }
