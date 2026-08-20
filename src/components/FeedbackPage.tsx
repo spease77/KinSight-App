@@ -63,8 +63,7 @@ export function FeedbackPage() {
       <Header title="Feedback" />
       <main className="flex flex-col gap-6 px-5 pb-6 pt-4">
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-          <label className="flex min-h-[min(50vh,22rem)] flex-col gap-1.5">
-            <span className="ui-label">Feedback</span>
+          <label className="flex min-h-[min(50vh,22rem)] flex-col">
             <textarea
               value={message}
               onChange={(e) => setMessage(e.target.value)}
