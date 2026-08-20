@@ -1053,7 +1053,7 @@ export async function deleteContact(
     .delete()
     .eq("contact_id", trimmedId);
   await supabase
-    .from("maintenance_reminders")
+    .from("maintenance_reminder_log")
     .delete()
     .eq("contact_id", trimmedId);
   await supabase
@@ -1065,14 +1065,24 @@ export async function deleteContact(
     await deleteContactAvatarFile(existing.avatar_storage_path.trim());
   }
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("contacts")
     .delete()
-    .eq("id", trimmedId);
+    .eq("id", trimmedId)
+    .select("id");
 
   if (error) {
     console.error("deleteContact error:", error.message);
     return { success: false, error: error.message };
+  }
+
+  if (!data?.length) {
+    console.error("deleteContact: no row deleted for id", trimmedId);
+    return {
+      success: false,
+      error:
+        "Contact could not be deleted. Run supabase/migrations/018_contacts_delete_policy.sql in the Supabase SQL Editor.",
+    };
   }
 
   return { success: true };

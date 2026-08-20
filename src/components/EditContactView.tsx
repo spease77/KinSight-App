@@ -52,7 +52,7 @@ export function EditContactView({
   onContactUpdate,
 }: EditContactViewProps) {
   const router = useRouter();
-  const { removeContact } = useContacts();
+  const { removeContact, reload } = useContacts();
   const photoActionsRef = useRef<ContactPhotoActions | null>(null);
   const initialStateRef = useRef<EditContactFieldState>(
     buildEditContactFieldState(contact.profile ?? {})
@@ -135,7 +135,9 @@ export function EditContactView({
       const result = await deleteContactById(contact.id);
 
       if (!result.success) {
-        setDeleteError(result.error ?? "Could not delete contact.");
+        const message = result.error ?? "Could not delete contact.";
+        setDeleteError(message);
+        showErrorToast(message);
         return;
       }
 
@@ -144,8 +146,11 @@ export function EditContactView({
       showSuccessToast("Contact deleted");
       router.push("/contacts");
       router.refresh();
+      await reload();
     } catch {
-      setDeleteError("Could not delete contact. Check your connection.");
+      const message = "Could not delete contact. Check your connection.";
+      setDeleteError(message);
+      showErrorToast(message);
     } finally {
       setIsDeleting(false);
     }
