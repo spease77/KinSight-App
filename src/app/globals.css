@@ -4479,9 +4479,13 @@ html[data-standalone="true"] .app-viewport {
   }
 }
 
+.milestone-text {
+  width: 100%;
+}
+
 .milestone-ladder {
-  --milestone-ladder-inset: 0.25rem;
-  --milestone-circle-size: 1.5rem;
+  --milestone-ladder-inset: 0;
+  --milestone-circle-size: 1.625rem;
   --milestone-circle-radius: calc(var(--milestone-circle-size) / 2);
   min-height: 148px;
 }
@@ -4489,7 +4493,7 @@ html[data-standalone="true"] .app-viewport {
 .milestone-ladder-layout {
   display: flex;
   height: 100%;
-  gap: 0.5rem;
+  gap: 0.625rem;
   padding-top: var(--milestone-ladder-inset);
   padding-bottom: var(--milestone-ladder-inset);
 }
@@ -4547,27 +4551,27 @@ html[data-standalone="true"] .app-viewport {
 
 @media (min-width: 640px) {
   .milestone-ladder {
-    --milestone-ladder-inset: 0.5rem;
-    --milestone-circle-size: 1.75rem;
+    --milestone-ladder-inset: 0;
+    --milestone-circle-size: 1.875rem;
     min-height: 180px;
   }
 
   .milestone-ladder-layout {
-    gap: 0.625rem;
+    gap: 0.75rem;
   }
 }
 
 @media (min-width: 768px) {
   .milestone-ladder {
-    --milestone-ladder-inset: 0.875rem;
-    --milestone-circle-size: 2rem;
+    --milestone-ladder-inset: 0;
+    --milestone-circle-size: 2.125rem;
     min-height: 0;
   }
 
   .milestone-ladder-layout {
     width: 100%;
     margin-inline: auto;
-    gap: 0.75rem;
+    gap: 0.875rem;
   }
 }
 

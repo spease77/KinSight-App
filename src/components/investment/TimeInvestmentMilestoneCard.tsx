@@ -363,18 +363,18 @@ function MilestoneLadder({
                 <div
                   className={`milestone-text milestone-text--${TIER_KEY[milestone.tier]}`}
                 >
-                  <p className="text-xs font-semibold tracking-tight sm:text-sm">
+                  <p className="text-sm font-semibold tracking-tight sm:text-base">
                     {milestone.tier}
                     <span className="font-normal"> · {milestone.label}</span>
                   </p>
                   {reached ? (
-                    <p className="mt-0.5 text-[10px] sm:text-xs">
+                    <p className="mt-0.5 text-xs sm:text-sm">
                       {maintenanceOverdue
                         ? "Unlocked · Needs touch base"
                         : "Unlocked"}
                     </p>
                   ) : (
-                    <p className="mt-0.5 text-[10px] sm:text-xs">
+                    <p className="mt-0.5 text-xs sm:text-sm">
                       {hasGoalContact
                         ? formatRemainingMinutes(remaining)
                         : "--h"}
@@ -430,7 +430,7 @@ export function TimeInvestmentMilestoneCard({
       aria-label={
         hasGoalContact ? `Rapport Goal for ${heading}` : "Rapport Goal"
       }
-      className="ui-card flex flex-col gap-4 p-4 sm:gap-5 sm:p-6"
+      className="flex flex-col gap-4 sm:gap-5"
     >
       <div className="flex items-baseline justify-between gap-3">
         <h2 className="type-section-title min-w-0 truncate font-sans text-[1.09375rem] tracking-tight text-foreground">
@@ -446,7 +446,7 @@ export function TimeInvestmentMilestoneCard({
           {error}
         </p>
       ) : (
-        <div className="grid grid-cols-2 items-stretch gap-3 sm:gap-6 md:gap-8">
+        <div className="grid grid-cols-2 items-stretch gap-4 sm:gap-6 md:gap-8">
           <div className="flex h-full min-w-0 justify-center">
             <ProgressRing
               goalContact={goalContact}
