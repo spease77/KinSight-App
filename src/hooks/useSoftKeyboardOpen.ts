@@ -64,7 +64,20 @@ export function useSoftKeyboardOpen(): boolean {
       }
     };
 
+    const syncKeyboardInset = () => {
+      const inset = Math.max(
+        0,
+        window.innerHeight - viewport.height - viewport.offsetTop
+      );
+      document.documentElement.style.setProperty(
+        "--keyboard-inset",
+        `${inset}px`
+      );
+    };
+
     const update = () => {
+      syncKeyboardInset();
+
       const focusInField = isEditableField(document.activeElement);
       const baseline = baselineHeightRef.current ?? viewport.height;
       const heightDelta = baseline - viewport.height;
@@ -135,6 +148,7 @@ export function useSoftKeyboardOpen(): boolean {
       window.removeEventListener("focusout", handleFocusOut);
       window.removeEventListener("resize", handleResize);
       window.removeEventListener("orientationchange", handleOrientationChange);
+      document.documentElement.style.removeProperty("--keyboard-inset");
     };
   }, []);
 

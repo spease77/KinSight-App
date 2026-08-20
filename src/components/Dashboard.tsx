@@ -27,10 +27,6 @@ import { useVoiceExperience } from "@/contexts/VoiceExperienceContext";
 import { useSoftKeyboardOpen } from "@/hooks/useSoftKeyboardOpen";
 import type { OsVoiceSource } from "@/lib/voice/os-voice-deeplink";
 
-function lockHomeScrollTop() {
-  document.querySelector<HTMLElement>(".app-scroll")?.scrollTo({ top: 0 });
-}
-
 interface DashboardProps {
   /** Bumps when the user returns to the Home tab from another screen. */
   homeSession?: number;
@@ -354,46 +350,6 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
   const keyboardOpen = useSoftKeyboardOpen();
   const hideHomeMic = !hasConversationStarted && keyboardOpen;
 
-  useEffect(() => {
-    const scrollEl = document.querySelector<HTMLElement>(".app-scroll");
-    if (!scrollEl) return;
-
-    const shouldLock = !hasConversationStarted && keyboardOpen;
-    scrollEl.classList.toggle("home-scroll-locked", shouldLock);
-    if (shouldLock) {
-      lockHomeScrollTop();
-    }
-
-    return () => {
-      scrollEl.classList.remove("home-scroll-locked");
-    };
-  }, [hasConversationStarted, keyboardOpen]);
-
-  useEffect(() => {
-    if (hasConversationStarted) return;
-
-    const viewport = window.visualViewport;
-    if (!viewport) return;
-
-    const keepHeroPinned = () => {
-      lockHomeScrollTop();
-    };
-
-    viewport.addEventListener("resize", keepHeroPinned);
-    viewport.addEventListener("scroll", keepHeroPinned);
-
-    return () => {
-      viewport.removeEventListener("resize", keepHeroPinned);
-      viewport.removeEventListener("scroll", keepHeroPinned);
-    };
-  }, [hasConversationStarted]);
-
-  const handleReplyFocus = useCallback(() => {
-    if (!hasConversationStarted) {
-      lockHomeScrollTop();
-    }
-  }, [hasConversationStarted]);
-
   return (
     <>
       <div
@@ -472,9 +428,9 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
               replyValue={replyText}
               onReplyChange={setReplyText}
               onReplySubmit={handleReplySubmit}
-              onReplyFocus={handleReplyFocus}
               chatError={chatError}
               conversationStarted={hasConversationStarted}
+              keyboardOpen={keyboardOpen}
               onMicToggle={handleMicToggle}
               onMicAccessFailure={handleMicAccessFailure}
               micDisabled={false}

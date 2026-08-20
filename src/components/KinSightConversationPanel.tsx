@@ -35,6 +35,7 @@ interface KinSightConversationPanelProps {
   onReplyFocus?: () => void;
   chatError?: Error;
   conversationStarted?: boolean;
+  keyboardOpen?: boolean;
   onMicToggle?: (stream?: MediaStream) => void;
   onMicAccessFailure?: (failure: MicrophoneAccessFailure) => void;
   micDisabled?: boolean;
@@ -67,6 +68,7 @@ export function KinSightConversationPanel({
   onReplyFocus,
   chatError,
   conversationStarted = false,
+  keyboardOpen = false,
   onMicToggle,
   onMicAccessFailure,
   micDisabled = false,
@@ -75,7 +77,18 @@ export function KinSightConversationPanel({
 }: KinSightConversationPanelProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const replyInputRef = useRef<HTMLInputElement>(null);
+  const askBarRef = useRef<HTMLFormElement>(null);
   const [isClient, setIsClient] = useState(false);
+
+  const scrollAskBarIntoView = () => {
+    askBarRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    if (!conversationStarted && keyboardOpen) {
+      requestAnimationFrame(scrollAskBarIntoView);
+    }
+  }, [conversationStarted, keyboardOpen]);
 
   useEffect(() => {
     setIsClient(true);
@@ -116,6 +129,7 @@ export function KinSightConversationPanel({
 
   const askBarForm = (
     <form
+      ref={askBarRef}
       onSubmit={handleReplySubmit}
       onClick={(e) => {
         if ((e.target as HTMLElement).closest("button")) return;
@@ -153,7 +167,12 @@ export function KinSightConversationPanel({
           type="text"
           value={replyValue}
           onChange={(e) => onReplyChange(e.target.value)}
-          onFocus={onReplyFocus}
+          onFocus={() => {
+            onReplyFocus?.();
+            if (!conversationStarted) {
+              requestAnimationFrame(scrollAskBarIntoView);
+            }
+          }}
           placeholder={
             isLoading ? "KinSight is thinking…" : "Ask about a contact..."
           }
@@ -312,6 +331,10 @@ export function KinSightConversationPanel({
 
       {conversationStarted ? (
         <div className="home-composer-dock mt-auto shrink-0">{askBarForm}</div>
+      ) : keyboardOpen ? (
+        <div className="home-composer-dock home-composer-dock--keyboard-open shrink-0">
+          {askBarForm}
+        </div>
       ) : (
         askBarForm
       )}
