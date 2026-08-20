@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Clock } from "lucide-react";
 import type { Contact } from "@/types/contact";
 import { Header } from "@/components/Header";
@@ -14,6 +14,7 @@ export function InvestmentPage() {
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [refreshToken, setRefreshToken] = useState(0);
   const [isLogTimeOpen, setIsLogTimeOpen] = useState(false);
+  const rapportGoalRef = useRef<HTMLDivElement>(null);
 
   const handleLogged = () => {
     setRefreshToken((current) => current + 1);
@@ -30,9 +31,29 @@ export function InvestmentPage() {
     });
   }, [contacts, isLoading]);
 
-  const handleContactSelect = useCallback((contact: Contact) => {
-    setSelectedContact(contact);
+  const scrollToRapportGoal = useCallback(() => {
+    requestAnimationFrame(() => {
+      const target = rapportGoalRef.current;
+      const scrollEl = document.querySelector<HTMLElement>(".app-scroll");
+      if (target && scrollEl) {
+        const top =
+          target.getBoundingClientRect().top -
+          scrollEl.getBoundingClientRect().top +
+          scrollEl.scrollTop;
+        scrollEl.scrollTo({ top, behavior: "smooth" });
+        return;
+      }
+      target?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
   }, []);
+
+  const handleContactSelect = useCallback(
+    (contact: Contact) => {
+      setSelectedContact(contact);
+      scrollToRapportGoal();
+    },
+    [scrollToRapportGoal]
+  );
 
   const headerActions = (
     <div className="flex shrink-0 items-center gap-1.5">
@@ -56,12 +77,12 @@ export function InvestmentPage() {
     <>
       <Header title="Time Log" headerActions={headerActions} />
       <main className="flex flex-col gap-3 px-5 pb-6 pt-4">
-        <div className="flex flex-col">
+        <div ref={rapportGoalRef} className="flex flex-col">
           <TimeInvestmentMilestoneCard
             selectedContact={selectedContact}
             refreshToken={refreshToken}
           />
-          <p className="mt-2 mb-3 text-center text-sm text-zinc-400">
+          <p className="mt-5 mb-3 text-center text-sm text-zinc-400">
             Track interactions to maintain a strong bond.
           </p>
         </div>
