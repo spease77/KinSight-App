@@ -27,9 +27,10 @@ import {
 } from "@/lib/agenda/month-grid";
 import type { ScheduledInteraction } from "@/types/scheduled-interaction";
 import {
-  AGENDA_MONTH_BLOCK_LABEL,
   AGENDA_MONTH_GRID,
   AGENDA_MONTH_NAV_HEADER,
+  AGENDA_MONTH_NAV_LABEL,
+  AGENDA_PANEL_TITLE,
   AGENDA_MONTH_PANEL_SHELL,
   AGENDA_MONTH_SCROLL,
   AGENDA_MONTH_WEEKDAY,
@@ -41,23 +42,22 @@ const INITIAL_MONTH_BUFFER = 4;
 const LOAD_MONTH_BATCH = 3;
 const EDGE_THRESHOLD_PX = 480;
 
-/** Snap scroll so the month label sits at the scroll top and day 1's row aligns below the weekday band. */
+/** Snap scroll so day 1's row aligns below the weekday band at the scroll top. */
 function getMonthSnapScrollTop(
   scrollEl: HTMLElement,
   block: HTMLElement
 ): number {
-  const label = block.querySelector<HTMLElement>(".agenda-month-block-label");
   const weekdayRow = block.querySelector<HTMLElement>(".agenda-month-weekday-row");
   const firstDayRow = block.querySelector<HTMLElement>("[data-first-day-row]");
 
   const scrollRect = scrollEl.getBoundingClientRect();
 
-  if (!label || !weekdayRow || !firstDayRow) {
+  if (!weekdayRow || !firstDayRow) {
     const blockRect = block.getBoundingClientRect();
     return scrollEl.scrollTop + (blockRect.top - scrollRect.top);
   }
 
-  const headerHeight = label.offsetHeight + weekdayRow.offsetHeight;
+  const headerHeight = weekdayRow.offsetHeight;
   const firstDayRowRect = firstDayRow.getBoundingClientRect();
 
   return (
@@ -110,10 +110,6 @@ function AgendaMonthBlock({
       className="agenda-month-block"
       data-month-key={monthAnchorKey(monthStart)}
     >
-      <p className={AGENDA_MONTH_BLOCK_LABEL}>
-        {formatAgendaMonthLabel(monthStart)}
-      </p>
-
       <div className="agenda-month-weekday-row">
         {MONTH_WEEKDAY_LABELS.map((label) => (
           <div key={label} className={AGENDA_MONTH_WEEKDAY}>
@@ -207,6 +203,9 @@ export function AgendaMonthCalendarGrid({
 
   const selectedDateKey = toDateKey(selectedDate);
   const todayKey = getTodayDateKey();
+  const visibleMonthLabel = formatAgendaMonthLabel(
+    startOfCalendarMonth(selectedDate)
+  );
 
   const setMonthBlockRef = useCallback(
     (monthStart: Date) => (node: HTMLDivElement | null) => {
@@ -410,22 +409,27 @@ export function AgendaMonthCalendarGrid({
   return (
     <section aria-label="Monthly calendar" className={AGENDA_MONTH_PANEL_SHELL}>
       <div className={AGENDA_MONTH_NAV_HEADER}>
-        <button
-          type="button"
-          onClick={() => navigateMonth(-1)}
-          className={AGENDA_PANEL_NAV_BUTTON}
-          aria-label="Previous month"
-        >
-          <ChevronLeft className="h-4 w-4" strokeWidth={2} />
-        </button>
-        <button
-          type="button"
-          onClick={() => navigateMonth(1)}
-          className={AGENDA_PANEL_NAV_BUTTON}
-          aria-label="Next month"
-        >
-          <ChevronRight className="h-4 w-4" strokeWidth={2} />
-        </button>
+        <p className={`${AGENDA_PANEL_TITLE} ${AGENDA_MONTH_NAV_LABEL}`}>
+          {visibleMonthLabel}
+        </p>
+        <div className="agenda-month-nav-buttons flex shrink-0 items-center gap-1">
+          <button
+            type="button"
+            onClick={() => navigateMonth(-1)}
+            className={AGENDA_PANEL_NAV_BUTTON}
+            aria-label="Previous month"
+          >
+            <ChevronLeft className="h-4 w-4" strokeWidth={2} />
+          </button>
+          <button
+            type="button"
+            onClick={() => navigateMonth(1)}
+            className={AGENDA_PANEL_NAV_BUTTON}
+            aria-label="Next month"
+          >
+            <ChevronRight className="h-4 w-4" strokeWidth={2} />
+          </button>
+        </div>
       </div>
 
       <div className={`${AGENDA_TIMELINE_FRAME} agenda-calendar-body-band`}>

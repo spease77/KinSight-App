@@ -683,10 +683,6 @@ html[data-standalone="true"] .app-viewport {
   flex-shrink: 0;
 }
 
-.agenda-month-block-label {
-  padding-block: 0.25rem 0.625rem;
-}
-
 .agenda-month-nav-header {
   position: sticky;
   top: 0;
@@ -695,6 +691,10 @@ html[data-standalone="true"] .app-viewport {
   min-height: 2rem;
   padding-block: 0.125rem;
   background-color: var(--bg-main);
+}
+
+.agenda-month-nav-label {
+  padding-block: 0.125rem;
 }
 
 .agenda-month-grid--scroll {

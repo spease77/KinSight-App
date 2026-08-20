@@ -58,18 +58,18 @@ export const AGENDA_WEEK_DAY_HEADER =
 /** Shared hour labels in day/week timeline grids (styled in globals.css). */
 export const AGENDA_TIME_LABEL = "agenda-week-time-slot";
 
-export const AGENDA_MONTH_BLOCK_LABEL =
-  "agenda-month-block-label shrink-0 font-mono text-xs font-medium uppercase tracking-[0.08em] text-foreground";
-
 export const AGENDA_MONTH_WEEKDAY =
   "py-2 text-center font-mono text-xs font-semibold uppercase tracking-wide text-muted";
 
 export const AGENDA_PANEL_NAV_BUTTON =
   "flex h-8 w-8 items-center justify-center rounded-lg text-icon transition-colors hover:bg-accent-green-muted hover:text-foreground";
 
-/** Month view — blank sticky row; prev/next arrows only (labels live in scroll blocks). */
+/** Month view — sticky row with visible month label (left) and prev/next arrows (right). */
 export const AGENDA_MONTH_NAV_HEADER =
-  "agenda-month-nav-header flex shrink-0 items-center justify-end gap-1 bg-main";
+  "agenda-month-nav-header flex shrink-0 items-center justify-between gap-2 bg-main";
+
+export const AGENDA_MONTH_NAV_LABEL =
+  "agenda-month-nav-label min-w-0 flex-1 truncate";
 
 /** Inset ring stays inside the card so parent overflow does not clip selection. */
 export const AGENDA_ITEM_SELECTED_CLASS =
