@@ -49,6 +49,9 @@ export const AGENDA_WEEK_TIME_SCROLL =
 export const AGENDA_WEEK_DAY_HEADER =
   "agenda-week-day-header sticky top-0 z-10 shrink-0 border-b bg-main text-center font-mono text-[10px] font-semibold tracking-wide transition-colors";
 
+/** Shared hour labels in day/week timeline grids (styled in globals.css). */
+export const AGENDA_TIME_LABEL = "agenda-week-time-slot";
+
 export const AGENDA_MONTH_WEEKDAY =
   "py-1.5 text-center font-mono text-[11px] font-semibold uppercase tracking-wide text-muted";
 

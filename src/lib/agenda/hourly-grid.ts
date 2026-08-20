@@ -2,7 +2,7 @@ import type { ContactType } from "@/lib/contacts/contact-type";
 import type { ScheduledInteraction } from "@/types/scheduled-interaction";
 import { isSameCalendarDay } from "@/lib/agenda/time-frame";
 
-export const AGENDA_TIME_GUTTER_WIDTH = "60px";
+export const AGENDA_TIME_GUTTER_WIDTH = "48px";
 export const AGENDA_WEEK_VISIBLE_DAY_COUNT = 7;
 export const AGENDA_WEEK_HORIZONTAL_SNAP_COUNT = 3;
 

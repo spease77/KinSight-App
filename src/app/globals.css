@@ -685,7 +685,7 @@ html[data-standalone="true"] .app-viewport {
 
 .agenda-calendar-body-band,
 .agenda-week-body-band {
-  --agenda-time-gutter-width: 60px;
+  --agenda-time-gutter-width: 48px;
   --agenda-slot-height: 36px;
   --agenda-grid-start-hour: 0;
   --agenda-grid-end-hour: 24;
@@ -769,6 +769,19 @@ html[data-standalone="true"] .app-viewport {
 .agenda-week-appointment {
   position: absolute;
   z-index: 10;
+}
+
+.agenda-week-time-slot {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  padding-top: 0.25rem;
+  padding-left: 0;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.8125rem;
+  line-height: 1;
+  color: var(--text-muted);
+  white-space: nowrap;
 }
 
 .agenda-week-time-slot,

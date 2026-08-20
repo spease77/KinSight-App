@@ -22,6 +22,7 @@ import {
   AGENDA_ITEM_SELECTED_CLASS,
   AGENDA_PANEL_NAV_BUTTON,
   AGENDA_PANEL_TITLE,
+  AGENDA_TIME_LABEL,
   AGENDA_GRID_BORDER_LINE,
 } from "@/components/agenda/agenda-panel-styles";
 
@@ -141,7 +142,7 @@ export function AgendaDayHourlyGrid({
                 data-agenda-slot-minutes={slot.minutesFromMidnight}
                 className="agenda-day-scroll-row time-grid-row"
               >
-                <div className="agenda-week-time-slot flex items-start justify-end whitespace-nowrap pr-1.5 pt-1 font-mono text-[10px] leading-none text-muted">
+                <div className={AGENDA_TIME_LABEL}>
                   {slot.label}
                 </div>
                 <div
