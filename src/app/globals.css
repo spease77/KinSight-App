@@ -4973,7 +4973,22 @@ html[data-standalone="true"] .app-viewport {
   max-width: 32rem;
   padding: 0.75rem 1rem;
   transform: translateX(-50%);
+  background-color: var(--bg-main);
   pointer-events: none;
+}
+
+.edit-contact-page--sheet {
+  overflow: hidden;
+}
+
+.edit-contact-page--sheet .edit-contact-page__nav {
+  position: relative;
+  top: auto;
+  left: auto;
+  padding: calc(var(--safe-top) + 0.75rem) 1rem 0.75rem;
+  transform: none;
+  max-width: none;
+  flex-shrink: 0;
 }
 
 .edit-contact-page__nav .edit-contact-header__btn {
@@ -5036,11 +5051,29 @@ html[data-standalone="true"] .app-viewport {
   border-color: #454fc4;
 }
 
+.edit-contact-header__btn--save.edit-contact-header__btn--inactive,
+.edit-contact-header__btn--save:disabled {
+  background-color: #52525b;
+  border-color: transparent;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.edit-contact-header__btn--save.edit-contact-header__btn--inactive:hover,
+.edit-contact-header__btn--save:disabled:hover {
+  background-color: #52525b;
+  border-color: transparent;
+}
+
 .edit-contact-body {
   display: flex;
   flex-direction: column;
   gap: 1rem;
   padding: 3.75rem 1rem 1.5rem;
+}
+
+.edit-contact-page--sheet .edit-contact-body {
+  padding: 1rem 1rem 1.5rem;
 }
 
 .edit-contact-section {

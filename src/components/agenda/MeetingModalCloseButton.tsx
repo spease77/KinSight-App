@@ -47,10 +47,10 @@ export function MeetingModalCloseButton({
         type="button"
         onClick={handleClick}
         disabled={disabled}
-        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-zinc-600 text-white transition-all duration-200 hover:bg-zinc-500 active:scale-95 disabled:opacity-40"
+        className="edit-contact-header__btn edit-contact-header__btn--cancel"
         aria-label={ariaLabel}
       >
-        <X className="h-4 w-4" strokeWidth={2.5} />
+        <X className="h-5 w-5" strokeWidth={2.5} />
       </button>
     </DiscardChangesPopover>
   );

@@ -21,10 +21,8 @@ export function MeetingModalSaveButton({
 }: MeetingModalSaveButtonProps) {
   const sharedProps = {
     disabled: isSaving || !isDirty,
-    className: `flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-all duration-200 ${
-      isDirty
-        ? "bg-indigo-600 text-white hover:bg-indigo-500 active:scale-95 disabled:opacity-80"
-        : "pointer-events-none bg-zinc-600 text-white"
+    className: `edit-contact-header__btn edit-contact-header__btn--save${
+      isDirty ? "" : " edit-contact-header__btn--inactive"
     }`,
     "aria-label": isSaving ? savingLabel : saveLabel,
     "aria-disabled": !isDirty || isSaving,
@@ -34,9 +32,9 @@ export function MeetingModalSaveButton({
     return (
       <button type="button" onClick={onClick} {...sharedProps}>
         {isSaving ? (
-          <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2.5} />
+          <Loader2 className="h-5 w-5 animate-spin" strokeWidth={2.5} />
         ) : (
-          <Check className="h-4 w-4" strokeWidth={3} />
+          <Check className="h-5 w-5" strokeWidth={2.5} />
         )}
       </button>
     );
@@ -45,9 +43,9 @@ export function MeetingModalSaveButton({
   return (
     <button type="submit" form={formId} {...sharedProps}>
       {isSaving ? (
-        <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2.5} />
+        <Loader2 className="h-5 w-5 animate-spin" strokeWidth={2.5} />
       ) : (
-        <Check className="h-4 w-4" strokeWidth={3} />
+        <Check className="h-5 w-5" strokeWidth={2.5} />
       )}
     </button>
   );

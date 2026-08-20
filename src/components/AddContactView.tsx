@@ -1,8 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
-import { Check, Loader2, X } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AddContactPhotoSection,
   type AddContactPhotoActions,
@@ -23,6 +22,8 @@ import {
   createAnniversaryEntry,
   createBirthdayEntry,
 } from "@/components/EditContactKinSightTriggers";
+import { MeetingModalCloseButton } from "@/components/agenda/MeetingModalCloseButton";
+import { MeetingModalSaveButton } from "@/components/agenda/MeetingModalSaveButton";
 import { saveNewContact } from "@/lib/contacts/add-contact-save";
 import { imageBlobFromClipboardEvent } from "@/lib/contacts/avatar-crop";
 import {
@@ -33,18 +34,29 @@ import {
   loadContactSortPreference,
   type ContactSortField,
 } from "@/lib/contacts/sort-contacts";
+import { snapshotsEqual } from "@/lib/forms/compare-snapshots";
 import { useContacts } from "@/hooks/useContacts";
 
 export function AddContactView() {
   const router = useRouter();
   const { upsertContact, reload } = useContacts();
   const photoActionsRef = useRef<AddContactPhotoActions | null>(null);
+  const initialStateRef = useRef<EditContactFieldState>(
+    buildEditContactFieldState({})
+  );
   const [sortBy, setSortBy] = useState<ContactSortField>("first");
   const [state, setState] = useState<EditContactFieldState>(() =>
     buildEditContactFieldState({})
   );
+  const [hasPhotoChange, setHasPhotoChange] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const hasFormChanges = useMemo(
+    () => !snapshotsEqual(state, initialStateRef.current),
+    [state]
+  );
+  const hasChanges = hasFormChanges || hasPhotoChange;
 
   useEffect(() => {
     setSortBy(loadContactSortPreference());
@@ -99,29 +111,22 @@ export function AddContactView() {
   return (
     <div className="edit-contact-page">
       <header className="edit-contact-page__nav" aria-label="Add contact actions">
-        <button
-          type="button"
-          className="edit-contact-header__btn edit-contact-header__btn--cancel"
-          onClick={handleCancel}
+        <MeetingModalCloseButton
+          hasChanges={hasChanges}
           disabled={isSaving}
-          aria-label="Cancel"
-        >
-          <X className="h-5 w-5" strokeWidth={2.5} />
-        </button>
+          onClose={handleCancel}
+          onDiscard={handleCancel}
+        />
 
-        <button
-          type="button"
-          className="edit-contact-header__btn edit-contact-header__btn--save"
-          onClick={() => void handleSave()}
-          disabled={isSaving}
-          aria-label="Save"
-        >
-          {isSaving ? (
-            <Loader2 className="h-5 w-5 animate-spin" strokeWidth={2.5} />
-          ) : (
-            <Check className="h-5 w-5" strokeWidth={2.5} />
-          )}
-        </button>
+        <div className="pointer-events-auto">
+          <MeetingModalSaveButton
+            onClick={() => void handleSave()}
+            isDirty={hasChanges}
+            isSaving={isSaving}
+            savingLabel="Saving contact"
+            saveLabel="Save contact"
+          />
+        </div>
       </header>
 
       <EditContactDeleteProvider>
@@ -130,6 +135,7 @@ export function AddContactView() {
             firstName={state.firstName}
             lastName={state.lastName}
             sortBy={sortBy}
+            onPhotoDirtyChange={setHasPhotoChange}
             onReady={(actions) => {
               photoActionsRef.current = actions;
             }}

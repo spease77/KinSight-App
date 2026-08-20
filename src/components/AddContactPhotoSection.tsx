@@ -19,6 +19,7 @@ interface AddContactPhotoSectionProps {
   lastName: string;
   sortBy: ContactSortField;
   onReady?: (actions: AddContactPhotoActions) => void;
+  onPhotoDirtyChange?: (dirty: boolean) => void;
 }
 
 type CropState = {
@@ -31,6 +32,7 @@ export function AddContactPhotoSection({
   lastName,
   sortBy,
   onReady,
+  onPhotoDirtyChange,
 }: AddContactPhotoSectionProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const cropPreviewRef = useRef<string | null>(null);
@@ -54,15 +56,17 @@ export function AddContactPhotoSection({
       revokePreview(previewUrl);
       const nextPreviewUrl = URL.createObjectURL(blob);
       setPreviewUrl(nextPreviewUrl);
+      onPhotoDirtyChange?.(true);
     },
-    [previewUrl, revokePreview]
+    [onPhotoDirtyChange, previewUrl, revokePreview]
   );
 
   const clearPendingPhoto = useCallback(() => {
     pendingBlobRef.current = null;
     revokePreview(previewUrl);
     setPreviewUrl(null);
-  }, [previewUrl, revokePreview]);
+    onPhotoDirtyChange?.(false);
+  }, [onPhotoDirtyChange, previewUrl, revokePreview]);
 
   const openCropWithBlob = useCallback(
     (blob: Blob) => {

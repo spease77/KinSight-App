@@ -221,7 +221,7 @@ export function LogTimeModal({
       aria-modal="true"
       aria-labelledby="log-time-title"
     >
-      <div className="edit-contact-page mx-auto flex h-full w-full max-w-lg flex-col">
+      <div className="edit-contact-page edit-contact-page--sheet mx-auto flex h-full w-full max-w-lg flex-col">
         <header
           className="edit-contact-page__nav"
           aria-label="Log time actions"
