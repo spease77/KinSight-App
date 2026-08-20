@@ -351,7 +351,6 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
   const [askBarFocused, setAskBarFocused] = useState(false);
   const composerActive = keyboardOpen || askBarFocused;
   const hideHomeMic = !hasConversationStarted && composerActive;
-  const pinHomeHeader = !hasConversationStarted && composerActive;
 
   useEffect(() => {
     const scrollEl = document.querySelector<HTMLElement>(".app-scroll");
@@ -376,17 +375,10 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
               : "home-dashboard"
         }
       >
-        <div
-          className={
-            pinHomeHeader
-              ? "home-dashboard__header home-dashboard__header--pinned"
-              : "home-dashboard__header"
-          }
-        >
+        <div className="home-dashboard__header">
           <Header
             showNewSession={hasConversationStarted}
             onNewSession={resetToStateA}
-            sticky={!pinHomeHeader}
           />
         </div>
 
