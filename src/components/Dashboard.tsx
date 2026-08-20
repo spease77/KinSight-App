@@ -348,7 +348,9 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
 
   const hasConversationStarted = conversationEngaged;
   const keyboardOpen = useSoftKeyboardOpen();
-  const hideHomeMic = !hasConversationStarted && keyboardOpen;
+  const [askBarFocused, setAskBarFocused] = useState(false);
+  const composerActive = keyboardOpen || askBarFocused;
+  const hideHomeMic = !hasConversationStarted && composerActive;
 
   return (
     <>
@@ -356,7 +358,9 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
         className={
           hasConversationStarted
             ? "home-dashboard home-dashboard--conversation flex flex-col"
-            : "home-dashboard"
+            : composerActive
+              ? "home-dashboard home-dashboard--keyboard-open"
+              : "home-dashboard"
         }
       >
         <Header
@@ -426,9 +430,11 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
               replyValue={replyText}
               onReplyChange={setReplyText}
               onReplySubmit={handleReplySubmit}
+              onReplyFocus={() => setAskBarFocused(true)}
+              onReplyBlur={() => setAskBarFocused(false)}
               chatError={chatError}
               conversationStarted={hasConversationStarted}
-              keyboardOpen={keyboardOpen}
+              composerActive={composerActive}
               onMicToggle={handleMicToggle}
               onMicAccessFailure={handleMicAccessFailure}
               micDisabled={false}

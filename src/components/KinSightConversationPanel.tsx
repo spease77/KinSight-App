@@ -33,9 +33,11 @@ interface KinSightConversationPanelProps {
   onReplyChange: (value: string) => void;
   onReplySubmit: () => void;
   onReplyFocus?: () => void;
+  onReplyBlur?: () => void;
   chatError?: Error;
   conversationStarted?: boolean;
-  keyboardOpen?: boolean;
+  /** True when ask bar is focused or soft keyboard is open (State A layout). */
+  composerActive?: boolean;
   onMicToggle?: (stream?: MediaStream) => void;
   onMicAccessFailure?: (failure: MicrophoneAccessFailure) => void;
   micDisabled?: boolean;
@@ -66,9 +68,10 @@ export function KinSightConversationPanel({
   onReplyChange,
   onReplySubmit,
   onReplyFocus,
+  onReplyBlur,
   chatError,
   conversationStarted = false,
-  keyboardOpen = false,
+  composerActive = false,
   onMicToggle,
   onMicAccessFailure,
   micDisabled = false,
@@ -80,21 +83,14 @@ export function KinSightConversationPanel({
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
-    if (!conversationStarted && keyboardOpen) {
-      requestAnimationFrame(() => {
-        replyInputRef.current?.focus({ preventScroll: true });
-      });
-    }
-  }, [conversationStarted, keyboardOpen]);
-
-  useEffect(() => {
     setIsClient(true);
   }, []);
 
   const focusReplyInput = () => {
-    if (!isLoading) {
-      replyInputRef.current?.focus();
-    }
+    if (isLoading) return;
+    const input = replyInputRef.current;
+    if (!input || document.activeElement === input) return;
+    input.focus({ preventScroll: true });
   };
 
   const isProcessing =
@@ -128,6 +124,11 @@ export function KinSightConversationPanel({
     <form
       onSubmit={handleReplySubmit}
       onPointerDown={(e) => {
+        if ((e.target as HTMLElement).closest("button")) return;
+        // Synchronous focus on the user-gesture stack (required for iOS keyboard).
+        focusReplyInput();
+      }}
+      onClick={(e) => {
         if ((e.target as HTMLElement).closest("button")) return;
         focusReplyInput();
       }}
@@ -165,6 +166,9 @@ export function KinSightConversationPanel({
           onChange={(e) => onReplyChange(e.target.value)}
           onFocus={() => {
             onReplyFocus?.();
+          }}
+          onBlur={() => {
+            onReplyBlur?.();
           }}
           placeholder={
             isLoading ? "KinSight is thinking…" : "Ask about a contact..."
@@ -327,7 +331,7 @@ export function KinSightConversationPanel({
       ) : (
         <div
           className={`home-composer-dock shrink-0${
-            keyboardOpen ? " home-composer-dock--keyboard-open" : ""
+            composerActive ? " home-composer-dock--keyboard-open" : ""
           }`}
         >
           {askBarForm}

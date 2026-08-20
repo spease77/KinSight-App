@@ -908,7 +908,8 @@ html[data-standalone="true"] .app-viewport {
 .home-composer-dock {
   position: sticky;
   bottom: 0;
-  z-index: 20;
+  /* Above bottom nav (z-index 50) so the ask bar receives taps near the screen bottom. */
+  z-index: 55;
   padding-top: 0.75rem;
   padding-bottom: calc(0.5rem + env(safe-area-inset-bottom));
   background: linear-gradient(
@@ -922,7 +923,7 @@ html[data-standalone="true"] .app-viewport {
 .home-composer-dock--keyboard-open {
   position: fixed;
   left: 50%;
-  z-index: 30;
+  z-index: 60;
   width: min(100%, 32rem);
   max-width: 32rem;
   transform: translateX(-50%);
