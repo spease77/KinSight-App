@@ -140,7 +140,7 @@ function AgendaListRow({
 export function AgendaListView({
   interactions,
   onInteractionEdit,
-  emptyMessage = "Nothing scheduled. Use '+' button or home mic to add.",
+  emptyMessage,
 }: AgendaListViewProps) {
   const [sortBy, setSortBy] = useState<AgendaListSortField>("date");
   const [sortDirection, setSortDirection] =
@@ -156,10 +156,19 @@ export function AgendaListView({
   };
 
   if (interactions.length === 0) {
+    if (emptyMessage) {
+      return (
+        <p className="type-editorial py-8 text-center text-sm text-muted">
+          {emptyMessage}
+        </p>
+      );
+    }
+
     return (
-      <p className="type-editorial py-8 text-center text-sm text-muted">
-        {emptyMessage}
-      </p>
+      <div className="type-editorial flex flex-col gap-2 py-8 text-center text-sm text-muted">
+        <p>Nothing scheduled.</p>
+        <p>Use &apos;+&apos; button or home mic to add.</p>
+      </div>
     );
   }
 

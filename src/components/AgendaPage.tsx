@@ -325,11 +325,16 @@ export function AgendaPage() {
                     />
                   </>
                 ) : showEmptyStateMessage ? (
-                  <p className="py-3 text-center text-sm text-muted">
-                    {isSearchActive && hasTimeFrameResults
-                      ? "No meetings match your search."
-                      : "Nothing scheduled. Use '+' button or home mic to add."}
-                  </p>
+                  isSearchActive && hasTimeFrameResults ? (
+                    <p className="py-3 text-center text-sm text-muted">
+                      No meetings match your search.
+                    </p>
+                  ) : (
+                    <div className="flex flex-col gap-2 py-3 text-center text-sm text-muted">
+                      <p>Nothing scheduled.</p>
+                      <p>Use &apos;+&apos; button or home mic to add.</p>
+                    </div>
+                  )
                 ) : null}
               </>
             )}
