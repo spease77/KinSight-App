@@ -186,7 +186,7 @@ export function AgendaListView({
         onSortDirectionToggle={handleDirectionToggle}
       />
 
-      <ul className="contact-list-card contacts-scroll min-h-0 flex-1 overflow-y-auto pr-1">
+      <ul className="agenda-list-scroll contact-list-card contacts-scroll min-h-0 flex-1 overflow-y-auto pr-1">
         {sortedInteractions.map((interaction) => (
           <AgendaListRow
             key={interaction.id}

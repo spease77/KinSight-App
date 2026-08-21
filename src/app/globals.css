@@ -588,6 +588,13 @@ html[data-standalone="true"] .app-viewport {
   flex: 1 1 auto;
   flex-direction: column;
   margin-bottom: calc(-1 * var(--bottom-nav-clearance));
+}
+
+/* Scroll inset lives on inner panes so the grid/list fills to the bottom nav. */
+.app-scroll.agenda-scroll-locked .agenda-week-time-scroll,
+.app-scroll.agenda-scroll-locked .agenda-day-time-scroll,
+.app-scroll.agenda-scroll-locked .agenda-month-scroll,
+.app-scroll.agenda-scroll-locked .agenda-list-scroll {
   padding-bottom: var(--bottom-nav-clearance);
 }
 
@@ -685,7 +692,7 @@ html[data-standalone="true"] .app-viewport {
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: auto;
-  padding-block: 0.25rem 1rem;
+  padding-top: 0.25rem;
 }
 
 .agenda-month-block {
