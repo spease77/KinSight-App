@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import type { UIMessage } from "ai";
 import { Mic, Plus, Send, User, Volume2, VolumeX } from "lucide-react";
 import { getMessageText } from "@/lib/ai/message-text";
@@ -36,8 +36,6 @@ interface KinSightConversationPanelProps {
   onReplyBlur?: () => void;
   chatError?: Error;
   conversationStarted?: boolean;
-  /** True when the composer dock should pin above the soft keyboard. */
-  dockKeyboardOpen?: boolean;
   onMicToggle?: (stream?: MediaStream) => void;
   onMicAccessFailure?: (failure: MicrophoneAccessFailure) => void;
   micDisabled?: boolean;
@@ -71,7 +69,6 @@ export function KinSightConversationPanel({
   onReplyBlur,
   chatError,
   conversationStarted = false,
-  dockKeyboardOpen = false,
   onMicToggle,
   onMicAccessFailure,
   micDisabled = false,
@@ -84,29 +81,6 @@ export function KinSightConversationPanel({
 
   useEffect(() => {
     setIsClient(true);
-  }, []);
-
-  const composerActivationPendingRef = useRef(false);
-
-  const scheduleComposerActivation = useCallback(() => {
-    if (!onReplyFocus) return;
-
-    composerActivationPendingRef.current = true;
-
-    const activate = () => {
-      if (!composerActivationPendingRef.current) return;
-      composerActivationPendingRef.current = false;
-      onReplyFocus();
-    };
-
-    // Defer layout shifts until the tap gesture finishes — iOS drops focus
-    // when the dock jumps to fixed positioning mid-gesture.
-    window.addEventListener("pointerup", activate, { once: true, capture: true });
-    window.addEventListener("touchend", activate, { once: true, capture: true });
-  }, [onReplyFocus]);
-
-  const cancelComposerActivation = useCallback(() => {
-    composerActivationPendingRef.current = false;
   }, []);
 
   const isProcessing =
@@ -184,10 +158,9 @@ export function KinSightConversationPanel({
             value={replyValue}
             onChange={(e) => onReplyChange(e.target.value)}
             onFocus={() => {
-              scheduleComposerActivation();
+              onReplyFocus?.();
             }}
             onBlur={() => {
-              cancelComposerActivation();
               onReplyBlur?.();
             }}
             placeholder={
@@ -350,21 +323,7 @@ export function KinSightConversationPanel({
       {conversationStarted ? (
         <div className="home-composer-dock mt-auto shrink-0">{askBarForm}</div>
       ) : (
-        <>
-          {dockKeyboardOpen ? (
-            <div
-              className="home-composer-dock-spacer"
-              aria-hidden="true"
-            />
-          ) : null}
-          <div
-            className={`home-composer-dock shrink-0${
-              dockKeyboardOpen ? " home-composer-dock--keyboard-open" : ""
-            }`}
-          >
-            {askBarForm}
-          </div>
-        </>
+        <div className="home-composer-dock shrink-0">{askBarForm}</div>
       )}
 
       {statusLabel && !conversationStarted && (

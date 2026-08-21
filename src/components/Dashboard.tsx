@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
@@ -25,7 +24,7 @@ import { withMessageText } from "@/lib/ai/message-text";
 import { logMessageToKinSight } from "@/lib/kinsight/log-message";
 import type { MessageLogStatus } from "@/components/AssistantMessageBubble";
 import { useVoiceExperience } from "@/contexts/VoiceExperienceContext";
-import { useHomeHeaderSlot } from "@/hooks/useHomeHeaderSlot";
+import { useHomeKeyboardStable } from "@/hooks/useHomeKeyboardStable";
 import { useSoftKeyboardOpen } from "@/hooks/useSoftKeyboardOpen";
 import type { OsVoiceSource } from "@/lib/voice/os-voice-deeplink";
 
@@ -352,8 +351,8 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
   const keyboardOpen = useSoftKeyboardOpen();
   const [askBarFocused, setAskBarFocused] = useState(false);
   const composerActive = keyboardOpen || askBarFocused;
-  const hideHomeMic = !hasConversationStarted && composerActive;
-  const headerSlot = useHomeHeaderSlot();
+
+  useHomeKeyboardStable(composerActive && !hasConversationStarted);
 
   useEffect(() => {
     if (hasConversationStarted) return;
@@ -373,18 +372,11 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
       showNewSession={hasConversationStarted}
       onNewSession={resetToStateA}
       sticky={hasConversationStarted}
-      homeFixed={!hasConversationStarted}
     />
   );
 
-  const stateAHeader =
-    !hasConversationStarted && headerSlot
-      ? createPortal(header, headerSlot)
-      : null;
-
   return (
     <>
-      {stateAHeader}
       <div
         className={
           hasConversationStarted
@@ -392,15 +384,13 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
             : "home-dashboard home-dashboard--state-a"
         }
       >
-        {hasConversationStarted ? (
-          <div className="home-dashboard__header">{header}</div>
-        ) : null}
+        <div className="home-dashboard__header shrink-0">{header}</div>
 
         <main
           className={`relative flex flex-col ${
             hasConversationStarted
               ? "min-h-0 flex-1"
-              : "home-dashboard__main justify-start gap-6 px-5 pb-6 pt-8 sm:pt-12"
+              : "home-dashboard__main justify-start gap-6 px-5 pb-6 pt-4"
           }`}
         >
           <section
@@ -411,7 +401,7 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
                 : "home-hero"
             }`}
           >
-            {!hasConversationStarted && !hideHomeMic && (
+            {!hasConversationStarted && (
               <>
                 <MicrophoneButton
                   isRecording={isRecording}
@@ -462,7 +452,6 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
               onReplyBlur={() => setAskBarFocused(false)}
               chatError={chatError}
               conversationStarted={hasConversationStarted}
-              dockKeyboardOpen={keyboardOpen}
               onMicToggle={handleMicToggle}
               onMicAccessFailure={handleMicAccessFailure}
               micDisabled={false}

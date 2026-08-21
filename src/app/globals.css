@@ -527,9 +527,6 @@ b {
     var(--bottom-nav-height) + var(--safe-bottom) + 0.75rem
   );
   --home-header-height: 5.75rem;
-  --home-composer-dock-height: calc(
-    0.75rem + 3.25rem + 0.5rem + env(safe-area-inset-bottom, 0px)
-  );
 }
 
 .app-viewport {
@@ -1038,32 +1035,13 @@ html[data-standalone="true"] .app-viewport {
   flex: 1 1 auto;
 }
 
+.home-dashboard--state-a {
+  min-height: 0;
+  flex: 1 1 auto;
+}
+
 .home-dashboard__main {
   flex: 0 0 auto;
-}
-
-.home-header-slot {
-  position: relative;
-  z-index: 45;
-  flex-shrink: 0;
-  background-color: var(--bg-main);
-}
-
-.home-header-slot:not(:empty) {
-  min-height: var(--home-header-height);
-}
-
-.home-header-slot > header,
-.home-header--state-a {
-  position: fixed;
-  top: var(--safe-top);
-  left: 50%;
-  z-index: 45;
-  width: min(100%, 32rem);
-  max-width: 32rem;
-  transform: translateX(-50%);
-  background-color: var(--bg-main);
-  transition: none;
 }
 
 .home-dashboard__header {
@@ -1117,25 +1095,6 @@ html[data-standalone="true"] .app-viewport {
     color-mix(in srgb, var(--bg-main) 90%, transparent) 24%,
     var(--bg-main) 100%
   );
-}
-
-.home-composer-dock--keyboard-open {
-  position: fixed;
-  left: 50%;
-  z-index: 60;
-  width: min(100%, 32rem);
-  max-width: 32rem;
-  transform: translateX(-50%);
-  bottom: var(--keyboard-inset, 0px);
-  padding-left: 1.25rem;
-  padding-right: 1.25rem;
-  padding-bottom: 0.5rem;
-  transition: none;
-}
-
-.home-composer-dock-spacer {
-  flex-shrink: 0;
-  height: var(--home-composer-dock-height);
 }
 
 .home-ask-bar--conversation {
