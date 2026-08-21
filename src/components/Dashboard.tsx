@@ -24,7 +24,6 @@ import { withMessageText } from "@/lib/ai/message-text";
 import { logMessageToKinSight } from "@/lib/kinsight/log-message";
 import type { MessageLogStatus } from "@/components/AssistantMessageBubble";
 import { useVoiceExperience } from "@/contexts/VoiceExperienceContext";
-import { useHomeKeyboardStable } from "@/hooks/useHomeKeyboardStable";
 import { useSoftKeyboardOpen } from "@/hooks/useSoftKeyboardOpen";
 import type { OsVoiceSource } from "@/lib/voice/os-voice-deeplink";
 
@@ -351,8 +350,7 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
   const keyboardOpen = useSoftKeyboardOpen();
   const [askBarFocused, setAskBarFocused] = useState(false);
   const composerActive = keyboardOpen || askBarFocused;
-
-  useHomeKeyboardStable(composerActive && !hasConversationStarted);
+  const hideHomeMic = !hasConversationStarted && composerActive;
 
   useEffect(() => {
     if (hasConversationStarted) return;
@@ -402,7 +400,14 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
             }`}
           >
             {!hasConversationStarted && (
-              <>
+              <div
+                className={
+                  hideHomeMic
+                    ? "home-hero-mic-zone home-hero-mic-zone--hidden"
+                    : "home-hero-mic-zone"
+                }
+                aria-hidden={hideHomeMic}
+              >
                 <MicrophoneButton
                   isRecording={isRecording}
                   isSpeaking={isSpeaking}
@@ -423,7 +428,7 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
                     </p>
                   )}
                 </div>
-              </>
+              </div>
             )}
 
             <KinSightConversationPanel
@@ -452,6 +457,7 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
               onReplyBlur={() => setAskBarFocused(false)}
               chatError={chatError}
               conversationStarted={hasConversationStarted}
+              dockKeyboardOpen={keyboardOpen}
               onMicToggle={handleMicToggle}
               onMicAccessFailure={handleMicAccessFailure}
               micDisabled={false}
