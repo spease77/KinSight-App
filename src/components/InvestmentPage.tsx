@@ -82,7 +82,7 @@ export function InvestmentPage() {
             selectedContact={selectedContact}
             refreshToken={refreshToken}
           />
-          <p className="mt-5 mb-3 text-center text-sm text-zinc-400">
+          <p className="milestone-text--gold mt-6 mb-3 text-center text-sm">
             Track interactions to maintain a strong bond.
           </p>
         </div>

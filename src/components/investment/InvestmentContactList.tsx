@@ -100,7 +100,7 @@ function InvestmentContactRow({
         type="button"
         onClick={() => onSelect(contact)}
         aria-pressed={isSelected}
-        className={`contact-list-row group flex w-full cursor-pointer touch-manipulation items-center gap-4 py-3 text-left active:scale-[0.99]${
+        className={`contact-list-row group flex w-full cursor-pointer touch-manipulation items-center gap-4 py-3 pl-1 text-left active:scale-[0.99]${
           isSelected ? " bg-indigo-950/20" : ""
         }`}
       >
