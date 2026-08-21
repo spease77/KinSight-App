@@ -1,22 +1,25 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Delete } from "lucide-react";
 import {
   MEETING_HOUR_OPTIONS,
   MEETING_MINUTE_OPTIONS,
   MEETING_PERIOD_OPTIONS,
-  applySequentialTimeBackspace,
-  applySequentialTimeDigit,
+  applyFieldBackspace,
+  applyFieldDigit,
   parseTime24,
+  shouldDismissHourKeypad,
+  shouldDismissMinuteKeypad,
   toTime24,
 } from "@/lib/calendar/meeting-picker";
 
 const WHEEL_ITEM_HEIGHT = 41;
 const WHEEL_VISIBLE_HEIGHT = 203;
 const WHEEL_EDGE_PADDING = (WHEEL_VISIBLE_HEIGHT - WHEEL_ITEM_HEIGHT) / 2;
+const SCROLL_END_FALLBACK_MS = 48;
 
-type TimeInputMode = "wheel" | "manual";
+type KeypadField = "hour" | "minute";
 
 interface MeetingInlineTimeWheelProps {
   value: string;
@@ -29,7 +32,7 @@ interface WheelColumnProps<T extends string | number> {
   onSelect: (value: T) => void;
   format?: (value: T) => string;
   className?: string;
-  onEnterManual?: () => void;
+  onTapSelected?: () => void;
 }
 
 function WheelColumn<T extends string | number>({
@@ -38,11 +41,13 @@ function WheelColumn<T extends string | number>({
   onSelect,
   format = (value) => String(value),
   className = "",
-  onEnterManual,
+  onTapSelected,
 }: WheelColumnProps<T>) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const isUserScrollRef = useRef(false);
+  const didScrollDuringGestureRef = useRef(false);
   const scrollEndTimerRef = useRef<number | null>(null);
+  const rafRef = useRef<number | null>(null);
 
   const scrollToValue = useCallback(
     (value: T, behavior: ScrollBehavior = "auto") => {
@@ -56,28 +61,84 @@ function WheelColumn<T extends string | number>({
     [values]
   );
 
+  const snapToNearest = useCallback(() => {
+    if (!scrollRef.current) return;
+
+    const index = Math.round(scrollRef.current.scrollTop / WHEEL_ITEM_HEIGHT);
+    const clamped = Math.max(0, Math.min(values.length - 1, index));
+    const next = values[clamped];
+    const targetTop = clamped * WHEEL_ITEM_HEIGHT;
+
+    if (Math.abs(scrollRef.current.scrollTop - targetTop) > 0.5) {
+      scrollRef.current.scrollTo({ top: targetTop, behavior: "auto" });
+    }
+
+    if (next !== selected) onSelect(next);
+    isUserScrollRef.current = false;
+    didScrollDuringGestureRef.current = false;
+  }, [onSelect, selected, values]);
+
   useEffect(() => {
     if (isUserScrollRef.current) return;
     scrollToValue(selected);
   }, [selected, scrollToValue]);
 
+  useEffect(() => {
+    const element = scrollRef.current;
+    if (!element) return;
+
+    const handleScrollEnd = () => {
+      if (scrollEndTimerRef.current !== null) {
+        window.clearTimeout(scrollEndTimerRef.current);
+        scrollEndTimerRef.current = null;
+      }
+      snapToNearest();
+    };
+
+    element.addEventListener("scrollend", handleScrollEnd);
+    return () => element.removeEventListener("scrollend", handleScrollEnd);
+  }, [snapToNearest]);
+
   const handleScroll = () => {
     if (!scrollRef.current) return;
     isUserScrollRef.current = true;
+    didScrollDuringGestureRef.current = true;
+
+    if (rafRef.current !== null) {
+      cancelAnimationFrame(rafRef.current);
+    }
+
+    rafRef.current = requestAnimationFrame(() => {
+      if (!scrollRef.current) return;
+      const index = Math.round(scrollRef.current.scrollTop / WHEEL_ITEM_HEIGHT);
+      const clamped = Math.max(0, Math.min(values.length - 1, index));
+      const next = values[clamped];
+      if (next !== selected) onSelect(next);
+    });
 
     if (scrollEndTimerRef.current !== null) {
       window.clearTimeout(scrollEndTimerRef.current);
     }
 
     scrollEndTimerRef.current = window.setTimeout(() => {
-      if (!scrollRef.current) return;
-      const index = Math.round(scrollRef.current.scrollTop / WHEEL_ITEM_HEIGHT);
-      const clamped = Math.max(0, Math.min(values.length - 1, index));
-      const next = values[clamped];
-      if (next !== selected) onSelect(next);
-      scrollToValue(next, "smooth");
-      isUserScrollRef.current = false;
-    }, 80);
+      scrollEndTimerRef.current = null;
+      snapToNearest();
+    }, SCROLL_END_FALLBACK_MS);
+  };
+
+  const handleItemClick = (item: T) => {
+    if (didScrollDuringGestureRef.current) {
+      didScrollDuringGestureRef.current = false;
+      return;
+    }
+
+    if (item === selected) {
+      onTapSelected?.();
+      return;
+    }
+
+    onSelect(item);
+    scrollToValue(item, "auto");
   };
 
   return (
@@ -85,7 +146,7 @@ function WheelColumn<T extends string | number>({
       <div
         ref={scrollRef}
         onScroll={handleScroll}
-        className="meeting-time-wheel-column h-[12.6875rem] overflow-y-auto"
+        className="meeting-time-wheel-column h-[12.6875rem] overflow-y-auto overscroll-y-contain"
       >
         <div style={{ height: WHEEL_EDGE_PADDING }} aria-hidden="true" />
         {values.map((item) => {
@@ -94,15 +155,8 @@ function WheelColumn<T extends string | number>({
             <button
               key={String(item)}
               type="button"
-              onClick={() => {
-                onSelect(item);
-                scrollToValue(item, "smooth");
-              }}
-              onDoubleClick={(event) => {
-                event.preventDefault();
-                onEnterManual?.();
-              }}
-              className={`meeting-time-wheel-item flex w-full snap-center items-center justify-center text-[1.463rem] leading-none transition-[color,opacity,transform] duration-150 ${
+              onClick={() => handleItemClick(item)}
+              className={`meeting-time-wheel-item flex w-full snap-center items-center justify-center text-[1.463rem] leading-none ${
                 active
                   ? "font-semibold text-accent-primary-bright"
                   : "font-normal text-muted/55"
@@ -121,109 +175,80 @@ function WheelColumn<T extends string | number>({
 
 const NUMPAD_KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "", "0", "back"] as const;
 
-interface MeetingTimeManualEntryProps {
+interface TimeFieldKeypadProps {
+  field: KeypadField;
   hour12: number;
   minute: number;
-  period: "AM" | "PM";
-  onTimeChange: (hour12: number, minute: number, period: "AM" | "PM") => void;
-  onToggleMode: () => void;
+  onHourChange: (hour: number) => void;
+  onMinuteChange: (minute: number) => void;
+  onDismiss: () => void;
 }
 
-function MeetingTimeManualEntry({
+function TimeFieldKeypad({
+  field,
   hour12,
   minute,
-  period,
-  onTimeChange,
-  onToggleMode,
-}: MeetingTimeManualEntryProps) {
-  const captureRef = useRef<HTMLInputElement>(null);
+  onHourChange,
+  onMinuteChange,
+  onDismiss,
+}: TimeFieldKeypadProps) {
+  const digitCountRef = useRef(0);
 
   useEffect(() => {
-    captureRef.current?.focus({ preventScroll: true });
-  }, []);
+    digitCountRef.current = 0;
+  }, [field]);
 
   const applyDigit = (digit: string) => {
-    const next = applySequentialTimeDigit(hour12, minute, digit);
-    onTimeChange(next.hour12, next.minute, period);
+    digitCountRef.current += 1;
+
+    if (field === "hour") {
+      const nextHour = applyFieldDigit(hour12, digit, 1, 12);
+      onHourChange(nextHour);
+      if (shouldDismissHourKeypad(digitCountRef.current, digit)) {
+        onDismiss();
+      }
+      return;
+    }
+
+    const nextMinute = applyFieldDigit(minute, digit, 0, 59);
+    onMinuteChange(nextMinute);
+    if (shouldDismissMinuteKeypad(digitCountRef.current)) {
+      onDismiss();
+    }
   };
 
   const applyBackspace = () => {
-    const next = applySequentialTimeBackspace(hour12, minute);
-    onTimeChange(next.hour12, next.minute, period);
-  };
-
-  const handleCaptureKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.key >= "0" && event.key <= "9") {
-      event.preventDefault();
-      applyDigit(event.key);
+    digitCountRef.current = Math.max(0, digitCountRef.current - 1);
+    if (field === "hour") {
+      onHourChange(applyFieldBackspace(hour12, 1));
       return;
     }
-    if (event.key === "Backspace") {
-      event.preventDefault();
-      applyBackspace();
-    }
+    onMinuteChange(applyFieldBackspace(minute, 0));
   };
 
-  const handleCaptureInput = (event: FormEvent<HTMLInputElement>) => {
-    const digit = event.currentTarget.value.replace(/\D/g, "").slice(-1);
-    event.currentTarget.value = "";
-    if (digit) applyDigit(digit);
-  };
-
-  const hourLabel = String(hour12).padStart(2, "0");
-  const minuteLabel = String(minute).padStart(2, "0");
+  const valueLabel =
+    field === "hour" ? String(hour12) : String(minute).padStart(2, "0");
 
   return (
-    <div className="px-3 py-3">
-      <div
-        className="relative mx-auto w-full max-w-[11rem] md:max-w-xs"
-        onDoubleClick={onToggleMode}
-      >
-        <input
-          ref={captureRef}
-          type="tel"
-          inputMode="numeric"
-          pattern="[0-9]*"
-          autoComplete="off"
-          enterKeyHint="done"
-          aria-label="Enter time digits"
-          className="meeting-time-manual-capture"
-          onKeyDown={handleCaptureKeyDown}
-          onInput={handleCaptureInput}
-        />
-
-        <div
-          className="pointer-events-none flex items-center justify-center gap-0.5 rounded-xl px-2 py-3 md:gap-2"
-          aria-hidden="true"
+    <div className="meeting-time-keypad-sheet" role="dialog" aria-label={`Enter ${field}`}>
+      <div className="meeting-time-keypad-toolbar">
+        <span className="meeting-time-keypad-toolbar-label">
+          {field === "hour" ? "Hour" : "Minute"}
+        </span>
+        <button
+          type="button"
+          onClick={onDismiss}
+          className="meeting-time-keypad-done"
         >
-          <span className="meeting-time-manual-field">{hourLabel}</span>
-          <span className="pb-0.5 text-[1.406rem] font-light text-accent-primary-bright">:</span>
-          <span className="meeting-time-manual-field">{minuteLabel}</span>
-          <span className="meeting-time-manual-period">{period}</span>
-        </div>
+          Done
+        </button>
       </div>
 
-      <p className="mt-1 text-center text-[11px] text-muted md:hidden">
-        Type on your keypad — digits fill hour, then minutes. Double-tap to use the wheel.
-      </p>
+      <div className="meeting-time-keypad-value" aria-live="polite">
+        {valueLabel}
+      </div>
 
-      <div className="meeting-time-numpad mt-3 hidden md:grid">
-        <div className="col-span-3 mb-1 flex justify-center gap-2">
-          {MEETING_PERIOD_OPTIONS.map((option) => (
-            <button
-              key={option}
-              type="button"
-              onClick={() => onTimeChange(hour12, minute, option)}
-              className={`rounded-md px-3 py-1 text-xs font-semibold transition-colors ${
-                period === option
-                  ? "bg-accent-primary-muted text-accent-primary-bright"
-                  : "text-muted hover:text-foreground"
-              }`}
-            >
-              {option}
-            </button>
-          ))}
-        </div>
+      <div className="meeting-time-numpad grid">
         {NUMPAD_KEYS.map((key, index) => {
           if (key === "") {
             return <div key={`spacer-${index}`} aria-hidden="true" />;
@@ -235,7 +260,7 @@ function MeetingTimeManualEntry({
                 key="back"
                 type="button"
                 onClick={applyBackspace}
-                className="meeting-time-numpad-key flex items-center justify-center"
+                className="meeting-time-numpad-key meeting-time-numpad-key--action flex items-center justify-center"
                 aria-label="Delete digit"
               >
                 <Delete className="h-5 w-5" strokeWidth={2} />
@@ -263,7 +288,7 @@ export function MeetingInlineTimeWheel({
   value,
   onChange,
 }: MeetingInlineTimeWheelProps) {
-  const [inputMode, setInputMode] = useState<TimeInputMode>("wheel");
+  const [activeKeypad, setActiveKeypad] = useState<KeypadField | null>(null);
   const { hour12, minute, period } = parseTime24(value);
 
   const updateTime = (
@@ -274,27 +299,13 @@ export function MeetingInlineTimeWheel({
     onChange(toTime24(nextHour, nextMinute, nextPeriod));
   };
 
-  const enterManualMode = () => {
-    setInputMode("manual");
+  const openKeypad = (field: KeypadField) => {
+    setActiveKeypad(field);
   };
 
-  const exitManualMode = () => {
-    setInputMode("wheel");
+  const closeKeypad = () => {
+    setActiveKeypad(null);
   };
-
-  if (inputMode === "manual") {
-    return (
-      <div className="meeting-inline-time-wheel">
-        <MeetingTimeManualEntry
-          hour12={hour12}
-          minute={minute}
-          period={period}
-          onTimeChange={updateTime}
-          onToggleMode={exitManualMode}
-        />
-      </div>
-    );
-  }
 
   return (
     <div className="meeting-inline-time-wheel relative px-2 py-2">
@@ -306,7 +317,7 @@ export function MeetingInlineTimeWheel({
               values={MEETING_HOUR_OPTIONS}
               selected={hour12}
               onSelect={(nextHour) => updateTime(nextHour, minute, period)}
-              onEnterManual={enterManualMode}
+              onTapSelected={() => openKeypad("hour")}
             />
             <WheelColumn
               className="meeting-time-wheel-minute"
@@ -314,23 +325,17 @@ export function MeetingInlineTimeWheel({
               selected={minute}
               onSelect={(nextMinute) => updateTime(hour12, nextMinute, period)}
               format={(minuteValue) => String(minuteValue).padStart(2, "0")}
-              onEnterManual={enterManualMode}
+              onTapSelected={() => openKeypad("minute")}
             />
 
             <span className="meeting-time-wheel-colon" aria-hidden="true">
               :
             </span>
 
-            <button
-              type="button"
-              onDoubleClick={enterManualMode}
-              className="meeting-time-wheel-lens meeting-time-wheel-lens--time"
-              aria-label="Double-tap to enter time manually"
-            >
-              <span className="sr-only">
-                {String(hour12).padStart(2, "0")}:{String(minute).padStart(2, "0")}
-              </span>
-            </button>
+            <div
+              className="meeting-time-wheel-lens meeting-time-wheel-lens--time pointer-events-none"
+              aria-hidden="true"
+            />
           </div>
 
           <WheelColumn
@@ -347,9 +352,24 @@ export function MeetingInlineTimeWheel({
         />
       </div>
 
-      <p className="mt-1 text-center text-[10px] text-muted/80 md:hidden">
-        Double-tap the time to type with your keypad
-      </p>
+      {activeKeypad ? (
+        <>
+          <button
+            type="button"
+            className="meeting-time-keypad-backdrop"
+            aria-label="Close numeric keypad"
+            onClick={closeKeypad}
+          />
+          <TimeFieldKeypad
+            field={activeKeypad}
+            hour12={hour12}
+            minute={minute}
+            onHourChange={(nextHour) => updateTime(nextHour, minute, period)}
+            onMinuteChange={(nextMinute) => updateTime(hour12, nextMinute, period)}
+            onDismiss={closeKeypad}
+          />
+        </>
+      ) : null}
     </div>
   );
 }

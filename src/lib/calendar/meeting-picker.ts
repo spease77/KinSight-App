@@ -124,3 +124,33 @@ export function applySequentialTimeBackspace(
   const nextMinute = clampMinute(parseInt(next.slice(2, 4), 10) || 0);
   return { hour12: nextHour, minute: nextMinute };
 }
+
+/** iOS-style shifting digit entry for a single wheel column (hour or minute). */
+export function applyFieldDigit(
+  current: number,
+  digit: string,
+  min: number,
+  max: number
+): number {
+  const padded = String(current).padStart(2, "0");
+  const next = `${padded.slice(1)}${digit}`;
+  const parsed = parseInt(next, 10);
+  if (Number.isNaN(parsed)) return min;
+  return Math.min(max, Math.max(min, parsed));
+}
+
+export function applyFieldBackspace(current: number, min: number): number {
+  const padded = String(current).padStart(2, "0");
+  const parsed = parseInt(`0${padded.slice(0, 1)}`, 10);
+  if (Number.isNaN(parsed)) return min;
+  return Math.max(min, parsed);
+}
+
+export function shouldDismissHourKeypad(digitCount: number, lastDigit: string): boolean {
+  if (digitCount >= 2) return true;
+  return digitCount === 1 && lastDigit >= "2" && lastDigit <= "9";
+}
+
+export function shouldDismissMinuteKeypad(digitCount: number): boolean {
+  return digitCount >= 2;
+}
