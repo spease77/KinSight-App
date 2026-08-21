@@ -166,7 +166,17 @@ export function KinSightConversationPanel({
         </button>
       )}
       {isClient ? (
-        <label className="home-ask-bar__field min-w-0 flex-1 cursor-text">
+        <label
+          className="home-ask-bar__field min-w-0 flex-1 cursor-text"
+          onMouseDown={(event) => {
+            if (event.target !== replyInputRef.current) {
+              event.preventDefault();
+            }
+          }}
+          onClick={() => {
+            replyInputRef.current?.focus({ preventScroll: true });
+          }}
+        >
           <input
             ref={replyInputRef}
             id="kinsight-ask"
@@ -340,13 +350,21 @@ export function KinSightConversationPanel({
       {conversationStarted ? (
         <div className="home-composer-dock mt-auto shrink-0">{askBarForm}</div>
       ) : (
-        <div
-          className={`home-composer-dock shrink-0${
-            dockKeyboardOpen ? " home-composer-dock--keyboard-open" : ""
-          }`}
-        >
-          {askBarForm}
-        </div>
+        <>
+          {dockKeyboardOpen ? (
+            <div
+              className="home-composer-dock-spacer"
+              aria-hidden="true"
+            />
+          ) : null}
+          <div
+            className={`home-composer-dock shrink-0${
+              dockKeyboardOpen ? " home-composer-dock--keyboard-open" : ""
+            }`}
+          >
+            {askBarForm}
+          </div>
+        </>
       )}
 
       {statusLabel && !conversationStarted && (

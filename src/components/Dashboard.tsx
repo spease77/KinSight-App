@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { useChat } from "@ai-sdk/react";
@@ -25,7 +25,7 @@ import { withMessageText } from "@/lib/ai/message-text";
 import { logMessageToKinSight } from "@/lib/kinsight/log-message";
 import type { MessageLogStatus } from "@/components/AssistantMessageBubble";
 import { useVoiceExperience } from "@/contexts/VoiceExperienceContext";
-import { useHomeScrollLock } from "@/hooks/useHomeScrollLock";
+import { useHomeHeaderSlot } from "@/hooks/useHomeHeaderSlot";
 import { useSoftKeyboardOpen } from "@/hooks/useSoftKeyboardOpen";
 import type { OsVoiceSource } from "@/lib/voice/os-voice-deeplink";
 
@@ -353,11 +353,7 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
   const [askBarFocused, setAskBarFocused] = useState(false);
   const composerActive = keyboardOpen || askBarFocused;
   const hideHomeMic = !hasConversationStarted && composerActive;
-  const [headerSlot, setHeaderSlot] = useState<HTMLElement | null>(null);
-
-  useLayoutEffect(() => {
-    setHeaderSlot(document.getElementById("home-header-slot"));
-  }, []);
+  const headerSlot = useHomeHeaderSlot();
 
   useEffect(() => {
     if (hasConversationStarted) return;
@@ -372,13 +368,12 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
     };
   }, [hasConversationStarted]);
 
-  useHomeScrollLock(!hasConversationStarted && composerActive);
-
   const header = (
     <Header
       showNewSession={hasConversationStarted}
       onNewSession={resetToStateA}
       sticky={hasConversationStarted}
+      homeFixed={!hasConversationStarted}
     />
   );
 
@@ -398,8 +393,6 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
         }
       >
         {hasConversationStarted ? (
-          <div className="home-dashboard__header">{header}</div>
-        ) : !headerSlot ? (
           <div className="home-dashboard__header">{header}</div>
         ) : null}
 
@@ -465,13 +458,7 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
               replyValue={replyText}
               onReplyChange={setReplyText}
               onReplySubmit={handleReplySubmit}
-              onReplyFocus={() => {
-                setAskBarFocused(true);
-                const scrollEl =
-                  document.querySelector<HTMLElement>(".app-scroll");
-                if (scrollEl) scrollEl.scrollTop = 0;
-                window.scrollTo(0, 0);
-              }}
+              onReplyFocus={() => setAskBarFocused(true)}
               onReplyBlur={() => setAskBarFocused(false)}
               chatError={chatError}
               conversationStarted={hasConversationStarted}
