@@ -2,14 +2,11 @@
 
 import { ArrowDownAZ, ArrowUpAZ, Clock } from "lucide-react";
 
-/** Plain sort bar direction control leading margin (0.25rem). */
-export const PLAIN_SORT_DIRECTION_INSET = "ml-1";
+/** Plain sort bar direction control trailing margin (0.25rem). */
+export const PLAIN_SORT_DIRECTION_INSET = "mr-1";
 
-/**
- * Contact list inset aligned to the plain sort direction icon's left edge:
- * ml-1 (0.25rem) + half of (w-8 − w-4 icon) = 0.75rem.
- */
-export const PLAIN_SORT_ALIGNED_LIST_INSET = "pl-3";
+/** Contact list inset aligned to the first plain sort tab's left edge. */
+export const PLAIN_SORT_ALIGNED_LIST_INSET = "";
 
 interface RelationshipTreeSortBarProps<T extends string> {
   sortField: T;
@@ -42,17 +39,6 @@ export function RelationshipTreeSortBar<T extends string>({
       role="group"
       aria-label="Sort contacts"
     >
-      <button
-        type="button"
-        onClick={onSortDirectionToggle}
-        aria-label={`Sort ${directionLabel}. Tap to reverse.`}
-        title={`Sort ${directionLabel}`}
-        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-icon transition-colors hover:bg-accent-green-muted hover:text-foreground${
-          isPlain ? ` ${PLAIN_SORT_DIRECTION_INSET}` : ""
-        }`}
-      >
-        <DirectionIcon className="h-4 w-4" strokeWidth={2} />
-      </button>
       {fields.map((field) => {
         const active = sortField === field.value;
         const isTimeField = field.value === "time";
@@ -92,6 +78,17 @@ export function RelationshipTreeSortBar<T extends string>({
           </button>
         );
       })}
+      <button
+        type="button"
+        onClick={onSortDirectionToggle}
+        aria-label={`Sort ${directionLabel}. Tap to reverse.`}
+        title={`Sort ${directionLabel}`}
+        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-icon transition-colors hover:bg-accent-green-muted hover:text-foreground${
+          isPlain ? ` ${PLAIN_SORT_DIRECTION_INSET}` : ""
+        }`}
+      >
+        <DirectionIcon className="h-4 w-4" strokeWidth={2} />
+      </button>
     </div>
   );
 }

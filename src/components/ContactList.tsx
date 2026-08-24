@@ -162,18 +162,6 @@ function SortToggle({
       role="group"
       aria-label="Sort contacts by"
     >
-      <button
-        type="button"
-        onClick={onDirectionToggle}
-        aria-label={`Sort ${directionLabel}. Tap to reverse.`}
-        title={`Sort ${directionLabel}`}
-        className="
-          ml-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg
-          text-icon transition-colors hover:bg-accent-green-muted hover:text-foreground
-        "
-      >
-        <DirectionIcon className="h-4 w-4" strokeWidth={2} />
-      </button>
       {(
         [
           {
@@ -214,6 +202,18 @@ function SortToggle({
           </button>
         );
       })}
+      <button
+        type="button"
+        onClick={onDirectionToggle}
+        aria-label={`Sort ${directionLabel}. Tap to reverse.`}
+        title={`Sort ${directionLabel}`}
+        className="
+          mr-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg
+          text-icon transition-colors hover:bg-accent-green-muted hover:text-foreground
+        "
+      >
+        <DirectionIcon className="h-4 w-4" strokeWidth={2} />
+      </button>
     </div>
   );
 }
