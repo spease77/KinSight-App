@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { isStandalonePwa } from "@/lib/viewport/is-standalone-pwa";
 
 const KEYBOARD_HEIGHT_THRESHOLD = 120;
 const KEYBOARD_DOCK_GAP_PX = 10;
@@ -57,6 +58,52 @@ function isIOS(): boolean {
   );
 }
 
+function getBaselineHeight(viewport: VisualViewport): number {
+  return Math.max(
+    window.innerHeight,
+    viewport.height,
+    document.documentElement.clientHeight
+  );
+}
+
+/** Safari tab: layout viewport stays full-height; keyboard shrinks visual viewport. */
+function computeSafariKeyboardInset(viewport: VisualViewport): number {
+  return Math.max(
+    0,
+    window.innerHeight - viewport.height - viewport.offsetTop
+  );
+}
+
+/**
+ * Standalone PWA: visualViewport.height may not shrink — iOS scrolls the layout
+ * viewport instead. Combine vv shrink, document scroll, and a stored baseline.
+ */
+function computeStandaloneKeyboardInset(
+  viewport: VisualViewport,
+  baseline: number
+): number {
+  const layoutHeight = document.documentElement.clientHeight;
+  const vvShrink = Math.max(
+    0,
+    layoutHeight - viewport.height - viewport.offsetTop
+  );
+  const scrollProxy = Math.max(0, window.scrollY + viewport.offsetTop);
+  const baselineShrink = Math.max(0, baseline - viewport.height);
+
+  return Math.max(vvShrink, scrollProxy, baselineShrink);
+}
+
+function computeHeaderOffsetTop(
+  viewport: VisualViewport,
+  standalone: boolean
+): number {
+  if (!standalone) {
+    return Math.max(0, viewport.offsetTop);
+  }
+
+  return Math.max(viewport.offsetTop, window.scrollY);
+}
+
 export function useSoftKeyboardOpen(): boolean {
   const [keyboardOpen, setKeyboardOpen] = useState(false);
   const baselineHeightRef = useRef<number | null>(null);
@@ -67,18 +114,16 @@ export function useSoftKeyboardOpen(): boolean {
 
     const syncBaseline = () => {
       if (!isEditableField(document.activeElement)) {
-        baselineHeightRef.current = Math.max(
-          window.innerHeight,
-          viewport.height
-        );
+        baselineHeightRef.current = getBaselineHeight(viewport);
       }
     };
 
     const syncViewportMetrics = () => {
-      const rawInset = Math.max(
-        0,
-        window.innerHeight - viewport.height - viewport.offsetTop
-      );
+      const standalone = isStandalonePwa();
+      const baseline = baselineHeightRef.current ?? getBaselineHeight(viewport);
+      const rawInset = standalone
+        ? computeStandaloneKeyboardInset(viewport, baseline)
+        : computeSafariKeyboardInset(viewport);
       const keyboardVisible = rawInset > 60;
       const dockLift =
         (keyboardVisible ? KEYBOARD_DOCK_GAP_PX : 0) +
@@ -91,7 +136,7 @@ export function useSoftKeyboardOpen(): boolean {
       );
       document.documentElement.style.setProperty(
         "--visual-viewport-offset-top",
-        `${Math.max(0, viewport.offsetTop)}px`
+        `${computeHeaderOffsetTop(viewport, standalone)}px`
       );
     };
 
@@ -138,8 +183,12 @@ export function useSoftKeyboardOpen(): boolean {
     const handleFocusOut = () => {
       window.setTimeout(() => {
         if (!isEditableField(document.activeElement)) {
+          if (isStandalonePwa() && window.scrollY > 0) {
+            window.scrollTo(0, 0);
+          }
           syncBaseline();
           setKeyboardOpen(false);
+          syncViewportMetrics();
           return;
         }
 
@@ -159,7 +208,13 @@ export function useSoftKeyboardOpen(): boolean {
       }, 250);
     };
 
-    baselineHeightRef.current = Math.max(window.innerHeight, viewport.height);
+    const handleScroll = () => {
+      if (!isStandalonePwa()) return;
+      syncViewportMetrics();
+      update();
+    };
+
+    baselineHeightRef.current = getBaselineHeight(viewport);
 
     viewport.addEventListener("resize", update);
     viewport.addEventListener("scroll", update);
@@ -167,6 +222,7 @@ export function useSoftKeyboardOpen(): boolean {
     window.addEventListener("focusout", handleFocusOut);
     window.addEventListener("resize", handleResize);
     window.addEventListener("orientationchange", handleOrientationChange);
+    window.addEventListener("scroll", handleScroll, { passive: true });
 
     update();
 
@@ -177,6 +233,7 @@ export function useSoftKeyboardOpen(): boolean {
       window.removeEventListener("focusout", handleFocusOut);
       window.removeEventListener("resize", handleResize);
       window.removeEventListener("orientationchange", handleOrientationChange);
+      window.removeEventListener("scroll", handleScroll);
       document.documentElement.style.removeProperty("--keyboard-inset");
       document.documentElement.style.removeProperty(
         "--visual-viewport-offset-top"

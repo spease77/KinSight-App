@@ -1064,6 +1064,12 @@ html[data-standalone="true"] .app-viewport {
   background-color: var(--bg-main);
 }
 
+/* Standalone PWA: prevent rubber-band scroll from dragging fixed chrome. */
+html[data-standalone="true"] .home-fixed-header,
+html[data-standalone="true"] .home-composer-dock--keyboard-open {
+  touch-action: none;
+}
+
 .home-fixed-header-spacer {
   flex-shrink: 0;
   height: var(--home-header-height);
