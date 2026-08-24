@@ -18,6 +18,10 @@ import {
   groupInteractionsByDate,
 } from "@/lib/agenda/time-frame";
 import {
+  loadAgendaViewPreference,
+  saveAgendaViewPreference,
+} from "@/lib/agenda/view-preference";
+import {
   DEFAULT_AGENDA_TIME_FRAME,
   type AgendaTimeFrame,
   type ScheduledInteraction,
@@ -111,6 +115,15 @@ export function AgendaPage() {
   useEffect(() => {
     void loadInteractions();
   }, [loadInteractions]);
+
+  useEffect(() => {
+    setTimeFrame(loadAgendaViewPreference());
+  }, []);
+
+  const handleTimeFrameChange = useCallback((value: AgendaTimeFrame) => {
+    setTimeFrame(value);
+    saveAgendaViewPreference(value);
+  }, []);
 
   useEffect(() => {
     if (pathname === "/agenda") {
@@ -271,7 +284,7 @@ export function AgendaPage() {
           <div className="px-5 pb-2">
             <AgendaTimeFrameSwitcher
               timeFrame={timeFrame}
-              onTimeFrameChange={setTimeFrame}
+              onTimeFrameChange={handleTimeFrameChange}
             />
           </div>
         </div>
