@@ -2,6 +2,15 @@
 
 import { ArrowDownAZ, ArrowUpAZ, Clock } from "lucide-react";
 
+/** Plain sort bar direction control leading margin (0.25rem). */
+export const PLAIN_SORT_DIRECTION_INSET = "ml-1";
+
+/**
+ * Contact list inset aligned to the plain sort direction icon's left edge:
+ * ml-1 (0.25rem) + half of (w-8 − w-4 icon) = 0.75rem.
+ */
+export const PLAIN_SORT_ALIGNED_LIST_INSET = "pl-3";
+
 interface RelationshipTreeSortBarProps<T extends string> {
   sortField: T;
   sortDirection: "asc" | "desc";
@@ -39,7 +48,7 @@ export function RelationshipTreeSortBar<T extends string>({
         aria-label={`Sort ${directionLabel}. Tap to reverse.`}
         title={`Sort ${directionLabel}`}
         className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-icon transition-colors hover:bg-accent-green-muted hover:text-foreground${
-          isPlain ? " ml-1" : ""
+          isPlain ? ` ${PLAIN_SORT_DIRECTION_INSET}` : ""
         }`}
       >
         <DirectionIcon className="h-4 w-4" strokeWidth={2} />

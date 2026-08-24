@@ -14,6 +14,7 @@ import {
 import {
   RelationshipTreeSortBar,
   INVESTMENT_CONTACT_SORT_FIELDS,
+  PLAIN_SORT_ALIGNED_LIST_INSET,
 } from "@/components/RelationshipTreeSortBar";
 import { formatDurationMinutes, hasLoggedTimeInvested } from "@/lib/time-logs/format-duration";
 import { useInvestmentSummary } from "@/hooks/useInvestmentSummary";
@@ -100,7 +101,7 @@ function InvestmentContactRow({
         type="button"
         onClick={() => onSelect(contact)}
         aria-pressed={isSelected}
-        className={`contact-list-row group flex w-full cursor-pointer touch-manipulation items-center gap-4 py-3 pl-1 text-left active:scale-[0.99]${
+        className={`contact-list-row group flex w-full cursor-pointer touch-manipulation items-center gap-4 py-3 ${PLAIN_SORT_ALIGNED_LIST_INSET} text-left active:scale-[0.99]${
           isSelected ? " bg-indigo-950/20" : ""
         }`}
       >
