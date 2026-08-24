@@ -382,7 +382,14 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
             : "home-dashboard home-dashboard--state-a"
         }
       >
-        <div className="home-dashboard__header shrink-0">{header}</div>
+        {hasConversationStarted ? (
+          <div className="home-dashboard__header shrink-0">{header}</div>
+        ) : (
+          <>
+            <div className="home-fixed-header">{header}</div>
+            <div className="home-fixed-header-spacer" aria-hidden="true" />
+          </>
+        )}
 
         <main
           className={`relative flex flex-col ${

@@ -64,7 +64,7 @@ export function useSoftKeyboardOpen(): boolean {
       }
     };
 
-    const syncKeyboardInset = () => {
+    const syncViewportMetrics = () => {
       const inset = Math.max(
         0,
         window.innerHeight - viewport.height - viewport.offsetTop
@@ -73,10 +73,14 @@ export function useSoftKeyboardOpen(): boolean {
         "--keyboard-inset",
         `${inset}px`
       );
+      document.documentElement.style.setProperty(
+        "--visual-viewport-offset-top",
+        `${Math.max(0, viewport.offsetTop)}px`
+      );
     };
 
     const update = () => {
-      syncKeyboardInset();
+      syncViewportMetrics();
 
       const focusInField = isEditableField(document.activeElement);
       const baseline = baselineHeightRef.current ?? viewport.height;
@@ -149,6 +153,9 @@ export function useSoftKeyboardOpen(): boolean {
       window.removeEventListener("resize", handleResize);
       window.removeEventListener("orientationchange", handleOrientationChange);
       document.documentElement.style.removeProperty("--keyboard-inset");
+      document.documentElement.style.removeProperty(
+        "--visual-viewport-offset-top"
+      );
     };
   }, []);
 
