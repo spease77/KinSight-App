@@ -464,7 +464,7 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
               onReplyBlur={() => setAskBarFocused(false)}
               chatError={chatError}
               conversationStarted={hasConversationStarted}
-              dockKeyboardOpen={keyboardOpen}
+              dockKeyboardOpen={composerActive}
               onMicToggle={handleMicToggle}
               onMicAccessFailure={handleMicAccessFailure}
               micDisabled={false}
