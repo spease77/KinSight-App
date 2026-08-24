@@ -343,9 +343,6 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
 
   const activeMicFailure = micAccessFailure ?? permissionFailure;
 
-  const isMicIdle =
-    !isRecording && !isSpeaking && !isBusy && !isDetecting;
-
   const hasConversationStarted = conversationEngaged;
   const keyboardOpen = useSoftKeyboardOpen();
   const [askBarFocused, setAskBarFocused] = useState(false);
@@ -423,18 +420,6 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
                   onMicAccessFailure={handleMicAccessFailure}
                   volumeLevel={volumeLevel}
                 />
-
-                <div
-                  className={`flex w-full max-w-sm items-center justify-center ${
-                    isMicIdle ? "min-h-14 py-4" : "min-h-0"
-                  }`}
-                >
-                  {isMicIdle && (
-                    <p className="text-center font-sans text-sm font-medium leading-snug text-foreground/85">
-                      Tap mic to record / stop
-                    </p>
-                  )}
-                </div>
               </div>
             )}
 

@@ -3524,8 +3524,8 @@ html[data-standalone="true"] .home-composer-dock--keyboard-open {
 }
 
 .mic-shell-recording {
-  background-color: var(--accent-green-bright);
-  border-color: #5a7d68;
+  background-color: #4ade9f;
+  border-color: #3ab882;
 }
 
 .mic-inner-idle {
@@ -3537,11 +3537,56 @@ html[data-standalone="true"] .home-composer-dock--keyboard-open {
 }
 
 .mic-inner-recording {
-  background-color: var(--accent-green-bright);
-  border: 1px solid #5a7d68;
+  background-color: #4ade9f;
+  border: 1px solid #3ab882;
   transition:
     background-color 0.3s ease,
     border-color 0.3s ease;
+}
+
+.mic-ring-recording {
+  border-color: rgba(74, 222, 159, 0.5);
+}
+
+.mic-ring-recording--soft {
+  border-color: rgba(74, 222, 159, 0.35);
+}
+
+.mic-listening-dot {
+  display: block;
+  border-radius: 9999px;
+  background-color: #ffffff;
+  animation: mic-listening-dot-pulse 1.1s ease-in-out infinite;
+  transform-origin: center;
+}
+
+.mic-listening-dot--hero {
+  width: 0.5rem;
+  height: 0.5rem;
+}
+
+.mic-listening-dot--compact {
+  width: 0.25rem;
+  height: 0.25rem;
+}
+
+@media (min-width: 640px) {
+  .mic-listening-dot--hero {
+    width: 0.625rem;
+    height: 0.625rem;
+  }
+}
+
+@keyframes mic-listening-dot-pulse {
+  0%,
+  100% {
+    transform: scale(0.55);
+    opacity: 0.45;
+  }
+  50% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 @keyframes mic-ring-expand {

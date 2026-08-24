@@ -1,7 +1,7 @@
 "use client";
 
 import type { CSSProperties } from "react";
-import { Ear, Mic } from "lucide-react";
+import { Mic } from "lucide-react";
 import type { MicrophoneAccessFailure } from "@/lib/audio/voice-support";
 import {
   checkMicrophoneEnvironment,
@@ -42,6 +42,29 @@ const SIZE_CLASSES = {
 const VOLUME_TRANSITION_CLASS =
   "transition-[transform,box-shadow] duration-75 ease-out will-change-[transform,box-shadow]";
 
+function ListeningDots({ variant }: { variant: "hero" | "compact" }) {
+  const gap = variant === "hero" ? "gap-1.5 sm:gap-2" : "gap-1";
+  const dotClass =
+    variant === "hero"
+      ? "mic-listening-dot mic-listening-dot--hero"
+      : "mic-listening-dot mic-listening-dot--compact";
+
+  return (
+    <div
+      className={`flex items-center justify-center ${gap}`}
+      aria-hidden="true"
+    >
+      {[0, 1, 2, 3].map((index) => (
+        <span
+          key={index}
+          className={dotClass}
+          style={{ animationDelay: `${index * 0.14}s` }}
+        />
+      ))}
+    </div>
+  );
+}
+
 function getMicVolumePresentation(
   volumeLevel: number,
   isRecording: boolean,
@@ -59,7 +82,7 @@ function getMicVolumePresentation(
   const spread = blur * 0.4;
   const opacity = 0.18 + intensity * 0.55;
   const glowColor = isRecording
-    ? `color-mix(in srgb, var(--accent-green-bright) ${Math.round(opacity * 100)}%, transparent)`
+    ? `rgba(74, 222, 159, ${opacity.toFixed(2)})`
     : `color-mix(in srgb, var(--accent-mic) ${Math.round(opacity * 45)}%, transparent)`;
 
   return {
@@ -116,7 +139,7 @@ function MicToggleControl({
           sizes.ring
         } ${
           isRecording
-            ? "border-accent-green-bright/50 mic-ring-fast"
+            ? "mic-ring-recording mic-ring-fast"
             : "border-accent-mic/50"
         }`}
         aria-hidden="true"
@@ -127,7 +150,7 @@ function MicToggleControl({
             sizes.ring
           } ${
             isRecording
-              ? "border-accent-green-bright/35 mic-ring-fast"
+              ? "mic-ring-recording mic-ring-recording--soft mic-ring-fast"
               : "border-accent-mic/35"
           }`}
           aria-hidden="true"
@@ -155,7 +178,7 @@ function MicToggleControl({
           }`}
         >
           {isRecording ? (
-            <Ear className={`${sizes.icon} text-foreground`} strokeWidth={2.25} />
+            <ListeningDots variant={variant} />
           ) : (
             <Mic className={`${sizes.icon} text-foreground`} strokeWidth={2.25} />
           )}
