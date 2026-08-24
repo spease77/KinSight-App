@@ -392,6 +392,19 @@ html[data-standalone="true"] body {
   min-height: 100lvh;
 }
 
+/* Standalone PWA: block document scroll while ask bar is focused so scrollY
+   does not inflate --keyboard-inset and teleport the fixed composer dock. */
+html[data-standalone="true"].keyboard-composer-active {
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+  height: 100%;
+}
+
+html[data-standalone="true"].keyboard-composer-active body {
+  overflow: hidden;
+}
+
 /* Hide scrollbars globally while preserving scroll (touch, wheel, trackpad). */
 html,
 body,

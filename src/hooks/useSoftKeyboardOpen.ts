@@ -9,6 +9,7 @@ const KEYBOARD_DOCK_GAP_PX = 10;
 const IOS_KEYBOARD_ACCESSORY_PX = 44;
 const MOBILE_MEDIA_QUERY = "(max-width: 768px)";
 const COARSE_POINTER_QUERY = "(pointer: coarse)";
+const STANDALONE_TRACK_MS = 600;
 
 const NON_KEYBOARD_INPUT_TYPES = new Set([
   "button",
@@ -22,6 +23,12 @@ const NON_KEYBOARD_INPUT_TYPES = new Set([
   "reset",
   "submit",
 ]);
+
+type ViewportSnapshot = {
+  height: number;
+  offsetTop: number;
+  innerHeight: number;
+};
 
 function isEditableField(element: Element | null): boolean {
   if (!element || !(element instanceof HTMLElement)) return false;
@@ -58,14 +65,23 @@ function isIOS(): boolean {
   );
 }
 
+function snapshotViewport(viewport: VisualViewport): ViewportSnapshot {
+  return {
+    height: viewport.height,
+    offsetTop: viewport.offsetTop,
+    innerHeight: window.innerHeight,
+  };
+}
+
 /**
- * Single keyboard-height formula for Safari tab and standalone PWA.
- * visualViewport shrink is primary; standalone falls back to document scroll
- * when vv.height does not shrink (never sum or double-count sources).
+ * Safari tab: layout viewport stays full-height; keyboard shrinks visual viewport.
+ * Standalone PWA: height may not shrink — iOS pans offsetTop or scrolls the document.
+ * Use max of independent signals; never sum sources (avoids double-count gaps).
  */
 function computeRawKeyboardInset(
   viewport: VisualViewport,
-  standalone: boolean
+  standalone: boolean,
+  restViewport: ViewportSnapshot | null
 ): number {
   const vvInset = Math.max(
     0,
@@ -77,7 +93,28 @@ function computeRawKeyboardInset(
   }
 
   const scrollInset = Math.max(0, window.scrollY);
-  return Math.max(vvInset, scrollInset);
+
+  if (restViewport) {
+    const restBottom = restViewport.offsetTop + restViewport.height;
+    const currentBottom = viewport.offsetTop + viewport.height;
+    const visibleShrink = Math.max(0, restBottom - currentBottom);
+    const offsetPan = Math.max(
+      0,
+      viewport.offsetTop - restViewport.offsetTop
+    );
+    const heightShrink = Math.max(0, restViewport.height - viewport.height);
+
+    return Math.max(
+      vvInset,
+      scrollInset,
+      visibleShrink,
+      offsetPan,
+      heightShrink
+    );
+  }
+
+  const offsetInset = Math.max(0, viewport.offsetTop);
+  return Math.max(vvInset, scrollInset, offsetInset);
 }
 
 export function useSoftKeyboardOpen(): boolean {
@@ -87,21 +124,59 @@ export function useSoftKeyboardOpen(): boolean {
     const viewport = window.visualViewport;
     if (!viewport) return;
 
+    let restViewport: ViewportSnapshot | null = snapshotViewport(viewport);
+    let trackRafId = 0;
+    let trackUntil = 0;
+    let deferredOpenPending = false;
+
+    const syncRestViewport = () => {
+      if (!isEditableField(document.activeElement)) {
+        restViewport = snapshotViewport(viewport);
+      }
+    };
+
+    const setComposerScrollLock = (active: boolean) => {
+      document.documentElement.classList.toggle(
+        "keyboard-composer-active",
+        active
+      );
+    };
+
+    const stopTracking = () => {
+      if (trackRafId) {
+        cancelAnimationFrame(trackRafId);
+        trackRafId = 0;
+      }
+      trackUntil = 0;
+    };
+
     const syncViewportMetrics = () => {
       const standalone = isStandalonePwa();
       const focusInField = isEditableField(document.activeElement);
-      const rawInset = computeRawKeyboardInset(viewport, standalone);
+      const rawInset = computeRawKeyboardInset(
+        viewport,
+        standalone,
+        restViewport
+      );
+      const vvShrunk =
+        window.innerHeight - viewport.height - viewport.offsetTop > 60;
       const keyboardVisible =
         rawInset > 60 || (focusInField && isTouchLikeDevice());
       const dockLift =
         (keyboardVisible ? KEYBOARD_DOCK_GAP_PX : 0) +
-        (keyboardVisible && isIOS() ? IOS_KEYBOARD_ACCESSORY_PX : 0);
+        (keyboardVisible && isIOS() && vvShrunk
+          ? IOS_KEYBOARD_ACCESSORY_PX
+          : 0);
       const inset = rawInset + dockLift;
 
       document.documentElement.style.setProperty(
         "--keyboard-inset",
         `${inset}px`
       );
+
+      if (standalone) {
+        setComposerScrollLock(focusInField);
+      }
     };
 
     const settleViewportMetrics = () => {
@@ -110,6 +185,63 @@ export function useSoftKeyboardOpen(): boolean {
         syncViewportMetrics();
         requestAnimationFrame(syncViewportMetrics);
       });
+    };
+
+    const trackViewportDuringKeyboard = () => {
+      stopTracking();
+      trackUntil = performance.now() + STANDALONE_TRACK_MS;
+
+      const tick = () => {
+        syncViewportMetrics();
+        if (performance.now() < trackUntil) {
+          trackRafId = requestAnimationFrame(tick);
+          return;
+        }
+        trackRafId = 0;
+      };
+
+      trackRafId = requestAnimationFrame(tick);
+    };
+
+    const activateKeyboardOpen = () => {
+      deferredOpenPending = false;
+      setKeyboardOpen(true);
+      settleViewportMetrics();
+      if (isStandalonePwa()) {
+        trackViewportDuringKeyboard();
+      }
+    };
+
+    const scheduleKeyboardOpen = () => {
+      deferredOpenPending = true;
+      window.addEventListener("pointerup", activateKeyboardOpen, {
+        once: true,
+        capture: true,
+      });
+      window.addEventListener("touchend", activateKeyboardOpen, {
+        once: true,
+        capture: true,
+      });
+    };
+
+    const cancelDeferredKeyboardOpen = () => {
+      if (!deferredOpenPending) return;
+      deferredOpenPending = false;
+      window.removeEventListener("pointerup", activateKeyboardOpen, true);
+      window.removeEventListener("touchend", activateKeyboardOpen, true);
+    };
+
+    const openKeyboardForFocus = () => {
+      settleViewportMetrics();
+
+      if (isStandalonePwa() && isTouchLikeDevice()) {
+        scheduleKeyboardOpen();
+        trackViewportDuringKeyboard();
+        return;
+      }
+
+      setKeyboardOpen(true);
+      settleViewportMetrics();
     };
 
     const update = () => {
@@ -122,7 +254,13 @@ export function useSoftKeyboardOpen(): boolean {
       const touchDevice = isTouchLikeDevice();
 
       if (touchDevice && focusInField) {
-        setKeyboardOpen(true);
+        if (!deferredOpenPending) {
+          if (isStandalonePwa()) {
+            scheduleKeyboardOpen();
+          } else {
+            setKeyboardOpen(true);
+          }
+        }
         return;
       }
 
@@ -132,11 +270,17 @@ export function useSoftKeyboardOpen(): boolean {
     };
 
     const resetAfterKeyboardDismiss = () => {
+      cancelDeferredKeyboardOpen();
+      stopTracking();
+
       if (isStandalonePwa() && window.scrollY > 0) {
         window.scrollTo(0, 0);
       }
+
       document.documentElement.style.setProperty("--keyboard-inset", "0px");
+      setComposerScrollLock(false);
       setKeyboardOpen(false);
+      syncRestViewport();
       syncViewportMetrics();
     };
 
@@ -145,8 +289,7 @@ export function useSoftKeyboardOpen(): boolean {
         isEditableField(event.target as Element) &&
         isTouchLikeDevice()
       ) {
-        setKeyboardOpen(true);
-        settleViewportMetrics();
+        openKeyboardForFocus();
         return;
       }
 
@@ -165,11 +308,15 @@ export function useSoftKeyboardOpen(): boolean {
     };
 
     const handleResize = () => {
+      syncRestViewport();
       update();
     };
 
     const handleOrientationChange = () => {
-      window.setTimeout(update, 250);
+      window.setTimeout(() => {
+        syncRestViewport();
+        update();
+      }, 250);
     };
 
     const handleScroll = () => {
@@ -180,12 +327,14 @@ export function useSoftKeyboardOpen(): boolean {
 
     const handleAppResume = () => {
       if (document.visibilityState !== "visible") return;
+      syncRestViewport();
       settleViewportMetrics();
       update();
     };
 
     viewport.addEventListener("resize", update);
     viewport.addEventListener("scroll", update);
+    viewport.addEventListener("geometrychange", update);
     window.addEventListener("focusin", handleFocusIn);
     window.addEventListener("focusout", handleFocusOut);
     window.addEventListener("resize", handleResize);
@@ -197,8 +346,11 @@ export function useSoftKeyboardOpen(): boolean {
     update();
 
     return () => {
+      stopTracking();
+      cancelDeferredKeyboardOpen();
       viewport.removeEventListener("resize", update);
       viewport.removeEventListener("scroll", update);
+      viewport.removeEventListener("geometrychange", update);
       window.removeEventListener("focusin", handleFocusIn);
       window.removeEventListener("focusout", handleFocusOut);
       window.removeEventListener("resize", handleResize);
@@ -207,6 +359,7 @@ export function useSoftKeyboardOpen(): boolean {
       window.removeEventListener("pageshow", handleAppResume);
       document.removeEventListener("visibilitychange", handleAppResume);
       document.documentElement.style.removeProperty("--keyboard-inset");
+      setComposerScrollLock(false);
     };
   }, []);
 
