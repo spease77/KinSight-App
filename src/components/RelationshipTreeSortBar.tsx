@@ -5,8 +5,14 @@ import { ArrowDownAZ, ArrowUpAZ, Clock } from "lucide-react";
 /** Plain sort bar direction control trailing margin (0.25rem). */
 export const PLAIN_SORT_DIRECTION_INSET = "mr-1";
 
+/**
+ * Shared left inset for plain sort bars and aligned contact lists (0.75rem).
+ * Keeps the first sort tab and list rows on the same vertical axis.
+ */
+export const PLAIN_SORT_CONTENT_INSET = "pl-3";
+
 /** Contact list inset aligned to the first plain sort tab's left edge. */
-export const PLAIN_SORT_ALIGNED_LIST_INSET = "";
+export const PLAIN_SORT_ALIGNED_LIST_INSET = PLAIN_SORT_CONTENT_INSET;
 
 interface RelationshipTreeSortBarProps<T extends string> {
   sortField: T;
@@ -33,7 +39,7 @@ export function RelationshipTreeSortBar<T extends string>({
     <div
       className={
         isPlain
-          ? "flex flex-nowrap items-center gap-1"
+          ? `flex flex-nowrap items-center gap-1 ${PLAIN_SORT_CONTENT_INSET}`
           : "ui-card flex flex-wrap items-center gap-2 p-1"
       }
       role="group"
