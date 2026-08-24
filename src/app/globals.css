@@ -948,7 +948,7 @@ html[data-standalone="true"] .app-viewport {
 
 .agenda-week-day-letter {
   font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   font-weight: 500;
   line-height: 1;
   letter-spacing: 0.04em;
@@ -956,7 +956,7 @@ html[data-standalone="true"] .app-viewport {
 }
 
 .agenda-week-day-number {
-  margin-top: 0.125rem;
+  margin-top: 0.3125rem;
   font-family: var(--font-mono), ui-monospace, monospace;
   font-size: 0.875rem;
   font-weight: 600;
