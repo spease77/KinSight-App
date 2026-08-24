@@ -1130,6 +1130,7 @@ html[data-standalone="true"] .app-viewport {
   width: min(100%, 32rem);
   max-width: 32rem;
   transform: translateX(-50%);
+  /* --keyboard-inset includes visualViewport shrink + iOS accessory bar + dock gap */
   bottom: var(--keyboard-inset, 0px);
   padding-left: 1.25rem;
   padding-right: 1.25rem;

@@ -3,6 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 
 const KEYBOARD_HEIGHT_THRESHOLD = 120;
+const KEYBOARD_DOCK_GAP_PX = 10;
+/** iOS QuickType / Done toolbar above keyboard keys — not always in visualViewport inset. */
+const IOS_KEYBOARD_ACCESSORY_PX = 44;
 const MOBILE_MEDIA_QUERY = "(max-width: 768px)";
 const COARSE_POINTER_QUERY = "(pointer: coarse)";
 
@@ -47,6 +50,13 @@ function isTouchLikeDevice(): boolean {
   );
 }
 
+function isIOS(): boolean {
+  return (
+    /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)
+  );
+}
+
 export function useSoftKeyboardOpen(): boolean {
   const [keyboardOpen, setKeyboardOpen] = useState(false);
   const baselineHeightRef = useRef<number | null>(null);
@@ -65,10 +75,16 @@ export function useSoftKeyboardOpen(): boolean {
     };
 
     const syncViewportMetrics = () => {
-      const inset = Math.max(
+      const rawInset = Math.max(
         0,
         window.innerHeight - viewport.height - viewport.offsetTop
       );
+      const keyboardVisible = rawInset > 60;
+      const dockLift =
+        (keyboardVisible ? KEYBOARD_DOCK_GAP_PX : 0) +
+        (keyboardVisible && isIOS() ? IOS_KEYBOARD_ACCESSORY_PX : 0);
+      const inset = rawInset + dockLift;
+
       document.documentElement.style.setProperty(
         "--keyboard-inset",
         `${inset}px`
@@ -77,6 +93,14 @@ export function useSoftKeyboardOpen(): boolean {
         "--visual-viewport-offset-top",
         `${Math.max(0, viewport.offsetTop)}px`
       );
+    };
+
+    const settleViewportMetrics = () => {
+      syncViewportMetrics();
+      requestAnimationFrame(() => {
+        syncViewportMetrics();
+        requestAnimationFrame(syncViewportMetrics);
+      });
     };
 
     const update = () => {
@@ -104,6 +128,7 @@ export function useSoftKeyboardOpen(): boolean {
         isTouchLikeDevice()
       ) {
         setKeyboardOpen(true);
+        settleViewportMetrics();
         return;
       }
 
