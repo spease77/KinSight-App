@@ -545,14 +545,13 @@ b {
   width: 100%;
 }
 
-/* Bottom nav: fixed 56px bar flush to viewport bottom. */
+/* Bottom nav: flush to viewport bottom; layout via Tailwind in BottomNav.tsx */
 .bottom-nav {
   bottom: 0 !important;
   top: auto !important;
   margin: 0 !important;
   padding: 0 !important;
   box-sizing: border-box;
-  height: 56px !important;
 }
 
 .app-scroll.home-scroll-locked {
@@ -2409,9 +2408,10 @@ html.keyboard-composer-active .bottom-nav {
   min-width: 0;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-end;
   gap: 0.125rem;
   box-sizing: border-box;
+  padding: 0;
 }
 
 .bottom-nav__icon-wrap {
