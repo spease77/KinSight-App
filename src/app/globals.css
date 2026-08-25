@@ -519,12 +519,8 @@ b {
 :root {
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
-  --bottom-nav-height: calc(
-    0.25rem + 1.75rem + 0.125rem + 0.625rem + 0.5rem
-  );
-  --bottom-nav-clearance: calc(
-    var(--bottom-nav-height) + var(--safe-bottom)
-  );
+  --bottom-nav-height: 3.5rem;
+  --bottom-nav-clearance: 4rem;
   --home-header-height: 5.75rem;
   --home-composer-dock-height: calc(0.75rem + 3.25rem + 0.5rem);
   --home-conversation-composer-clearance: calc(
@@ -538,7 +534,6 @@ b {
 .app-scroll {
   overscroll-behavior-y: contain;
   -webkit-overflow-scrolling: touch;
-  padding-bottom: var(--bottom-nav-clearance);
 }
 
 .app-shell {
@@ -2397,25 +2392,7 @@ html.keyboard-composer-active .home-composer-dock {
   background-color: #3f3f46;
 }
 
-/* ── Bottom navigation (fixed flush to screen bottom) ── */
-.bottom-nav {
-  position: fixed;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  z-index: 50;
-  margin: 0 auto;
-  max-width: 32rem;
-  width: 100%;
-  border-top: none;
-  background-color: color-mix(in srgb, var(--bg-main) 98%, transparent);
-  -webkit-backdrop-filter: blur(12px);
-  backdrop-filter: blur(12px);
-  padding-top: 0.25rem;
-  padding-bottom: var(--safe-bottom);
-  transform: translateZ(0);
-  -webkit-transform: translateZ(0);
-}
+/* ── Bottom navigation (layout via Tailwind in BottomNav.tsx) ── */
 
 /* Hide while keyboard is open — keep layout box to avoid jump on show/hide. */
 html.keyboard-composer-active .bottom-nav {
@@ -2435,11 +2412,11 @@ html.keyboard-composer-active .bottom-nav {
   display: flex;
   min-width: 0;
   width: 100%;
+  height: 100%;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 0.125rem;
-  padding: 0.25rem 0;
   box-sizing: border-box;
 }
 

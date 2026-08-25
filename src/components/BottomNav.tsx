@@ -41,8 +41,11 @@ export function BottomNav() {
   const pathname = usePathname();
 
   return (
-    <nav aria-label="Main navigation" className="bottom-nav w-full px-4">
-      <div className="bottom-nav__inner">
+    <nav
+      aria-label="Main navigation"
+      className="bottom-nav fixed bottom-0 left-0 right-0 z-50 mx-auto w-full max-w-lg bg-background/95 px-4 pt-2 pb-2 backdrop-blur-md"
+    >
+      <div className="bottom-nav__inner h-14 max-h-14 w-full">
         {TABS.map(({ href, label, icon: Icon, match }) => {
           const active = match(pathname);
 
