@@ -550,10 +550,10 @@ b {
   bottom: 0 !important;
   top: auto !important;
   margin-bottom: 0 !important;
+  padding-bottom: 0 !important;
+  padding-top: 0 !important;
   box-sizing: border-box;
   height: 3.5rem !important;
-  padding-bottom: 0.25rem !important;
-  padding-top: 0.25rem !important;
 }
 
 .app-scroll.home-scroll-locked {

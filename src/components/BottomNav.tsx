@@ -43,7 +43,7 @@ export function BottomNav() {
   return (
     <nav
       aria-label="Main navigation"
-      className="bottom-nav fixed bottom-0 left-0 right-0 z-50 h-14 w-full bg-background/95 pt-1 pb-1 backdrop-blur-md"
+      className="bottom-nav fixed bottom-0 left-0 right-0 z-50 h-14 w-full bg-background/95 backdrop-blur-md"
       style={{ bottom: 0, marginBottom: 0 }}
     >
       <div className="bottom-nav__frame mx-auto h-full w-full max-w-lg px-4">

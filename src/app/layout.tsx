@@ -22,11 +22,13 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "KinSight — Sales Relationship Intelligence",
+  title: "KinSight",
   description:
     "Capture client conversations and build stronger sales relationships with KinSight.",
+  manifest: "/manifest.json",
   icons: {
     icon: "/favicon.svg",
+    apple: "/favicon.svg",
   },
   appleWebApp: {
     capable: true,
