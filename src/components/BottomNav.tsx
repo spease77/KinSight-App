@@ -43,32 +43,34 @@ export function BottomNav() {
   return (
     <nav
       aria-label="Main navigation"
-      className="bottom-nav fixed bottom-0 left-0 right-0 z-50 h-[56px] w-full border-t border-border/40 bg-background/95 backdrop-blur-md"
+      className="bottom-nav fixed bottom-0 left-0 right-0 z-50 h-[48px] w-full overflow-hidden border-t border-border/40 bg-background/95 backdrop-blur-md"
     >
-      <div className="bottom-nav__inner flex h-full w-full items-center justify-around px-2">
-        {TABS.map(({ href, label, icon: Icon, match }) => {
-          const active = match(pathname);
+      <div className="relative mx-auto h-full w-full max-w-md">
+        <div className="bottom-nav__inner absolute bottom-0 left-0 right-0 flex items-end justify-around pb-[2px]">
+          {TABS.map(({ href, label, icon: Icon, match }) => {
+            const active = match(pathname);
 
-          return (
-            <Link
-              key={href}
-              href={href}
-              className={`bottom-nav__tab p-1 py-0 ${
-                active ? "bottom-nav__tab--active" : ""
-              }`}
-            >
-              <span
-                className={`bottom-nav__icon-wrap${
-                  active ? " bottom-nav__icon-wrap--active" : ""
+            return (
+              <Link
+                key={href}
+                href={href}
+                className={`bottom-nav__tab m-0 flex translate-y-[2px] flex-col items-center justify-end p-0 pb-0 ${
+                  active ? "bottom-nav__tab--active" : ""
                 }`}
-                aria-hidden="true"
               >
-                <Icon className="bottom-nav__icon" strokeWidth={2} />
-              </span>
-              <span className="bottom-nav__label">{label}</span>
-            </Link>
-          );
-        })}
+                <span
+                  className={`bottom-nav__icon-wrap${
+                    active ? " bottom-nav__icon-wrap--active" : ""
+                  }`}
+                  aria-hidden="true"
+                >
+                  <Icon className="bottom-nav__icon" strokeWidth={2} />
+                </span>
+                <span className="bottom-nav__label">{label}</span>
+              </Link>
+            );
+          })}
+        </div>
       </div>
     </nav>
   );
