@@ -518,7 +518,7 @@ b {
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --bottom-nav-height: 4.75rem;
   --bottom-nav-clearance: calc(
-    var(--bottom-nav-height) + var(--safe-bottom) + 0.75rem
+    var(--bottom-nav-height) + var(--safe-bottom) + 0.25rem
   );
   --home-header-height: 5.75rem;
   --home-composer-dock-height: calc(
@@ -1058,6 +1058,20 @@ html.keyboard-composer-active .home-dashboard--state-a .home-hero-mic-zone {
     color-mix(in srgb, var(--bg-main) 90%, transparent) 24%,
     var(--bg-main) 100%
   );
+}
+
+/* Pin ask bar above keyboard without scrolling the page. */
+html.keyboard-composer-active .home-dashboard--state-a .home-composer-dock {
+  position: fixed;
+  right: 0;
+  left: 0;
+  bottom: var(--keyboard-inset, 0px);
+  z-index: 40;
+  margin: 0 auto;
+  max-width: 32rem;
+  padding-inline: 1.25rem;
+  padding-bottom: 0.5rem;
+  transition: none;
 }
 
 .home-ask-bar--conversation {
@@ -2333,7 +2347,8 @@ html.keyboard-composer-active .home-dashboard--state-a .home-hero-mic-zone {
   background-color: color-mix(in srgb, var(--bg-main) 95%, transparent);
   -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
-  padding-bottom: max(0.5rem, var(--safe-bottom));
+  padding-top: 0.375rem;
+  padding-bottom: var(--safe-bottom);
   transition:
     opacity 0.2s ease,
     background-color 0.2s ease;

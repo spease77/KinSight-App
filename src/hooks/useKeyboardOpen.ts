@@ -3,6 +3,10 @@
 import { useEffect, useState } from "react";
 
 const KEYBOARD_INSET_THRESHOLD = 50;
+const IOS_ACCESSORY_BAR_PX = 44;
+const COMPOSER_KEYBOARD_GAP_PX = 12;
+/** Fallback when iOS overlays keyboard without shrinking visualViewport. */
+const IOS_KEYBOARD_FALLBACK_PX = 280;
 const MOBILE_MEDIA_QUERY = "(max-width: 768px)";
 const COARSE_POINTER_QUERY = "(pointer: coarse)";
 
@@ -54,17 +58,54 @@ function computeKeyboardInset(viewport: VisualViewport): number {
   );
 }
 
+function getAppScroll(): HTMLElement | null {
+  return document.querySelector<HTMLElement>(".app-scroll");
+}
+
+/** Prevent scroll drift from repeated focus / visualViewport events. */
+function resetAppScroll() {
+  const scrollEl = getAppScroll();
+  if (scrollEl) {
+    scrollEl.scrollTop = 0;
+  }
+}
+
+function syncKeyboardInset(insetPx: number) {
+  document.documentElement.style.setProperty(
+    "--keyboard-inset",
+    `${Math.max(0, insetPx)}px`
+  );
+}
+
+function resolveComposerBottomInset(
+  viewport: VisualViewport,
+  composerActive: boolean
+): number {
+  const vvInset = computeKeyboardInset(viewport);
+
+  if (vvInset > KEYBOARD_INSET_THRESHOLD) {
+    return vvInset + IOS_ACCESSORY_BAR_PX + COMPOSER_KEYBOARD_GAP_PX;
+  }
+
+  if (composerActive) {
+    return IOS_KEYBOARD_FALLBACK_PX + COMPOSER_KEYBOARD_GAP_PX;
+  }
+
+  return 0;
+}
+
 /** Sync DOM class for instant nav/mic hide before React re-render. */
 function setComposerActiveClass(active: boolean) {
   document.documentElement.classList.toggle("keyboard-composer-active", active);
+  if (!active) {
+    syncKeyboardInset(0);
+    resetAppScroll();
+  }
 }
 
 export type KeyboardChromeState = {
-  /** True when visual viewport confirms keyboard is open. */
   isKeyboardOpen: boolean;
-  /** True immediately when a text field is focused on touch devices. */
   composerActive: boolean;
-  /** Combined signal — hide bottom nav and home mic. */
   shouldHideChrome: boolean;
 };
 
@@ -78,25 +119,30 @@ export function useKeyboardOpen(): KeyboardChromeState {
 
     const update = () => {
       const focusInField = isEditableField(document.activeElement);
+      const touch = isTouchLikeDevice();
+      const active = touch && focusInField;
       const inset = computeKeyboardInset(viewport);
       const viewportShrunk = inset > KEYBOARD_INSET_THRESHOLD;
-      const touch = isTouchLikeDevice();
 
-      if (touch && focusInField) {
+      if (active) {
+        syncKeyboardInset(resolveComposerBottomInset(viewport, true));
         setComposerActiveClass(true);
         setComposerActive(true);
         setIsKeyboardOpen(viewportShrunk || true);
         return;
       }
 
-      const active = focusInField && touch;
-      setComposerActiveClass(active);
-      setComposerActive(active);
-      setIsKeyboardOpen(viewportShrunk || (focusInField && inset > 30));
+      setComposerActiveClass(false);
+      setComposerActive(false);
+      setIsKeyboardOpen(viewportShrunk);
     };
 
     const handleFocusIn = (event: FocusEvent) => {
       if (isEditableField(event.target as Element) && isTouchLikeDevice()) {
+        resetAppScroll();
+        syncKeyboardInset(
+          resolveComposerBottomInset(viewport, true)
+        );
         setComposerActiveClass(true);
         setComposerActive(true);
         setIsKeyboardOpen(true);
@@ -132,6 +178,7 @@ export function useKeyboardOpen(): KeyboardChromeState {
       window.removeEventListener("focusout", handleFocusOut);
       window.removeEventListener("resize", update);
       setComposerActiveClass(false);
+      syncKeyboardInset(0);
     };
   }, []);
 
