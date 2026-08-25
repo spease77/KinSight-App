@@ -524,8 +524,6 @@ b {
     var(--bottom-nav-height) + var(--safe-bottom)
   );
   --home-header-height: 5.75rem;
-  --composer-dock-height: 3.75rem;
-  --composer-keyboard-gap: 4px;
   --home-composer-dock-height: calc(0.75rem + 3.25rem + 0.5rem);
   --home-conversation-composer-clearance: calc(
     var(--bottom-nav-clearance) + var(--home-composer-dock-height) + 0.5rem
@@ -1116,15 +1114,13 @@ html.keyboard-composer-active .home-dashboard--state-a .home-hero-mic-zone {
   padding-bottom: var(--home-conversation-composer-clearance);
 }
 
-/* Keyboard open: glue composer to visual viewport bottom (flush above keyboard). */
+/* Keyboard open: bottom edge flush to keyboard (no gap). */
 html.keyboard-composer-active .home-composer-dock {
-  top: calc(
-    var(--vv-bottom-edge, 100vh) - var(--composer-dock-height, 3.75rem) -
-      var(--composer-keyboard-gap, 4px)
-  );
-  bottom: auto !important;
-  padding-top: 0.5rem;
-  padding-bottom: 0.5rem;
+  top: auto !important;
+  bottom: var(--vv-layout-bottom-gap, 0px) !important;
+  padding-top: 0.125rem;
+  padding-bottom: 0;
+  background: var(--bg-main);
   box-shadow: none;
   transition: none;
 }

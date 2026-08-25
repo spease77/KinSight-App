@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 
-const COMPOSER_KEYBOARD_GAP_PX = 4;
 const MOBILE_MEDIA_QUERY = "(max-width: 768px)";
 const COARSE_POINTER_QUERY = "(pointer: coarse)";
 
@@ -69,40 +68,41 @@ function isHomeConversationActive(): boolean {
   return Boolean(document.querySelector(".home-dashboard--conversation"));
 }
 
-/** Pin composer to the visual viewport bottom edge (flush above keyboard). */
+/** Pin composer bottom edge to the visual viewport bottom (flush above keyboard). */
 function syncVisualViewportGeometry(viewport: VisualViewport) {
-  const bottomEdge = viewport.offsetTop + viewport.height;
-  document.documentElement.style.setProperty(
-    "--vv-bottom-edge",
-    `${bottomEdge}px`
-  );
-  document.documentElement.style.setProperty(
-    "--vv-offset-top",
-    `${viewport.offsetTop}px`
-  );
-  document.documentElement.style.setProperty(
-    "--vv-height",
-    `${viewport.height}px`
-  );
-  document.documentElement.style.setProperty(
-    "--composer-keyboard-gap",
-    `${COMPOSER_KEYBOARD_GAP_PX}px`
+  let gapFromLayoutBottom = Math.max(
+    0,
+    window.innerHeight - viewport.offsetTop - viewport.height
   );
 
   const dock = document.querySelector<HTMLElement>(".home-composer-dock");
-  if (dock) {
-    document.documentElement.style.setProperty(
-      "--composer-dock-height",
-      `${dock.offsetHeight}px`
-    );
+  if (
+    dock &&
+    document.documentElement.classList.contains("keyboard-composer-active")
+  ) {
+    const visualBottom = viewport.offsetTop + viewport.height;
+    const floatAbove = visualBottom - dock.getBoundingClientRect().bottom;
+    if (floatAbove > 0.5) {
+      gapFromLayoutBottom = Math.max(0, gapFromLayoutBottom - floatAbove);
+    }
   }
+
+  document.documentElement.style.setProperty(
+    "--vv-layout-bottom-gap",
+    `${gapFromLayoutBottom}px`
+  );
+}
+
+function scheduleVisualViewportSync(viewport: VisualViewport) {
+  syncVisualViewportGeometry(viewport);
+  requestAnimationFrame(() => {
+    syncVisualViewportGeometry(viewport);
+    requestAnimationFrame(() => syncVisualViewportGeometry(viewport));
+  });
 }
 
 function clearVisualViewportGeometry() {
-  document.documentElement.style.removeProperty("--vv-bottom-edge");
-  document.documentElement.style.removeProperty("--vv-offset-top");
-  document.documentElement.style.removeProperty("--vv-height");
-  document.documentElement.style.removeProperty("--composer-dock-height");
+  document.documentElement.style.removeProperty("--vv-layout-bottom-gap");
 }
 
 /** Sync DOM class for instant nav/mic hide before React re-render. */
@@ -133,7 +133,7 @@ export function useKeyboardOpen(): KeyboardChromeState {
       const active = touch && focusInField;
 
       if (active) {
-        syncVisualViewportGeometry(viewport);
+        scheduleVisualViewportSync(viewport);
         setComposerActiveClass(true);
         setComposerActive(true);
         setIsKeyboardOpen(true);
@@ -150,7 +150,7 @@ export function useKeyboardOpen(): KeyboardChromeState {
         if (!isHomeConversationActive()) {
           lockPageScroll();
         }
-        syncVisualViewportGeometry(viewport);
+        scheduleVisualViewportSync(viewport);
         setComposerActiveClass(true);
         setComposerActive(true);
         setIsKeyboardOpen(true);
