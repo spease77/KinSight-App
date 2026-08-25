@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import { Inter, Montserrat } from "next/font/google";
 import { AppShell } from "@/components/AppShell";
+import { AppChrome } from "@/components/AppChrome";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { ToastViewport } from "@/components/ToastViewport";
 import { themeInitScript } from "@/lib/theme/theme";
@@ -65,6 +66,7 @@ export default function RootLayout({
         />
         <ThemeProvider>
           <AppShell>{children}</AppShell>
+          <AppChrome />
           <ToastViewport />
         </ThemeProvider>
       </body>
