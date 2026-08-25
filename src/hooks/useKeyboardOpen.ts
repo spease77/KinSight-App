@@ -77,14 +77,30 @@ function syncKeyboardInset(insetPx: number) {
   );
 }
 
+function lockPageScroll() {
+  resetAppScroll();
+  window.scrollTo(0, 0);
+  document.documentElement.scrollTop = 0;
+  document.body.scrollTop = 0;
+}
+
 function resolveComposerBottomInset(
   viewport: VisualViewport,
   composerActive: boolean
 ): number {
-  const vvInset = computeKeyboardInset(viewport);
+  const layoutBottomGap = Math.max(
+    0,
+    window.innerHeight - viewport.offsetTop - viewport.height
+  );
 
-  if (vvInset > KEYBOARD_INSET_THRESHOLD) {
-    return vvInset + IOS_ACCESSORY_BAR_PX + COMPOSER_KEYBOARD_GAP_PX;
+  if (layoutBottomGap > KEYBOARD_INSET_THRESHOLD) {
+    return layoutBottomGap + IOS_ACCESSORY_BAR_PX + COMPOSER_KEYBOARD_GAP_PX;
+  }
+
+  if (composerActive && viewport.offsetTop > KEYBOARD_INSET_THRESHOLD) {
+    return (
+      viewport.offsetTop + IOS_ACCESSORY_BAR_PX + COMPOSER_KEYBOARD_GAP_PX
+    );
   }
 
   if (composerActive) {
@@ -139,7 +155,7 @@ export function useKeyboardOpen(): KeyboardChromeState {
 
     const handleFocusIn = (event: FocusEvent) => {
       if (isEditableField(event.target as Element) && isTouchLikeDevice()) {
-        resetAppScroll();
+        lockPageScroll();
         syncKeyboardInset(
           resolveComposerBottomInset(viewport, true)
         );

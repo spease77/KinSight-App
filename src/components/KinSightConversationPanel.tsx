@@ -139,9 +139,7 @@ export function KinSightConversationPanel({
         <label
           className="home-ask-bar__field min-w-0 flex-1 cursor-text"
           onMouseDown={(event) => {
-            if (event.target !== replyInputRef.current) {
-              event.preventDefault();
-            }
+            event.preventDefault();
           }}
           onClick={() => {
             replyInputRef.current?.focus({ preventScroll: true });

@@ -2,8 +2,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
-import { createPortal } from "react-dom";
 import { CalendarClock, Clock, Home, MessageSquare, Users } from "lucide-react";
 import { useKeyboardOpen } from "@/hooks/useKeyboardOpen";
 
@@ -43,18 +41,13 @@ const TABS = [
 export function BottomNav() {
   const pathname = usePathname();
   const { shouldHideChrome } = useKeyboardOpen();
-  const [mounted, setMounted] = useState(false);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  const nav = (
+  return (
     <nav
       aria-label="Main navigation"
       aria-hidden={shouldHideChrome}
       inert={shouldHideChrome ? true : undefined}
-      className={`bottom-nav w-full px-4 pt-2${
+      className={`bottom-nav w-full px-4${
         shouldHideChrome ? " bottom-nav--keyboard-open" : ""
       }`}
     >
@@ -86,10 +79,4 @@ export function BottomNav() {
       </div>
     </nav>
   );
-
-  if (!mounted) {
-    return null;
-  }
-
-  return createPortal(nav, document.body);
 }
