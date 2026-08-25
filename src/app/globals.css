@@ -2389,7 +2389,7 @@ html.keyboard-composer-active .home-composer-dock {
   background-color: #3f3f46;
 }
 
-/* ── Bottom navigation (pinned flush to visible screen bottom) ── */
+/* ── Bottom navigation (flush to screen bottom; safe-area lifts icons only) ── */
 .bottom-nav {
   position: fixed;
   right: 0;
@@ -2409,6 +2409,13 @@ html.keyboard-composer-active .home-composer-dock {
   -webkit-transform: translateZ(0);
   transition: none;
   animation: none;
+}
+
+/* Home-screen PWA: ignore browser toolbar offsets — sit on the glass. */
+@media (display-mode: standalone), (display-mode: fullscreen) {
+  .bottom-nav {
+    bottom: 0 !important;
+  }
 }
 
 /* Hide while keyboard is open — keep layout box to avoid jump on show/hide. */
