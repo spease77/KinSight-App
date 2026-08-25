@@ -2,10 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
-import { createPortal } from "react-dom";
 import { CalendarClock, Clock, Home, MessageSquare, Users } from "lucide-react";
-import { useSoftKeyboardOpen } from "@/hooks/useSoftKeyboardOpen";
 
 const TABS = [
   {
@@ -42,22 +39,11 @@ const TABS = [
 
 export function BottomNav() {
   const pathname = usePathname();
-  const { keyboardOpen, composerActive } = useSoftKeyboardOpen();
-  const hideNav = keyboardOpen || composerActive;
-  const [mounted, setMounted] = useState(false);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  const nav = (
+  return (
     <nav
       aria-label="Main navigation"
-      aria-hidden={hideNav}
-      inert={hideNav ? true : undefined}
-      className={`bottom-nav w-full px-4 pt-2 ${
-        hideNav ? "bottom-nav--keyboard-open" : ""
-      }`}
+      className="bottom-nav w-full flex-none bg-background/95 backdrop-blur-md pb-[env(safe-area-inset-bottom)]"
     >
       <div className="bottom-nav__inner">
         {TABS.map(({ href, label, icon: Icon, match }) => {
@@ -67,7 +53,6 @@ export function BottomNav() {
             <Link
               key={href}
               href={href}
-              tabIndex={hideNav ? -1 : undefined}
               className={`bottom-nav__tab ${
                 active ? "bottom-nav__tab--active" : ""
               }`}
@@ -87,10 +72,4 @@ export function BottomNav() {
       </div>
     </nav>
   );
-
-  if (!mounted) {
-    return null;
-  }
-
-  return createPortal(nav, document.body);
 }

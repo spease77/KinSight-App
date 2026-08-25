@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import type { UIMessage } from "ai";
 import { Mic, Plus, Send, User, Volume2, VolumeX } from "lucide-react";
 import { getMessageText } from "@/lib/ai/message-text";
@@ -32,13 +32,8 @@ interface KinSightConversationPanelProps {
   replyValue: string;
   onReplyChange: (value: string) => void;
   onReplySubmit: () => void;
-  /** Deferred until tap gesture ends — avoids iOS focus loss when dock goes fixed. */
-  onDockKeyboardOpen?: () => void;
-  onDockKeyboardClose?: () => void;
   chatError?: Error;
   conversationStarted?: boolean;
-  /** True when the composer dock should pin above the soft keyboard. */
-  dockKeyboardOpen?: boolean;
   onMicToggle?: (stream?: MediaStream) => void;
   onMicAccessFailure?: (failure: MicrophoneAccessFailure) => void;
   micDisabled?: boolean;
@@ -68,11 +63,8 @@ export function KinSightConversationPanel({
   replyValue,
   onReplyChange,
   onReplySubmit,
-  onDockKeyboardOpen,
-  onDockKeyboardClose,
   chatError,
   conversationStarted = false,
-  dockKeyboardOpen = false,
   onMicToggle,
   onMicAccessFailure,
   micDisabled = false,
@@ -85,29 +77,6 @@ export function KinSightConversationPanel({
 
   useEffect(() => {
     setIsClient(true);
-  }, []);
-
-  const dockActivationPendingRef = useRef(false);
-
-  const scheduleDockActivation = useCallback(() => {
-    if (!onDockKeyboardOpen) return;
-
-    dockActivationPendingRef.current = true;
-
-    const activate = () => {
-      if (!dockActivationPendingRef.current) return;
-      dockActivationPendingRef.current = false;
-      onDockKeyboardOpen();
-    };
-
-    // Defer layout shifts until the tap gesture finishes — iOS drops focus
-    // when the dock jumps to fixed positioning mid-gesture.
-    window.addEventListener("pointerup", activate, { once: true, capture: true });
-    window.addEventListener("touchend", activate, { once: true, capture: true });
-  }, [onDockKeyboardOpen]);
-
-  const cancelDockActivation = useCallback(() => {
-    dockActivationPendingRef.current = false;
   }, []);
 
   const isProcessing =
@@ -184,13 +153,6 @@ export function KinSightConversationPanel({
             type="text"
             value={replyValue}
             onChange={(e) => onReplyChange(e.target.value)}
-            onFocus={() => {
-              scheduleDockActivation();
-            }}
-            onBlur={() => {
-              cancelDockActivation();
-              onDockKeyboardClose?.();
-            }}
             placeholder={
               isLoading ? "KinSight is thinking…" : "Ask about a contact..."
             }
@@ -351,21 +313,7 @@ export function KinSightConversationPanel({
       {conversationStarted ? (
         <div className="home-composer-dock mt-auto shrink-0">{askBarForm}</div>
       ) : (
-        <>
-          {dockKeyboardOpen ? (
-            <div
-              className="home-composer-dock-spacer"
-              aria-hidden="true"
-            />
-          ) : null}
-          <div
-            className={`home-composer-dock shrink-0${
-              dockKeyboardOpen ? " home-composer-dock--keyboard-open" : ""
-            }`}
-          >
-            {askBarForm}
-          </div>
-        </>
+        <div className="home-composer-dock shrink-0">{askBarForm}</div>
       )}
 
       {statusLabel && !conversationStarted && (

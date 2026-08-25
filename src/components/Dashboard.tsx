@@ -24,7 +24,6 @@ import { withMessageText } from "@/lib/ai/message-text";
 import { logMessageToKinSight } from "@/lib/kinsight/log-message";
 import type { MessageLogStatus } from "@/components/AssistantMessageBubble";
 import { useVoiceExperience } from "@/contexts/VoiceExperienceContext";
-import { useSoftKeyboardOpen } from "@/hooks/useSoftKeyboardOpen";
 import type { OsVoiceSource } from "@/lib/voice/os-voice-deeplink";
 
 interface DashboardProps {
@@ -344,10 +343,6 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
   const activeMicFailure = micAccessFailure ?? permissionFailure;
 
   const hasConversationStarted = conversationEngaged;
-  const { keyboardOpen, composerActive } = useSoftKeyboardOpen();
-  const [dockKeyboardOpen, setDockKeyboardOpen] = useState(false);
-  const hideHomeMic = !hasConversationStarted && composerActive;
-  const dockComposer = dockKeyboardOpen || keyboardOpen;
 
   useEffect(() => {
     if (hasConversationStarted) return;
@@ -379,14 +374,7 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
             : "home-dashboard home-dashboard--state-a"
         }
       >
-        {hasConversationStarted ? (
-          <div className="home-dashboard__header shrink-0">{header}</div>
-        ) : (
-          <>
-            <div className="home-fixed-header">{header}</div>
-            <div className="home-fixed-header-spacer" aria-hidden="true" />
-          </>
-        )}
+        <div className="home-dashboard__header shrink-0">{header}</div>
 
         <main
           className={`relative flex flex-col ${
@@ -404,14 +392,7 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
             }`}
           >
             {!hasConversationStarted && (
-              <div
-                className={
-                  hideHomeMic
-                    ? "home-hero-mic-zone home-hero-mic-zone--hidden"
-                    : "home-hero-mic-zone"
-                }
-                aria-hidden={hideHomeMic}
-              >
+              <div className="home-hero-mic-zone">
                 <MicrophoneButton
                   isRecording={isRecording}
                   isSpeaking={isSpeaking}
@@ -445,11 +426,8 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
               replyValue={replyText}
               onReplyChange={setReplyText}
               onReplySubmit={handleReplySubmit}
-              onDockKeyboardOpen={() => setDockKeyboardOpen(true)}
-              onDockKeyboardClose={() => setDockKeyboardOpen(false)}
               chatError={chatError}
               conversationStarted={hasConversationStarted}
-              dockKeyboardOpen={dockComposer}
               onMicToggle={handleMicToggle}
               onMicAccessFailure={handleMicAccessFailure}
               micDisabled={false}
