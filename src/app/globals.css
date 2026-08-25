@@ -361,10 +361,15 @@ html {
 
 html,
 body {
+  position: fixed;
+  width: 100%;
   height: 100%;
+  height: 100dvh;
   margin: 0;
   padding: 0;
   overflow: hidden;
+  overscroll-behavior: none;
+  touch-action: manipulation;
   background-color: var(--background);
 }
 
@@ -396,10 +401,14 @@ body,
   -webkit-overflow-scrolling: touch;
 }
 
-.overflow-y-auto,
-.overflow-y-scroll,
-main {
+.overflow-y-auto:not(.app-scroll),
+.overflow-y-scroll:not(.app-scroll) {
   overscroll-behavior-y: auto !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+main.app-scroll {
+  overscroll-behavior-y: contain !important;
   -webkit-overflow-scrolling: touch;
 }
 
@@ -2311,10 +2320,7 @@ b {
 
 /* ── Bottom navigation (inverted active icons with preserved stroke detail) ── */
 .bottom-nav {
-  margin: 0 auto;
-  max-width: 32rem;
   border-top: none;
-  padding-top: 0.5rem;
   transition: background-color 0.2s ease;
 }
 

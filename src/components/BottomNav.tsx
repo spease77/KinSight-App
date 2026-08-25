@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { CalendarClock, Clock, Home, MessageSquare, Users } from "lucide-react";
+import { useKeyboardOpen } from "@/hooks/useKeyboardOpen";
 
 const TABS = [
   {
@@ -39,11 +40,16 @@ const TABS = [
 
 export function BottomNav() {
   const pathname = usePathname();
+  const isKeyboardOpen = useKeyboardOpen();
 
   return (
     <nav
       aria-label="Main navigation"
-      className="bottom-nav w-full flex-none bg-background/95 backdrop-blur-md pb-[env(safe-area-inset-bottom)]"
+      className={`bottom-nav fixed bottom-0 left-0 right-0 z-50 mx-auto w-full max-w-lg bg-background/95 backdrop-blur-md pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] transition-transform duration-200 ${
+        isKeyboardOpen
+          ? "translate-y-full pointer-events-none"
+          : "translate-y-0"
+      }`}
     >
       <div className="bottom-nav__inner">
         {TABS.map(({ href, label, icon: Icon, match }) => {
