@@ -93,7 +93,7 @@ export function Header({
   return (
     <>
       <header
-        className={`${sticky ? "sticky top-0 z-30" : ""} bg-main px-4 pb-4 pt-3`}
+        className={`${sticky ? "sticky top-0 z-10 bg-background" : ""} px-4 pb-4 pt-3`}
       >
         <div className="flex items-center justify-between gap-3">
           <h1 className="font-sans text-3xl font-normal tracking-tight text-foreground sm:text-4xl">

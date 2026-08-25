@@ -521,8 +521,8 @@ b {
 :root {
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
-  --bottom-nav-height: 58px;
-  --bottom-nav-clearance: 68px;
+  --bottom-nav-height: 64px;
+  --bottom-nav-clearance: 76px;
   --home-header-height: 5.75rem;
   --home-composer-dock-height: calc(0.75rem + 3.25rem + 0.5rem);
   --home-conversation-composer-clearance: calc(
@@ -547,14 +547,14 @@ b {
   width: 100%;
 }
 
-/* Bottom nav: fixed 58px bar; spacing via Tailwind in BottomNav.tsx */
+/* Bottom nav: fixed 64px bar; spacing via Tailwind in BottomNav.tsx */
 .bottom-nav {
   bottom: 0 !important;
   top: auto !important;
   margin: 0 !important;
   padding: 0 !important;
   box-sizing: border-box;
-  height: 58px !important;
+  height: 64px !important;
 }
 
 .app-scroll.home-scroll-locked {
@@ -715,9 +715,9 @@ b {
 .agenda-page-header {
   position: sticky;
   top: 0;
-  z-index: 40;
+  z-index: 10;
   flex-shrink: 0;
-  background-color: var(--bg-main);
+  background-color: var(--background);
   transition:
     background-color 0.2s ease,
     box-shadow 0.2s ease,
