@@ -358,6 +358,7 @@
 html {
   -webkit-tap-highlight-color: transparent;
   height: -webkit-fill-available;
+  min-height: 100dvh;
 }
 
 html,
@@ -366,6 +367,7 @@ body {
   inset: 0;
   width: 100%;
   height: 100%;
+  min-height: 100dvh;
   margin: 0;
   padding: 0;
   overflow: hidden;
@@ -520,7 +522,7 @@ b {
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --bottom-nav-height: 56px;
-  --bottom-nav-clearance: 72px;
+  --bottom-nav-clearance: 80px;
   --home-header-height: 5.75rem;
   --home-composer-dock-height: calc(0.75rem + 3.25rem + 0.5rem);
   --home-conversation-composer-clearance: calc(
@@ -545,14 +547,12 @@ b {
   width: 100%;
 }
 
-/* Bottom nav: fixed 56px bar flush to viewport bottom. */
+/* Bottom nav: fixed to viewport bottom; safe-area padding via Tailwind. */
 .bottom-nav {
   bottom: 0 !important;
   top: auto !important;
   margin: 0 !important;
-  padding: 0 !important;
   box-sizing: border-box;
-  height: 56px !important;
 }
 
 .app-scroll.home-scroll-locked {
