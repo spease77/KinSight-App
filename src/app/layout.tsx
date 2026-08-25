@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import { Inter, Montserrat } from "next/font/google";
 import { AppShell } from "@/components/AppShell";
+import { Navigation } from "@/components/Navigation";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { ToastViewport } from "@/components/ToastViewport";
 import { themeInitScript } from "@/lib/theme/theme";
@@ -62,14 +63,21 @@ export default function RootLayout({
       className={`${montserrat.variable} ${inter.variable}`}
       suppressHydrationWarning
     >
-      <body className="no-scrollbar antialiased">
+      <body className="bg-background text-foreground no-scrollbar antialiased">
         <Script
           id="theme-init"
           strategy="beforeInteractive"
           dangerouslySetInnerHTML={{ __html: themeInitScript }}
         />
         <ThemeProvider>
-          <AppShell>{children}</AppShell>
+          <AppShell>
+            <div className="app-shell mx-auto flex h-[100dvh] w-full max-w-lg flex-col overflow-hidden">
+              <main className="app-scroll no-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-24 pt-[env(safe-area-inset-top)]">
+                {children}
+              </main>
+              <Navigation />
+            </div>
+          </AppShell>
           <ToastViewport />
         </ThemeProvider>
       </body>
