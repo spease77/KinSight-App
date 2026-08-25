@@ -75,8 +75,10 @@ export function InvestmentPage() {
 
   return (
     <>
-      <Header title="Time Log" headerActions={headerActions} />
-      <main className="flex flex-col gap-3 px-5 pt-4">
+      <header className="sticky top-0 z-20 mb-4 w-full bg-background pt-[max(env(safe-area-inset-top),44px)] pb-2">
+        <Header title="Time Log" headerActions={headerActions} sticky={false} />
+      </header>
+      <main className="flex flex-col gap-3 px-5">
         <div ref={rapportGoalRef} className="flex flex-col">
           <TimeInvestmentMilestoneCard
             selectedContact={selectedContact}

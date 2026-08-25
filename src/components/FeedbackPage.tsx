@@ -71,10 +71,10 @@ export function FeedbackPage() {
 
   return (
     <div className="feedback-page flex flex-col">
-      <div className="feedback-page__header shrink-0">
+      <header className="sticky top-0 z-20 mb-4 w-full bg-background pt-[max(env(safe-area-inset-top),44px)] pb-2">
         <Header title="Feedback" sticky={false} />
-      </div>
-      <main className="feedback-page__body flex flex-col gap-6 px-5 pt-4">
+      </header>
+      <main className="feedback-page__body flex flex-col gap-6 px-5">
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           <label className="flex flex-col">
             <textarea

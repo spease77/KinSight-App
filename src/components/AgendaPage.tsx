@@ -265,8 +265,8 @@ export function AgendaPage() {
   return (
     <>
       <div className="agenda-page flex flex-col">
-        <div
-          className={`agenda-page-header ${
+        <header
+          className={`agenda-page-header sticky top-0 z-20 mb-4 w-full bg-background pt-[max(env(safe-area-inset-top),44px)] pb-2 ${
             headerScrolled ? "agenda-page-header--scrolled" : ""
           }`}
         >
@@ -287,7 +287,7 @@ export function AgendaPage() {
               onTimeFrameChange={handleTimeFrameChange}
             />
           </div>
-        </div>
+        </header>
 
         <main className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden px-5 pb-0">
         {isLoading ? (

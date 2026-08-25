@@ -713,11 +713,7 @@ b {
 }
 
 .agenda-page-header {
-  position: sticky;
-  top: 0;
-  z-index: 10;
   flex-shrink: 0;
-  background-color: var(--background);
   transition:
     background-color 0.2s ease,
     box-shadow 0.2s ease,
