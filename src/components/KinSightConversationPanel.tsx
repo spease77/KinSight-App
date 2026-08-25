@@ -226,7 +226,7 @@ export function KinSightConversationPanel({
           ref={scrollRef}
           className={`contacts-scroll ui-card ui-card-tint-green flex flex-col gap-3 overflow-y-auto border-border-green p-3 ${
             conversationStarted
-              ? "min-h-0 flex-1"
+              ? "kinsight-conversation-messages min-h-0 flex-1"
               : "max-h-[34vh] sm:max-h-[38vh]"
           }`}
         >
@@ -309,7 +309,7 @@ export function KinSightConversationPanel({
       )}
 
       {conversationStarted ? (
-        <div className="home-composer-dock mt-auto shrink-0">{askBarForm}</div>
+        <div className="home-composer-dock shrink-0">{askBarForm}</div>
       ) : (
         <div className="home-composer-dock shrink-0">{askBarForm}</div>
       )}

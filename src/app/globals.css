@@ -545,6 +545,9 @@ b {
   --home-composer-dock-height: calc(
     0.75rem + 3.25rem + 0.5rem + env(safe-area-inset-bottom, 0px)
   );
+  --home-conversation-composer-clearance: calc(
+    var(--bottom-nav-clearance) + 0.75rem + 3.25rem + 0.5rem
+  );
 }
 
 .app-scroll {
@@ -1088,6 +1091,25 @@ html.keyboard-composer-active .home-dashboard--state-a .home-hero-mic-zone {
     color-mix(in srgb, var(--bg-main) 90%, transparent) 24%,
     var(--bg-main) 100%
   );
+}
+
+/* Conversation: pin composer above bottom nav like a chat app. */
+.home-dashboard--conversation .home-composer-dock {
+  position: fixed;
+  right: 0;
+  left: 0;
+  bottom: var(--bottom-nav-clearance);
+  z-index: 40;
+  margin: 0 auto;
+  max-width: 32rem;
+  width: 100%;
+  padding-inline: 1.25rem;
+  padding-bottom: 0.5rem;
+}
+
+.home-dashboard--conversation .kinsight-conversation-messages {
+  margin-bottom: 0.25rem;
+  padding-bottom: var(--home-conversation-composer-clearance);
 }
 
 /* Pin ask bar above keyboard without scrolling the page. */
