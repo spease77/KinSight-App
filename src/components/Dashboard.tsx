@@ -348,8 +348,6 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
   const hideHomeMic = !hasConversationStarted && composerActive;
 
   useEffect(() => {
-    if (hasConversationStarted) return;
-
     const scrollEl = document.querySelector<HTMLElement>(".app-scroll");
     if (!scrollEl) return;
 
@@ -358,7 +356,7 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
     return () => {
       scrollEl.classList.remove("home-scroll-locked");
     };
-  }, [hasConversationStarted]);
+  }, []);
 
   const header = (
     <Header

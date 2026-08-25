@@ -115,7 +115,6 @@ function setComposerActiveClass(active: boolean) {
   document.documentElement.classList.toggle("keyboard-composer-active", active);
   if (!active) {
     syncKeyboardInset(0);
-    resetAppScroll();
   }
 }
 
@@ -201,6 +200,6 @@ export function useKeyboardOpen(): KeyboardChromeState {
   return {
     isKeyboardOpen,
     composerActive,
-    shouldHideChrome: isKeyboardOpen || composerActive,
+    shouldHideChrome: composerActive,
   };
 }

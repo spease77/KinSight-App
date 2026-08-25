@@ -380,9 +380,12 @@ html {
 
 body {
   display: flex;
-  min-height: 100%;
-  min-height: 100dvh;
-  min-height: -webkit-fill-available;
+  height: 100%;
+  height: 100dvh;
+  height: -webkit-fill-available;
+  max-height: 100%;
+  max-height: 100dvh;
+  max-height: -webkit-fill-available;
   flex-direction: column;
   color: var(--text-body, var(--text-primary));
   font-family: var(--font-sans), system-ui, sans-serif;
@@ -547,15 +550,12 @@ b {
 .app-scroll {
   overscroll-behavior-y: contain;
   -webkit-overflow-scrolling: touch;
-}
-
-/* In-flow bottom nav — no extra scroll padding needed. */
-.app-shell > .app-scroll {
-  padding-bottom: 0;
+  padding-bottom: var(--bottom-nav-clearance);
 }
 
 .app-shell {
   display: flex;
+  height: 100%;
   min-height: 0;
   flex: 1 1 auto;
   flex-direction: column;
@@ -1091,7 +1091,7 @@ html.keyboard-composer-active .home-dashboard--state-a .home-hero-mic-zone {
 }
 
 /* Pin ask bar above keyboard without scrolling the page. */
-html.keyboard-composer-active .home-dashboard--state-a .home-composer-dock {
+html.keyboard-composer-active .home-composer-dock {
   position: fixed;
   right: 0;
   left: 0;
@@ -2364,11 +2364,15 @@ html.keyboard-composer-active .home-dashboard--state-a .home-composer-dock {
   background-color: #3f3f46;
 }
 
-/* ── Bottom navigation (in-flow at shell bottom) ── */
+/* ── Bottom navigation (fixed to viewport bottom) ── */
 .bottom-nav {
-  position: relative;
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
   z-index: 50;
-  flex-shrink: 0;
+  margin: 0 auto;
+  max-width: 32rem;
   width: 100%;
   border-top: none;
   background-color: color-mix(in srgb, var(--bg-main) 95%, transparent);
