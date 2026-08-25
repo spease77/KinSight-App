@@ -357,7 +357,6 @@
 
 html {
   -webkit-tap-highlight-color: transparent;
-  height: 100%;
   height: -webkit-fill-available;
 }
 
@@ -372,20 +371,11 @@ body {
   background-color: var(--background);
 }
 
-html {
-  min-height: 100%;
-  min-height: 100dvh;
-  min-height: -webkit-fill-available;
-}
-
 body {
   display: flex;
-  height: 100%;
-  height: 100dvh;
-  height: -webkit-fill-available;
-  max-height: 100%;
-  max-height: 100dvh;
-  max-height: -webkit-fill-available;
+  min-height: 100vh;
+  min-height: 100svh;
+  min-height: -webkit-fill-available;
   flex-direction: column;
   color: var(--text-body, var(--text-primary));
   font-family: var(--font-sans), system-ui, sans-serif;
@@ -393,14 +383,6 @@ body {
   transition:
     background-color 0.2s ease,
     color 0.2s ease;
-}
-
-/* Lock document scroll only while the composer keyboard is open. */
-html.keyboard-composer-active,
-html.keyboard-composer-active body {
-  position: fixed;
-  height: 100%;
-  height: 100dvh;
 }
 
 /* Hide scrollbars globally while preserving scroll (touch, wheel, trackpad). */
@@ -539,14 +521,17 @@ b {
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --bottom-nav-height: 4.75rem;
   --bottom-nav-clearance: calc(
-    var(--bottom-nav-height) + var(--safe-bottom) + 0.25rem
+    var(--bottom-nav-height) + var(--safe-bottom)
   );
   --home-header-height: 5.75rem;
-  --home-composer-dock-height: calc(
-    0.75rem + 3.25rem + 0.5rem + env(safe-area-inset-bottom, 0px)
-  );
+  --composer-dock-height: 3.75rem;
+  --composer-keyboard-gap: 4px;
+  --home-composer-dock-height: calc(0.75rem + 3.25rem + 0.5rem);
   --home-conversation-composer-clearance: calc(
-    var(--bottom-nav-clearance) + 0.75rem + 3.25rem + 0.5rem
+    var(--bottom-nav-clearance) + var(--home-composer-dock-height) + 0.5rem
+  );
+  --home-state-a-composer-clearance: calc(
+    var(--bottom-nav-clearance) + var(--home-composer-dock-height) + 0.5rem
   );
 }
 
@@ -1031,6 +1016,17 @@ b {
   flex: 1 1 auto;
 }
 
+.home-dashboard--state-a .home-dashboard__main {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding-bottom: var(--home-state-a-composer-clearance);
+}
+
+.home-dashboard--state-a .home-hero {
+  flex: 1 1 auto;
+  justify-content: center;
+}
+
 .home-dashboard__main {
   flex: 0 0 auto;
 }
@@ -1093,32 +1089,21 @@ html.keyboard-composer-active .home-dashboard--state-a .home-hero-mic-zone {
   );
 }
 
-/* Conversation: composer rides the viewport bottom (Gemini-style). */
-.home-dashboard--conversation {
-  --composer-dock-bottom: var(--bottom-nav-clearance);
-}
-
-html.keyboard-composer-active .home-dashboard--conversation {
-  --composer-dock-bottom: var(--keyboard-inset, 0px);
-}
-
-html.keyboard-composer-active .home-dashboard--conversation .home-composer-dock {
-  padding-bottom: 0.5rem;
-  box-shadow: none;
-}
-
+/* Home: composer pinned above bottom nav at rest. */
+.home-dashboard--state-a .home-composer-dock,
 .home-dashboard--conversation .home-composer-dock {
   position: fixed;
   right: 0;
   left: 0;
-  bottom: var(--composer-dock-bottom);
+  bottom: var(--bottom-nav-clearance);
+  top: auto;
   z-index: 40;
   margin: 0 auto;
   max-width: 32rem;
   width: 100%;
   padding-inline: 1.25rem;
   padding-top: 0.5rem;
-  padding-bottom: max(0.5rem, var(--safe-bottom));
+  padding-bottom: 0.5rem;
   background: var(--bg-main);
   box-shadow: 0 -8px 24px rgb(0 0 0 / 0.12);
 }
@@ -1130,17 +1115,16 @@ html.keyboard-composer-active .home-dashboard--conversation .home-composer-dock 
   padding-bottom: var(--home-conversation-composer-clearance);
 }
 
-/* State A: pin ask bar above keyboard while typing. */
-html.keyboard-composer-active .home-dashboard--state-a .home-composer-dock {
-  position: fixed;
-  right: 0;
-  left: 0;
-  bottom: var(--keyboard-inset, 0px);
-  z-index: 40;
-  margin: 0 auto;
-  max-width: 32rem;
-  padding-inline: 1.25rem;
+/* Keyboard open: glue composer to visual viewport bottom (flush above keyboard). */
+html.keyboard-composer-active .home-composer-dock {
+  top: calc(
+    var(--vv-bottom-edge, 100vh) - var(--composer-dock-height, 3.75rem) -
+      var(--composer-keyboard-gap, 4px)
+  );
+  bottom: auto !important;
+  padding-top: 0.5rem;
   padding-bottom: 0.5rem;
+  box-shadow: none;
   transition: none;
 }
 
@@ -2404,7 +2388,7 @@ html.keyboard-composer-active .home-dashboard--state-a .home-composer-dock {
   background-color: #3f3f46;
 }
 
-/* ── Bottom navigation (fixed to viewport bottom) ── */
+/* ── Bottom navigation (fixed flush to screen bottom) ── */
 .bottom-nav {
   position: fixed;
   right: 0;
@@ -2419,7 +2403,7 @@ html.keyboard-composer-active .home-dashboard--state-a .home-composer-dock {
   -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
   padding-top: 0.25rem;
-  padding-bottom: var(--safe-bottom);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
   transition:
     opacity 0.2s ease,
     background-color 0.2s ease;

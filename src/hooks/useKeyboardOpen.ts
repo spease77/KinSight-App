@@ -2,10 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-const KEYBOARD_INSET_THRESHOLD = 50;
-const COMPOSER_KEYBOARD_GAP_PX = 8;
-/** Fallback when iOS overlays keyboard without shrinking visualViewport. */
-const IOS_KEYBOARD_FALLBACK_PX = 260;
+const COMPOSER_KEYBOARD_GAP_PX = 4;
 const MOBILE_MEDIA_QUERY = "(max-width: 768px)";
 const COARSE_POINTER_QUERY = "(pointer: coarse)";
 
@@ -50,30 +47,15 @@ function isTouchLikeDevice(): boolean {
   );
 }
 
-function computeKeyboardInset(viewport: VisualViewport): number {
-  return Math.max(
-    0,
-    window.innerHeight - viewport.height - viewport.offsetTop
-  );
-}
-
 function getAppScroll(): HTMLElement | null {
   return document.querySelector<HTMLElement>(".app-scroll");
 }
 
-/** Prevent scroll drift from repeated focus / visualViewport events. */
 function resetAppScroll() {
   const scrollEl = getAppScroll();
   if (scrollEl) {
     scrollEl.scrollTop = 0;
   }
-}
-
-function syncKeyboardInset(insetPx: number) {
-  document.documentElement.style.setProperty(
-    "--keyboard-inset",
-    `${Math.max(0, insetPx)}px`
-  );
 }
 
 function lockPageScroll() {
@@ -83,48 +65,51 @@ function lockPageScroll() {
   document.body.scrollTop = 0;
 }
 
-function resolveComposerBottomInset(
-  viewport: VisualViewport,
-  composerActive: boolean
-): number {
-  if (!composerActive) return 0;
-
-  const visualBottomGap = Math.max(
-    0,
-    window.innerHeight - viewport.offsetTop - viewport.height
-  );
-
-  if (visualBottomGap >= KEYBOARD_INSET_THRESHOLD) {
-    return visualBottomGap + COMPOSER_KEYBOARD_GAP_PX;
-  }
-
-  const panInset = Math.max(
-    0,
-    window.innerHeight - viewport.height - viewport.offsetTop
-  );
-
-  if (panInset >= KEYBOARD_INSET_THRESHOLD) {
-    return panInset + COMPOSER_KEYBOARD_GAP_PX;
-  }
-
-  if (viewport.offsetTop >= KEYBOARD_INSET_THRESHOLD) {
-    return viewport.offsetTop + COMPOSER_KEYBOARD_GAP_PX;
-  }
-
-  return IOS_KEYBOARD_FALLBACK_PX + COMPOSER_KEYBOARD_GAP_PX;
+function isHomeConversationActive(): boolean {
+  return Boolean(document.querySelector(".home-dashboard--conversation"));
 }
 
-function isHomeConversationActive(): boolean {
-  return Boolean(
-    document.querySelector(".home-dashboard--conversation")
+/** Pin composer to the visual viewport bottom edge (flush above keyboard). */
+function syncVisualViewportGeometry(viewport: VisualViewport) {
+  const bottomEdge = viewport.offsetTop + viewport.height;
+  document.documentElement.style.setProperty(
+    "--vv-bottom-edge",
+    `${bottomEdge}px`
   );
+  document.documentElement.style.setProperty(
+    "--vv-offset-top",
+    `${viewport.offsetTop}px`
+  );
+  document.documentElement.style.setProperty(
+    "--vv-height",
+    `${viewport.height}px`
+  );
+  document.documentElement.style.setProperty(
+    "--composer-keyboard-gap",
+    `${COMPOSER_KEYBOARD_GAP_PX}px`
+  );
+
+  const dock = document.querySelector<HTMLElement>(".home-composer-dock");
+  if (dock) {
+    document.documentElement.style.setProperty(
+      "--composer-dock-height",
+      `${dock.offsetHeight}px`
+    );
+  }
+}
+
+function clearVisualViewportGeometry() {
+  document.documentElement.style.removeProperty("--vv-bottom-edge");
+  document.documentElement.style.removeProperty("--vv-offset-top");
+  document.documentElement.style.removeProperty("--vv-height");
+  document.documentElement.style.removeProperty("--composer-dock-height");
 }
 
 /** Sync DOM class for instant nav/mic hide before React re-render. */
 function setComposerActiveClass(active: boolean) {
   document.documentElement.classList.toggle("keyboard-composer-active", active);
   if (!active) {
-    syncKeyboardInset(0);
+    clearVisualViewportGeometry();
   }
 }
 
@@ -146,20 +131,18 @@ export function useKeyboardOpen(): KeyboardChromeState {
       const focusInField = isEditableField(document.activeElement);
       const touch = isTouchLikeDevice();
       const active = touch && focusInField;
-      const inset = computeKeyboardInset(viewport);
-      const viewportShrunk = inset > KEYBOARD_INSET_THRESHOLD;
 
       if (active) {
-        syncKeyboardInset(resolveComposerBottomInset(viewport, true));
+        syncVisualViewportGeometry(viewport);
         setComposerActiveClass(true);
         setComposerActive(true);
-        setIsKeyboardOpen(viewportShrunk || true);
+        setIsKeyboardOpen(true);
         return;
       }
 
       setComposerActiveClass(false);
       setComposerActive(false);
-      setIsKeyboardOpen(viewportShrunk);
+      setIsKeyboardOpen(false);
     };
 
     const handleFocusIn = (event: FocusEvent) => {
@@ -167,9 +150,7 @@ export function useKeyboardOpen(): KeyboardChromeState {
         if (!isHomeConversationActive()) {
           lockPageScroll();
         }
-        syncKeyboardInset(
-          resolveComposerBottomInset(viewport, true)
-        );
+        syncVisualViewportGeometry(viewport);
         setComposerActiveClass(true);
         setComposerActive(true);
         setIsKeyboardOpen(true);
@@ -205,7 +186,7 @@ export function useKeyboardOpen(): KeyboardChromeState {
       window.removeEventListener("focusout", handleFocusOut);
       window.removeEventListener("resize", update);
       setComposerActiveClass(false);
-      syncKeyboardInset(0);
+      clearVisualViewportGeometry();
     };
   }, []);
 
