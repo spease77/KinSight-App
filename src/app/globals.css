@@ -1093,27 +1093,45 @@ html.keyboard-composer-active .home-dashboard--state-a .home-hero-mic-zone {
   );
 }
 
-/* Conversation: pin composer above bottom nav like a chat app. */
+/* Conversation: composer rides the viewport bottom (Gemini-style). */
+.home-dashboard--conversation {
+  --composer-dock-bottom: var(--bottom-nav-clearance);
+}
+
+html.keyboard-composer-active .home-dashboard--conversation {
+  --composer-dock-bottom: var(--keyboard-inset, 0px);
+}
+
+html.keyboard-composer-active .home-dashboard--conversation .home-composer-dock {
+  padding-bottom: 0.5rem;
+  box-shadow: none;
+}
+
 .home-dashboard--conversation .home-composer-dock {
   position: fixed;
   right: 0;
   left: 0;
-  bottom: var(--bottom-nav-clearance);
+  bottom: var(--composer-dock-bottom);
   z-index: 40;
   margin: 0 auto;
   max-width: 32rem;
   width: 100%;
   padding-inline: 1.25rem;
-  padding-bottom: 0.5rem;
+  padding-top: 0.5rem;
+  padding-bottom: max(0.5rem, var(--safe-bottom));
+  background: var(--bg-main);
+  box-shadow: 0 -8px 24px rgb(0 0 0 / 0.12);
 }
 
 .home-dashboard--conversation .kinsight-conversation-messages {
-  margin-bottom: 0.25rem;
+  flex: 1 1 auto;
+  min-height: 0;
+  margin-bottom: 0;
   padding-bottom: var(--home-conversation-composer-clearance);
 }
 
-/* Pin ask bar above keyboard without scrolling the page. */
-html.keyboard-composer-active .home-composer-dock {
+/* State A: pin ask bar above keyboard while typing. */
+html.keyboard-composer-active .home-dashboard--state-a .home-composer-dock {
   position: fixed;
   right: 0;
   left: 0;

@@ -101,6 +101,25 @@ export function KinSightConversationPanel({
     });
   }, [messages, isLoading]);
 
+  useEffect(() => {
+    if (!conversationStarted) return;
+
+    const scrollMessagesToEnd = () => {
+      const el = scrollRef.current;
+      if (!el) return;
+      el.scrollTop = el.scrollHeight;
+    };
+
+    const input = replyInputRef.current;
+    input?.addEventListener("focus", scrollMessagesToEnd);
+    window.visualViewport?.addEventListener("resize", scrollMessagesToEnd);
+
+    return () => {
+      input?.removeEventListener("focus", scrollMessagesToEnd);
+      window.visualViewport?.removeEventListener("resize", scrollMessagesToEnd);
+    };
+  }, [conversationStarted]);
+
   const handleReplySubmit = (e: FormEvent) => {
     e.preventDefault();
     onReplySubmit();
@@ -287,25 +306,25 @@ export function KinSightConversationPanel({
               </div>
             </div>
           )}
+
+          {conversationStarted && statusLabel && (
+            <p className="type-meta shrink-0 px-1 text-center text-foreground">
+              {statusLabel}
+            </p>
+          )}
+
+          {conversationStarted && voiceError && (
+            <p className="shrink-0 px-1 text-center text-xs text-red-400" role="alert">
+              {voiceError}
+            </p>
+          )}
+
+          {conversationStarted && chatError && (
+            <p className="shrink-0 px-1 text-center text-xs text-red-400" role="alert">
+              {chatError.message || "KinSight couldn't respond. Please try again."}
+            </p>
+          )}
         </div>
-      )}
-
-      {conversationStarted && statusLabel && (
-        <p className="type-meta shrink-0 px-1 text-center text-foreground">
-          {statusLabel}
-        </p>
-      )}
-
-      {conversationStarted && voiceError && (
-        <p className="shrink-0 px-1 text-center text-xs text-red-400" role="alert">
-          {voiceError}
-        </p>
-      )}
-
-      {conversationStarted && chatError && (
-        <p className="shrink-0 px-1 text-center text-xs text-red-400" role="alert">
-          {chatError.message || "KinSight couldn't respond. Please try again."}
-        </p>
       )}
 
       {conversationStarted ? (

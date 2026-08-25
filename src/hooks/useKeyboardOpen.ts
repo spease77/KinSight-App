@@ -3,10 +3,9 @@
 import { useEffect, useState } from "react";
 
 const KEYBOARD_INSET_THRESHOLD = 50;
-const IOS_ACCESSORY_BAR_PX = 44;
-const COMPOSER_KEYBOARD_GAP_PX = 12;
+const COMPOSER_KEYBOARD_GAP_PX = 8;
 /** Fallback when iOS overlays keyboard without shrinking visualViewport. */
-const IOS_KEYBOARD_FALLBACK_PX = 280;
+const IOS_KEYBOARD_FALLBACK_PX = 260;
 const MOBILE_MEDIA_QUERY = "(max-width: 768px)";
 const COARSE_POINTER_QUERY = "(pointer: coarse)";
 
@@ -88,26 +87,37 @@ function resolveComposerBottomInset(
   viewport: VisualViewport,
   composerActive: boolean
 ): number {
-  const layoutBottomGap = Math.max(
+  if (!composerActive) return 0;
+
+  const visualBottomGap = Math.max(
     0,
     window.innerHeight - viewport.offsetTop - viewport.height
   );
 
-  if (layoutBottomGap > KEYBOARD_INSET_THRESHOLD) {
-    return layoutBottomGap + IOS_ACCESSORY_BAR_PX + COMPOSER_KEYBOARD_GAP_PX;
+  if (visualBottomGap >= KEYBOARD_INSET_THRESHOLD) {
+    return visualBottomGap + COMPOSER_KEYBOARD_GAP_PX;
   }
 
-  if (composerActive && viewport.offsetTop > KEYBOARD_INSET_THRESHOLD) {
-    return (
-      viewport.offsetTop + IOS_ACCESSORY_BAR_PX + COMPOSER_KEYBOARD_GAP_PX
-    );
+  const panInset = Math.max(
+    0,
+    window.innerHeight - viewport.height - viewport.offsetTop
+  );
+
+  if (panInset >= KEYBOARD_INSET_THRESHOLD) {
+    return panInset + COMPOSER_KEYBOARD_GAP_PX;
   }
 
-  if (composerActive) {
-    return IOS_KEYBOARD_FALLBACK_PX + COMPOSER_KEYBOARD_GAP_PX;
+  if (viewport.offsetTop >= KEYBOARD_INSET_THRESHOLD) {
+    return viewport.offsetTop + COMPOSER_KEYBOARD_GAP_PX;
   }
 
-  return 0;
+  return IOS_KEYBOARD_FALLBACK_PX + COMPOSER_KEYBOARD_GAP_PX;
+}
+
+function isHomeConversationActive(): boolean {
+  return Boolean(
+    document.querySelector(".home-dashboard--conversation")
+  );
 }
 
 /** Sync DOM class for instant nav/mic hide before React re-render. */
@@ -154,7 +164,9 @@ export function useKeyboardOpen(): KeyboardChromeState {
 
     const handleFocusIn = (event: FocusEvent) => {
       if (isEditableField(event.target as Element) && isTouchLikeDevice()) {
-        lockPageScroll();
+        if (!isHomeConversationActive()) {
+          lockPageScroll();
+        }
         syncKeyboardInset(
           resolveComposerBottomInset(viewport, true)
         );
