@@ -381,7 +381,7 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
           className={`relative flex flex-col ${
             hasConversationStarted
               ? "min-h-0 flex-1"
-              : "home-dashboard__main justify-start gap-6 px-5 pb-6 pt-4"
+              : "home-dashboard__main justify-start gap-6 px-5 pt-4"
           }`}
         >
           <section

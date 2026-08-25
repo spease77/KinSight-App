@@ -70,11 +70,11 @@ export function FeedbackPage() {
   };
 
   return (
-    <div className="feedback-page flex min-h-0 flex-1 flex-col">
+    <div className="feedback-page flex flex-col">
       <div className="feedback-page__header shrink-0">
         <Header title="Feedback" sticky={false} />
       </div>
-      <main className="feedback-page__body flex flex-col gap-6 px-5 pb-6 pt-4">
+      <main className="feedback-page__body flex flex-col gap-6 px-5 pt-4">
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           <label className="flex flex-col">
             <textarea

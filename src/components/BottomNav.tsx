@@ -43,9 +43,9 @@ export function BottomNav() {
   return (
     <nav
       aria-label="Main navigation"
-      className="bottom-nav fixed bottom-0 left-0 right-0 z-50 h-14 w-full bg-background/95"
+      className="bottom-nav fixed bottom-0 left-0 right-0 z-50 h-[56px] w-full border-t border-border/50 bg-background/95 backdrop-blur-md"
     >
-      <div className="bottom-nav__inner flex h-full w-full items-end justify-around px-2 pb-1">
+      <div className="bottom-nav__inner flex h-full w-full items-center justify-around px-2">
         {TABS.map(({ href, label, icon: Icon, match }) => {
           const active = match(pathname);
 
@@ -53,7 +53,7 @@ export function BottomNav() {
             <Link
               key={href}
               href={href}
-              className={`bottom-nav__tab p-0 py-0 ${
+              className={`bottom-nav__tab py-1 ${
                 active ? "bottom-nav__tab--active" : ""
               }`}
             >

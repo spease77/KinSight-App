@@ -63,7 +63,7 @@ export function ContactsPage() {
   return (
     <>
       <Header title="Contacts" headerActions={headerActions} />
-      <main className="flex flex-col gap-4 px-5 pb-6 pt-4">
+      <main className="flex flex-col gap-4 px-5 pt-4">
         {statusMessage && (
           <p className="ui-card ui-alert-error px-4 py-3 text-sm" role="alert">
             {statusMessage}

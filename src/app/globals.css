@@ -519,8 +519,8 @@ b {
 :root {
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
-  --bottom-nav-height: 3.5rem;
-  --bottom-nav-clearance: 6rem;
+  --bottom-nav-height: 56px;
+  --bottom-nav-clearance: 72px;
   --home-header-height: 5.75rem;
   --home-composer-dock-height: calc(0.75rem + 3.25rem + 0.5rem);
   --home-conversation-composer-clearance: calc(
@@ -545,13 +545,14 @@ b {
   width: 100%;
 }
 
-/* Bottom nav: flush to viewport bottom; layout via Tailwind in BottomNav.tsx */
+/* Bottom nav: fixed 56px bar flush to viewport bottom. */
 .bottom-nav {
   bottom: 0 !important;
   top: auto !important;
   margin: 0 !important;
   padding: 0 !important;
   box-sizing: border-box;
+  height: 56px !important;
 }
 
 .app-scroll.home-scroll-locked {
@@ -2408,10 +2409,9 @@ html.keyboard-composer-active .bottom-nav {
   min-width: 0;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: center;
   gap: 0.125rem;
   box-sizing: border-box;
-  padding: 0;
 }
 
 .bottom-nav__icon-wrap {
