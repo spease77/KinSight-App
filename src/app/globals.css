@@ -1094,13 +1094,9 @@ html[data-standalone="true"] .home-composer-dock--keyboard-open {
   flex-shrink: 0;
 }
 
-.home-hero-mic-zone--hidden {
-  visibility: hidden;
-  pointer-events: none;
-}
-
+.home-hero-mic-zone--hidden,
 html.keyboard-composer-active .home-dashboard--state-a .home-hero-mic-zone {
-  visibility: hidden;
+  display: none;
   pointer-events: none;
 }
 
@@ -2441,23 +2437,14 @@ html.keyboard-composer-active .home-dashboard--state-a .home-hero-mic-zone {
   backdrop-filter: blur(12px);
   padding-bottom: max(0.5rem, var(--safe-bottom));
   transition:
-    transform 0.2s ease,
     opacity 0.2s ease,
-    visibility 0.2s ease,
     background-color 0.2s ease;
 }
 
-.bottom-nav--keyboard-open {
-  visibility: hidden;
-  opacity: 0;
-  pointer-events: none;
-  transform: translateY(100%);
-}
-
-/* Instant hide before React re-render when ask bar is focused (standalone PWA). */
+/* Hide completely when keyboard/composer active — never reposition with inset. */
+.bottom-nav--keyboard-open,
 html.keyboard-composer-active .bottom-nav {
-  visibility: hidden;
-  opacity: 0;
+  display: none;
   pointer-events: none;
 }
 

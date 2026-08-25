@@ -143,7 +143,8 @@ export function useSoftKeyboardOpen(): SoftKeyboardState {
       }
     };
 
-    const setComposerScrollLock = (active: boolean) => {
+    /** Sync DOM class for instant nav/mic hide before React re-render. */
+    const setComposerActiveClass = (active: boolean) => {
       document.documentElement.classList.toggle(
         "keyboard-composer-active",
         active
@@ -182,8 +183,8 @@ export function useSoftKeyboardOpen(): SoftKeyboardState {
         `${inset}px`
       );
 
-      if (standalone) {
-        setComposerScrollLock(focusInField);
+      if (isTouchLikeDevice()) {
+        setComposerActiveClass(focusInField);
       }
     };
 
@@ -287,7 +288,7 @@ export function useSoftKeyboardOpen(): SoftKeyboardState {
       }
 
       document.documentElement.style.setProperty("--keyboard-inset", "0px");
-      setComposerScrollLock(false);
+      setComposerActiveClass(false);
       setComposerActive(false);
       setKeyboardOpen(false);
       syncRestViewport();
@@ -299,6 +300,7 @@ export function useSoftKeyboardOpen(): SoftKeyboardState {
         isEditableField(event.target as Element) &&
         isTouchLikeDevice()
       ) {
+        setComposerActiveClass(true);
         setComposerActive(true);
         openKeyboardForFocus();
         return;
@@ -370,7 +372,7 @@ export function useSoftKeyboardOpen(): SoftKeyboardState {
       window.removeEventListener("pageshow", handleAppResume);
       document.removeEventListener("visibilitychange", handleAppResume);
       document.documentElement.style.removeProperty("--keyboard-inset");
-      setComposerScrollLock(false);
+      setComposerActiveClass(false);
     };
   }, []);
 
