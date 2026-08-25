@@ -24,6 +24,7 @@ import { withMessageText } from "@/lib/ai/message-text";
 import { logMessageToKinSight } from "@/lib/kinsight/log-message";
 import type { MessageLogStatus } from "@/components/AssistantMessageBubble";
 import { useVoiceExperience } from "@/contexts/VoiceExperienceContext";
+import { useKeyboardOpen } from "@/hooks/useKeyboardOpen";
 import type { OsVoiceSource } from "@/lib/voice/os-voice-deeplink";
 
 interface DashboardProps {
@@ -343,6 +344,8 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
   const activeMicFailure = micAccessFailure ?? permissionFailure;
 
   const hasConversationStarted = conversationEngaged;
+  const { composerActive } = useKeyboardOpen();
+  const hideHomeMic = !hasConversationStarted && composerActive;
 
   useEffect(() => {
     if (hasConversationStarted) return;
@@ -392,7 +395,14 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
             }`}
           >
             {!hasConversationStarted && (
-              <div className="home-hero-mic-zone">
+              <div
+                className={
+                  hideHomeMic
+                    ? "home-hero-mic-zone home-hero-mic-zone--hidden"
+                    : "home-hero-mic-zone"
+                }
+                aria-hidden={hideHomeMic}
+              >
                 <MicrophoneButton
                   isRecording={isRecording}
                   isSpeaking={isSpeaking}

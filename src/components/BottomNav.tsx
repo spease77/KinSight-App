@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { CalendarClock, Clock, Home, MessageSquare, Users } from "lucide-react";
 import { useKeyboardOpen } from "@/hooks/useKeyboardOpen";
 
@@ -40,15 +42,20 @@ const TABS = [
 
 export function BottomNav() {
   const pathname = usePathname();
-  const isKeyboardOpen = useKeyboardOpen();
+  const { shouldHideChrome } = useKeyboardOpen();
+  const [mounted, setMounted] = useState(false);
 
-  return (
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const nav = (
     <nav
       aria-label="Main navigation"
-      className={`bottom-nav fixed bottom-0 left-0 right-0 z-50 mx-auto w-full max-w-lg bg-background/95 backdrop-blur-md pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] transition-transform duration-200 ${
-        isKeyboardOpen
-          ? "translate-y-full pointer-events-none"
-          : "translate-y-0"
+      aria-hidden={shouldHideChrome}
+      inert={shouldHideChrome ? true : undefined}
+      className={`bottom-nav w-full px-4 pt-2${
+        shouldHideChrome ? " bottom-nav--keyboard-open" : ""
       }`}
     >
       <div className="bottom-nav__inner">
@@ -59,6 +66,7 @@ export function BottomNav() {
             <Link
               key={href}
               href={href}
+              tabIndex={shouldHideChrome ? -1 : undefined}
               className={`bottom-nav__tab ${
                 active ? "bottom-nav__tab--active" : ""
               }`}
@@ -78,4 +86,10 @@ export function BottomNav() {
       </div>
     </nav>
   );
+
+  if (!mounted) {
+    return null;
+  }
+
+  return createPortal(nav, document.body);
 }

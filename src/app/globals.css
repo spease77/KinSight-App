@@ -529,6 +529,7 @@ b {
 .app-scroll {
   overscroll-behavior-y: contain;
   -webkit-overflow-scrolling: touch;
+  padding-bottom: var(--bottom-nav-clearance);
 }
 
 .app-scroll.home-scroll-locked {
@@ -1012,7 +1013,8 @@ b {
   flex-shrink: 0;
 }
 
-.home-hero-mic-zone--hidden {
+.home-hero-mic-zone--hidden,
+html.keyboard-composer-active .home-dashboard--state-a .home-hero-mic-zone {
   display: none;
   pointer-events: none;
 }
@@ -2320,8 +2322,28 @@ b {
 
 /* ── Bottom navigation (inverted active icons with preserved stroke detail) ── */
 .bottom-nav {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 50;
+  margin: 0 auto;
+  max-width: 32rem;
   border-top: none;
-  transition: background-color 0.2s ease;
+  background-color: color-mix(in srgb, var(--bg-main) 95%, transparent);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  padding-bottom: max(0.5rem, var(--safe-bottom));
+  transition:
+    opacity 0.2s ease,
+    background-color 0.2s ease;
+}
+
+/* Hide completely when keyboard/composer active — never reposition with inset. */
+.bottom-nav--keyboard-open,
+html.keyboard-composer-active .bottom-nav {
+  display: none;
+  pointer-events: none;
 }
 
 .bottom-nav__inner {
