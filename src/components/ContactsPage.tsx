@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Header } from "@/components/Header";
+import { PageHeader } from "@/components/PageHeader";
 import { ContactList } from "@/components/ContactList";
 import { DatabaseSetupNotice } from "@/components/DatabaseSetupNotice";
 import { useContacts } from "@/hooks/useContacts";
@@ -62,9 +63,9 @@ export function ContactsPage() {
 
   return (
     <>
-      <header className="sticky top-0 z-20 mb-4 w-full bg-background pt-[max(env(safe-area-inset-top),44px)] pb-2">
-        <Header title="Contacts" headerActions={headerActions} sticky={false} />
-      </header>
+      <PageHeader>
+        <Header title="Contacts" headerActions={headerActions} />
+      </PageHeader>
       <main className="flex flex-col gap-4 px-5">
         {statusMessage && (
           <p className="ui-card ui-alert-error px-4 py-3 text-sm" role="alert">

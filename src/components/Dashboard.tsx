@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import { Header } from "@/components/Header";
+import { PageHeader } from "@/components/PageHeader";
 import { MicrophoneButton } from "@/components/MicrophoneButton";
 import { KinSightConversationPanel } from "@/components/KinSightConversationPanel";
 import { ProposedContactModal } from "@/components/ProposedContactModal";
@@ -362,7 +363,6 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
     <Header
       showNewSession={hasConversationStarted}
       onNewSession={resetToStateA}
-      sticky={hasConversationStarted}
     />
   );
 
@@ -375,13 +375,15 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
             : "home-dashboard home-dashboard--state-a"
         }
       >
-        <div className="home-dashboard__header shrink-0">{header}</div>
+        <PageHeader className="home-dashboard__header shrink-0">
+          {header}
+        </PageHeader>
 
         <main
           className={`relative flex flex-col ${
             hasConversationStarted
               ? "min-h-0 flex-1"
-              : "home-dashboard__main justify-start gap-6 px-5 pt-4"
+              : "home-dashboard__main justify-start gap-6 px-5"
           }`}
         >
           <section
