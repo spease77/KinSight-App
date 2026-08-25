@@ -344,10 +344,10 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
   const activeMicFailure = micAccessFailure ?? permissionFailure;
 
   const hasConversationStarted = conversationEngaged;
-  const keyboardOpen = useSoftKeyboardOpen();
-  const [askBarFocused, setAskBarFocused] = useState(false);
-  const composerActive = keyboardOpen || askBarFocused;
+  const { keyboardOpen, composerActive } = useSoftKeyboardOpen();
+  const [dockKeyboardOpen, setDockKeyboardOpen] = useState(false);
   const hideHomeMic = !hasConversationStarted && composerActive;
+  const dockComposer = dockKeyboardOpen || keyboardOpen;
 
   useEffect(() => {
     if (hasConversationStarted) return;
@@ -445,11 +445,11 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
               replyValue={replyText}
               onReplyChange={setReplyText}
               onReplySubmit={handleReplySubmit}
-              onReplyFocus={() => setAskBarFocused(true)}
-              onReplyBlur={() => setAskBarFocused(false)}
+              onDockKeyboardOpen={() => setDockKeyboardOpen(true)}
+              onDockKeyboardClose={() => setDockKeyboardOpen(false)}
               chatError={chatError}
               conversationStarted={hasConversationStarted}
-              dockKeyboardOpen={composerActive}
+              dockKeyboardOpen={dockComposer}
               onMicToggle={handleMicToggle}
               onMicAccessFailure={handleMicAccessFailure}
               micDisabled={false}

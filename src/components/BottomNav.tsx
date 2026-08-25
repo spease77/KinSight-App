@@ -42,7 +42,8 @@ const TABS = [
 
 export function BottomNav() {
   const pathname = usePathname();
-  const keyboardOpen = useSoftKeyboardOpen();
+  const { keyboardOpen, composerActive } = useSoftKeyboardOpen();
+  const hideNav = keyboardOpen || composerActive;
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -52,10 +53,10 @@ export function BottomNav() {
   const nav = (
     <nav
       aria-label="Main navigation"
-      aria-hidden={keyboardOpen}
-      inert={keyboardOpen ? true : undefined}
+      aria-hidden={hideNav}
+      inert={hideNav ? true : undefined}
       className={`bottom-nav w-full px-4 pt-2 ${
-        keyboardOpen ? "bottom-nav--keyboard-open" : ""
+        hideNav ? "bottom-nav--keyboard-open" : ""
       }`}
     >
       <div className="bottom-nav__inner">
@@ -66,7 +67,7 @@ export function BottomNav() {
             <Link
               key={href}
               href={href}
-              tabIndex={keyboardOpen ? -1 : undefined}
+              tabIndex={hideNav ? -1 : undefined}
               className={`bottom-nav__tab ${
                 active ? "bottom-nav__tab--active" : ""
               }`}

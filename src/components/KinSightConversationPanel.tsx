@@ -32,8 +32,9 @@ interface KinSightConversationPanelProps {
   replyValue: string;
   onReplyChange: (value: string) => void;
   onReplySubmit: () => void;
-  onReplyFocus?: () => void;
-  onReplyBlur?: () => void;
+  /** Deferred until tap gesture ends — avoids iOS focus loss when dock goes fixed. */
+  onDockKeyboardOpen?: () => void;
+  onDockKeyboardClose?: () => void;
   chatError?: Error;
   conversationStarted?: boolean;
   /** True when the composer dock should pin above the soft keyboard. */
@@ -67,8 +68,8 @@ export function KinSightConversationPanel({
   replyValue,
   onReplyChange,
   onReplySubmit,
-  onReplyFocus,
-  onReplyBlur,
+  onDockKeyboardOpen,
+  onDockKeyboardClose,
   chatError,
   conversationStarted = false,
   dockKeyboardOpen = false,
@@ -86,27 +87,27 @@ export function KinSightConversationPanel({
     setIsClient(true);
   }, []);
 
-  const composerActivationPendingRef = useRef(false);
+  const dockActivationPendingRef = useRef(false);
 
-  const scheduleComposerActivation = useCallback(() => {
-    if (!onReplyFocus) return;
+  const scheduleDockActivation = useCallback(() => {
+    if (!onDockKeyboardOpen) return;
 
-    composerActivationPendingRef.current = true;
+    dockActivationPendingRef.current = true;
 
     const activate = () => {
-      if (!composerActivationPendingRef.current) return;
-      composerActivationPendingRef.current = false;
-      onReplyFocus();
+      if (!dockActivationPendingRef.current) return;
+      dockActivationPendingRef.current = false;
+      onDockKeyboardOpen();
     };
 
     // Defer layout shifts until the tap gesture finishes — iOS drops focus
     // when the dock jumps to fixed positioning mid-gesture.
     window.addEventListener("pointerup", activate, { once: true, capture: true });
     window.addEventListener("touchend", activate, { once: true, capture: true });
-  }, [onReplyFocus]);
+  }, [onDockKeyboardOpen]);
 
-  const cancelComposerActivation = useCallback(() => {
-    composerActivationPendingRef.current = false;
+  const cancelDockActivation = useCallback(() => {
+    dockActivationPendingRef.current = false;
   }, []);
 
   const isProcessing =
@@ -184,11 +185,11 @@ export function KinSightConversationPanel({
             value={replyValue}
             onChange={(e) => onReplyChange(e.target.value)}
             onFocus={() => {
-              scheduleComposerActivation();
+              scheduleDockActivation();
             }}
             onBlur={() => {
-              cancelComposerActivation();
-              onReplyBlur?.();
+              cancelDockActivation();
+              onDockKeyboardClose?.();
             }}
             placeholder={
               isLoading ? "KinSight is thinking…" : "Ask about a contact..."

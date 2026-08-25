@@ -117,8 +117,16 @@ function computeRawKeyboardInset(
   return Math.max(vvInset, scrollInset, offsetInset);
 }
 
-export function useSoftKeyboardOpen(): boolean {
+export type SoftKeyboardState = {
+  /** True once viewport confirms keyboard (may defer on iOS PWA until pointerup). */
+  keyboardOpen: boolean;
+  /** True immediately when a text field is focused on touch — drives nav/mic hide. */
+  composerActive: boolean;
+};
+
+export function useSoftKeyboardOpen(): SoftKeyboardState {
   const [keyboardOpen, setKeyboardOpen] = useState(false);
+  const [composerActive, setComposerActive] = useState(false);
 
   useEffect(() => {
     const viewport = window.visualViewport;
@@ -254,6 +262,7 @@ export function useSoftKeyboardOpen(): boolean {
       const touchDevice = isTouchLikeDevice();
 
       if (touchDevice && focusInField) {
+        setComposerActive(true);
         if (!deferredOpenPending) {
           if (isStandalonePwa()) {
             scheduleKeyboardOpen();
@@ -279,6 +288,7 @@ export function useSoftKeyboardOpen(): boolean {
 
       document.documentElement.style.setProperty("--keyboard-inset", "0px");
       setComposerScrollLock(false);
+      setComposerActive(false);
       setKeyboardOpen(false);
       syncRestViewport();
       syncViewportMetrics();
@@ -289,6 +299,7 @@ export function useSoftKeyboardOpen(): boolean {
         isEditableField(event.target as Element) &&
         isTouchLikeDevice()
       ) {
+        setComposerActive(true);
         openKeyboardForFocus();
         return;
       }
@@ -363,5 +374,5 @@ export function useSoftKeyboardOpen(): boolean {
     };
   }, []);
 
-  return keyboardOpen;
+  return { keyboardOpen, composerActive };
 }

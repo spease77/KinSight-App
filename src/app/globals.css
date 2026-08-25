@@ -1099,6 +1099,11 @@ html[data-standalone="true"] .home-composer-dock--keyboard-open {
   pointer-events: none;
 }
 
+html.keyboard-composer-active .home-dashboard--state-a .home-hero-mic-zone {
+  visibility: hidden;
+  pointer-events: none;
+}
+
 .home-ask-bar {
   display: flex;
   cursor: text;
@@ -2447,6 +2452,13 @@ html[data-standalone="true"] .home-composer-dock--keyboard-open {
   opacity: 0;
   pointer-events: none;
   transform: translateY(100%);
+}
+
+/* Instant hide before React re-render when ask bar is focused (standalone PWA). */
+html.keyboard-composer-active .bottom-nav {
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .bottom-nav__inner {
