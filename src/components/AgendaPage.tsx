@@ -272,19 +272,25 @@ export function AgendaPage() {
           }
         >
           <Header title="Agenda" headerActions={headerActions} />
+        </PageHeader>
+        <div
+          className={`agenda-page-toolbar shrink-0 ${
+            headerScrolled ? "agenda-page-header--scrolled" : ""
+          }`}
+        >
           <AgendaSearchBar
             open={isSearchOpen}
             query={searchQuery}
             onQueryChange={setSearchQuery}
             onClose={handleSearchClose}
           />
-          <div className="px-5 pb-2">
+          <div className="px-1 pb-2">
             <AgendaTimeFrameSwitcher
               timeFrame={timeFrame}
               onTimeFrameChange={handleTimeFrameChange}
             />
           </div>
-        </PageHeader>
+        </div>
 
         <main className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden px-5 pb-0">
         {isLoading ? (

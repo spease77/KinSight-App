@@ -9,7 +9,7 @@ const HOME_TAGLINE = "People Intelligence";
 const HOME_TAGLINE_TYPE_MS = 45;
 const HOME_TAGLINE_DELAY_MS = 1000;
 
-function HomeTagline() {
+export function HomeTagline() {
   const pathname = usePathname();
   const [isVisible, setIsVisible] = useState(false);
   const [visibleLength, setVisibleLength] = useState(0);
@@ -43,22 +43,17 @@ function HomeTagline() {
   }, [visibleLength, pathname, isVisible]);
 
   if (!isVisible) {
-    return (
-      <div
-        className="mt-1.5 h-[1.375rem]"
-        aria-hidden="true"
-      />
-    );
+    return <div className="h-5" aria-hidden="true" />;
   }
 
   return (
-    <div className="mt-1.5 flex items-center gap-2" aria-live="polite">
+    <div className="flex items-center gap-2 px-1" aria-live="polite">
       <Sparkles
-        className={`home-sparkle-icon h-4 w-4 shrink-0 ${isTyping ? "home-sparkle-flash" : ""}`}
+        className={`home-sparkle-icon h-3.5 w-3.5 shrink-0 ${isTyping ? "home-sparkle-flash" : ""}`}
         strokeWidth={2.25}
         aria-hidden="true"
       />
-      <span className="ui-badge-green px-2 py-0.5">
+      <span className="ui-badge-green px-2 py-0.5 text-[10px]">
         {HOME_TAGLINE.slice(0, visibleLength)}
         {isTyping ? (
           <span className="opacity-50" aria-hidden="true">
@@ -89,41 +84,37 @@ export function Header({
 
   return (
     <>
-      <div className="px-4">
-        <div className="flex items-center justify-between gap-3">
-          <h1 className="font-sans text-3xl font-normal tracking-tight text-foreground sm:text-4xl">
-            {isHome ? "KinSight" : title}
-          </h1>
+      <div className="flex h-full w-full min-w-0 items-center justify-between gap-2 px-1">
+        <h1 className="min-w-0 truncate font-sans text-[17px] font-semibold tracking-tight text-foreground">
+          {isHome ? "KinSight" : title}
+        </h1>
 
-          <div className="flex shrink-0 items-center gap-1">
-            {headerActions}
+        <div className="flex shrink-0 items-center gap-1">
+          {headerActions}
 
-            {showNewSession && onNewSession ? (
-              <button
-                type="button"
-                onClick={onNewSession}
-                className="flex h-9 items-center gap-1 rounded-full px-2.5 text-slate-400 transition-colors hover:bg-card-hover hover:text-foreground"
-                aria-label="Start new session"
-              >
-                <Plus className="h-4 w-4" strokeWidth={2} />
-                <span className="text-xs font-medium">New</span>
-              </button>
-            ) : null}
+          {showNewSession && onNewSession ? (
+            <button
+              type="button"
+              onClick={onNewSession}
+              className="flex h-8 items-center gap-1 rounded-full px-2 text-slate-400 transition-colors hover:bg-card-hover hover:text-foreground"
+              aria-label="Start new session"
+            >
+              <Plus className="h-4 w-4" strokeWidth={2} />
+              <span className="text-[10px] font-medium">New</span>
+            </button>
+          ) : null}
 
-            {isHome ? (
-              <button
-                type="button"
-                onClick={() => setIsDataManagementOpen(true)}
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-card-hover hover:text-foreground"
-                aria-label="Open data management settings"
-              >
-                <Settings className="h-5 w-5" strokeWidth={2} />
-              </button>
-            ) : null}
-          </div>
+          {isHome ? (
+            <button
+              type="button"
+              onClick={() => setIsDataManagementOpen(true)}
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-card-hover hover:text-foreground"
+              aria-label="Open data management settings"
+            >
+              <Settings className="h-4 w-4" strokeWidth={2} />
+            </button>
+          ) : null}
         </div>
-
-        {isHome ? <HomeTagline /> : null}
       </div>
 
       <DataManagementSheet

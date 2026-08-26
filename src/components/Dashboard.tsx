@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
-import { Header } from "@/components/Header";
+import { Header, HomeTagline } from "@/components/Header";
 import { PageHeader } from "@/components/PageHeader";
 import { MicrophoneButton } from "@/components/MicrophoneButton";
 import { KinSightConversationPanel } from "@/components/KinSightConversationPanel";
@@ -378,6 +378,11 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
         <PageHeader className="home-dashboard__header shrink-0">
           {header}
         </PageHeader>
+        {!hasConversationStarted ? (
+          <div className="mb-2 shrink-0">
+            <HomeTagline />
+          </div>
+        ) : null}
 
         <main
           className={`relative flex flex-col ${
