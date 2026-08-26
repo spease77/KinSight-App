@@ -388,7 +388,7 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
           className={`relative flex flex-col ${
             hasConversationStarted
               ? "min-h-0 flex-1"
-              : "home-dashboard__main justify-start gap-6 px-5"
+              : "home-dashboard__main justify-start gap-6 px-0"
           }`}
         >
           <section
@@ -453,7 +453,7 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
             {contactQueueError && !hasQueue && (
               <p
                 className={`px-1 text-center text-xs text-red-400 ${
-                  hasConversationStarted ? "w-full px-5" : "max-w-sm"
+                  hasConversationStarted ? "w-full px-0" : "max-w-sm"
                 }`}
                 role="alert"
               >

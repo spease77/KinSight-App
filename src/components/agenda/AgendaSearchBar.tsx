@@ -47,7 +47,7 @@ export function AgendaSearchBar({
       aria-hidden={!open}
     >
       <div className="overflow-hidden">
-        <div className="px-5 pb-3 pt-1">
+        <div className="px-1 pb-3 pt-1">
           <label htmlFor={inputId} className="sr-only">
             Search agenda
           </label>

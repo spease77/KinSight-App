@@ -292,7 +292,7 @@ export function AgendaPage() {
           </div>
         </div>
 
-        <main className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden px-5 pb-0">
+        <main className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden px-0 pb-0">
         {isLoading ? (
           <p className="type-meta py-8 text-center">Loading agenda…</p>
         ) : error ? (

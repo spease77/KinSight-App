@@ -79,7 +79,7 @@ export function InvestmentPage() {
       <PageHeader>
         <Header title="Time Log" headerActions={headerActions} />
       </PageHeader>
-      <main className="flex flex-col gap-3 px-5">
+      <main className="flex flex-col gap-3 px-0">
         <div ref={rapportGoalRef} className="flex flex-col">
           <TimeInvestmentMilestoneCard
             selectedContact={selectedContact}

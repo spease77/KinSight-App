@@ -75,7 +75,7 @@ export function FeedbackPage() {
       <PageHeader>
         <Header title="Feedback" />
       </PageHeader>
-      <main className="feedback-page__body flex flex-col gap-6 px-5">
+      <main className="feedback-page__body flex flex-col gap-6 px-0">
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           <label className="flex flex-col">
             <textarea
