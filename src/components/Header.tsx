@@ -85,7 +85,7 @@ export function Header({
   return (
     <>
       <div className="flex h-full w-full min-w-0 items-center justify-between gap-2 px-1">
-        <h1 className="min-w-0 truncate font-sans text-[17px] font-semibold tracking-tight text-foreground">
+        <h1 className="min-w-0 truncate font-sans text-2xl font-bold tracking-tight text-foreground">
           {isHome ? "KinSight" : title}
         </h1>
 

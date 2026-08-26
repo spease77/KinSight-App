@@ -368,56 +368,83 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
 
   return (
     <>
-      <div
-        className={
-          hasConversationStarted
-            ? "home-dashboard home-dashboard--conversation flex flex-col"
-            : "home-dashboard home-dashboard--state-a"
-        }
-      >
-        <PageHeader className="home-dashboard__header shrink-0">
-          {header}
-        </PageHeader>
-        {!hasConversationStarted ? (
-          <div className="mb-2 shrink-0">
-            <HomeTagline />
-          </div>
-        ) : null}
+      {hasConversationStarted ? (
+        <div className="home-dashboard home-dashboard--conversation flex flex-col">
+          <PageHeader className="home-dashboard__header shrink-0">
+            {header}
+          </PageHeader>
 
-        <main
-          className={`relative flex flex-col ${
-            hasConversationStarted
-              ? "min-h-0 flex-1"
-              : "home-dashboard__main justify-start gap-6 px-0"
-          }`}
-        >
-          <section
-            aria-label="Voice capture"
-            className={`relative z-10 flex w-full flex-col ${
-              hasConversationStarted
-                ? "min-h-0 flex-1 items-stretch"
-                : "home-hero"
-            }`}
-          >
-            {!hasConversationStarted && (
-              <div
-                className={
-                  hideHomeMic
-                    ? "home-hero-mic-zone home-hero-mic-zone--hidden"
-                    : "home-hero-mic-zone"
-                }
-                aria-hidden={hideHomeMic}
-              >
-                <MicrophoneButton
-                  isRecording={isRecording}
-                  isSpeaking={isSpeaking}
-                  isBusy={isBusy || isDetecting}
-                  onToggle={handleMicToggle}
-                  onMicAccessFailure={handleMicAccessFailure}
-                  volumeLevel={volumeLevel}
-                />
-              </div>
-            )}
+          <main className="relative flex min-h-0 flex-1 flex-col">
+            <section
+              aria-label="Voice capture"
+              className="relative z-10 flex min-h-0 flex-1 flex-col items-stretch"
+            >
+              <KinSightConversationPanel
+                transcript={transcript}
+                isRecording={isRecording}
+                isTranscribing={isTranscribing}
+                isAgentResponding={isChatLoading}
+                isSpeaking={isSpeaking}
+                isDetectingContacts={isDetecting}
+                voiceError={voiceError}
+                onTranscriptChange={setTranscriptText}
+                onTranscriptClear={clearTranscript}
+                onSubmitNotes={handleNotesSubmit}
+                messages={messages}
+                isLoading={isChatLoading}
+                onUpdateMessage={handleUpdateMessage}
+                onLogToKinSight={handleLogToKinSight}
+                messageLogStates={messageLogStates}
+                messageLogSuccessLabels={messageLogSuccessLabels}
+                speechEnabled={speechEnabled}
+                onToggleSpeech={toggleSpeechEnabled}
+                replyValue={replyText}
+                onReplyChange={setReplyText}
+                onReplySubmit={handleReplySubmit}
+                chatError={chatError}
+                conversationStarted={hasConversationStarted}
+                onMicToggle={handleMicToggle}
+                onMicAccessFailure={handleMicAccessFailure}
+                micDisabled={false}
+                isMicBusy={isBusy || isDetecting}
+                volumeLevel={volumeLevel}
+              />
+
+              {contactQueueError && !hasQueue && (
+                <p className="w-full px-0 text-center text-xs text-red-400" role="alert">
+                  {contactQueueError}
+                </p>
+              )}
+            </section>
+          </main>
+        </div>
+      ) : (
+        <div className="home-dashboard home-dashboard--state-a flex h-full min-h-[calc(100dvh-120px)] flex-col justify-between py-4">
+          <div className="w-full shrink-0">
+            <PageHeader className="home-dashboard__header">{header}</PageHeader>
+            <div className="mb-2">
+              <HomeTagline />
+            </div>
+          </div>
+
+          <div className="my-auto flex w-full flex-col items-center justify-center gap-6">
+            <div
+              className={
+                hideHomeMic
+                  ? "home-hero-mic-zone home-hero-mic-zone--hidden"
+                  : "home-hero-mic-zone"
+              }
+              aria-hidden={hideHomeMic}
+            >
+              <MicrophoneButton
+                isRecording={isRecording}
+                isSpeaking={isSpeaking}
+                isBusy={isBusy || isDetecting}
+                onToggle={handleMicToggle}
+                onMicAccessFailure={handleMicAccessFailure}
+                volumeLevel={volumeLevel}
+              />
+            </div>
 
             <KinSightConversationPanel
               transcript={transcript}
@@ -451,24 +478,19 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
             />
 
             {contactQueueError && !hasQueue && (
-              <p
-                className={`px-1 text-center text-xs text-red-400 ${
-                  hasConversationStarted ? "w-full px-0" : "max-w-sm"
-                }`}
-                role="alert"
-              >
+              <p className="max-w-sm px-1 text-center text-xs text-red-400" role="alert">
                 {contactQueueError}
               </p>
             )}
 
-            {supportChecked && !isSupported && !hasConversationStarted && (
+            {supportChecked && !isSupported && (
               <p className="type-meta max-w-sm text-center" role="status">
                 {voiceUnsupportedMessage(unsupportedReason)}
               </p>
             )}
-          </section>
-        </main>
-      </div>
+          </div>
+        </div>
+      )}
 
       {activeMicFailure ? (
         <MicPermissionModal

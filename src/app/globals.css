@@ -522,7 +522,7 @@ b {
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --bottom-nav-height: 50px;
-  --bottom-nav-clearance: 52px;
+  --bottom-nav-clearance: 68px;
   --home-header-height: 5.75rem;
   --home-composer-dock-height: calc(0.75rem + 3.25rem + 0.5rem);
   --home-conversation-composer-clearance: calc(
@@ -1020,11 +1020,11 @@ b {
 .home-dashboard--state-a .home-dashboard__main {
   flex: 1 1 auto;
   min-height: 0;
-  padding-bottom: var(--home-state-a-composer-clearance);
+  padding-bottom: 0;
 }
 
 .home-dashboard--state-a .home-hero {
-  flex: 1 1 auto;
+  flex: 0 0 auto;
   justify-content: center;
 }
 
@@ -1090,8 +1090,25 @@ html.keyboard-composer-active .home-dashboard--state-a .home-hero-mic-zone {
   );
 }
 
-/* Home: composer pinned above bottom nav at rest. */
-.home-dashboard--state-a .home-composer-dock,
+/* Home state A: composer flows in centered interaction block (not fixed). */
+.home-dashboard--state-a .home-composer-dock {
+  position: relative;
+  right: auto;
+  left: auto;
+  bottom: auto;
+  top: auto;
+  z-index: 1;
+  margin: 0;
+  max-width: none;
+  width: 100%;
+  padding-inline: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+/* Home conversation + keyboard: composer pinned above nav/keyboard. */
 .home-dashboard--conversation .home-composer-dock {
   position: fixed;
   right: 0;

@@ -76,7 +76,7 @@ export default function RootLayout({
         <ThemeProvider>
           <AppShell>
             <div className="app-shell mx-auto flex h-[100dvh] w-full max-w-lg flex-col overflow-hidden">
-              <main className="app-scroll no-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pt-[env(safe-area-inset-top)] pb-[52px]">
+              <main className="app-scroll no-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pt-[env(safe-area-inset-top)] pb-[68px]">
                 {children}
               </main>
               <Navigation />

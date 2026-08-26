@@ -214,7 +214,7 @@ export function KinSightConversationPanel({
       aria-label="KinSight chat"
       className={`flex min-h-0 flex-col gap-3 ${
         conversationStarted
-          ? "w-full flex-1 px-5 pt-2"
+          ? "w-full flex-1 px-0 pt-2"
           : "w-full max-w-sm"
       }`}
     >
