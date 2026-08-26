@@ -84,10 +84,22 @@ export function Header({
 
   return (
     <>
-      <div className="flex h-full w-full min-w-0 items-center justify-between gap-2 px-1">
-        <h1 className="min-w-0 truncate font-sans text-2xl font-bold tracking-tight text-foreground">
-          {isHome ? "KinSight" : title}
-        </h1>
+      <div className="flex h-full w-full min-w-0 items-center justify-between gap-2">
+        {isHome ? (
+          <div className="flex min-w-0 items-center gap-2">
+            <h1 className="min-w-0 shrink truncate font-sans text-2xl font-bold tracking-tight text-foreground">
+              KinSight
+            </h1>
+            <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium uppercase text-primary">
+              <Sparkles className="h-3 w-3" aria-hidden="true" />
+              People Intelligence
+            </span>
+          </div>
+        ) : (
+          <h1 className="min-w-0 truncate font-sans text-2xl font-bold tracking-tight text-foreground">
+            {title}
+          </h1>
+        )}
 
         <div className="flex shrink-0 items-center gap-1">
           {headerActions}
@@ -108,10 +120,10 @@ export function Header({
             <button
               type="button"
               onClick={() => setIsDataManagementOpen(true)}
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-card-hover hover:text-foreground"
+              className="p-1 text-muted-foreground transition-colors hover:text-foreground"
               aria-label="Open data management settings"
             >
-              <Settings className="h-4 w-4" strokeWidth={2} />
+              <Settings className="h-5 w-5" strokeWidth={2} />
             </button>
           ) : null}
         </div>

@@ -20,6 +20,8 @@ interface MicrophoneButtonProps {
   variant?: "hero" | "compact";
   /** Real-time mic level from `useAudioVisualizer` (0–100). */
   volumeLevel?: number;
+  /** When false, only the mic graphic is shown (caption rendered elsewhere). */
+  showCaption?: boolean;
 }
 
 const SIZE_CLASSES = {
@@ -41,6 +43,21 @@ const SIZE_CLASSES = {
 
 const VOLUME_TRANSITION_CLASS =
   "transition-[transform,box-shadow] duration-75 ease-out will-change-[transform,box-shadow]";
+
+export function getHomeMicPrompt({
+  isBusy = false,
+  isRecording = false,
+  isSpeaking = false,
+}: {
+  isBusy?: boolean;
+  isRecording?: boolean;
+  isSpeaking?: boolean;
+}): string {
+  if (isBusy) return "Processing your note…";
+  if (isRecording) return "Listening…";
+  if (isSpeaking) return "Tap to interrupt";
+  return "Summarize, ask, or schedule.";
+}
 
 function ListeningDots({ variant }: { variant: "hero" | "compact" }) {
   const gap = variant === "hero" ? "gap-1.5 sm:gap-2" : "gap-1";
@@ -197,6 +214,7 @@ export function MicrophoneButton({
   disabled = false,
   variant = "hero",
   volumeLevel = 0,
+  showCaption = true,
 }: MicrophoneButtonProps) {
   if (variant === "compact") {
     return (
@@ -213,7 +231,11 @@ export function MicrophoneButton({
   }
 
   return (
-    <div className="mic-hero flex w-full flex-col items-center gap-6 bg-transparent">
+    <div
+      className={`mic-hero flex w-full flex-col items-center bg-transparent ${
+        showCaption ? "gap-6" : "gap-0"
+      }`}
+    >
       <div className="mic-hero-spotlight relative flex items-center justify-center bg-transparent">
         <MicToggleControl
           isRecording={isRecording}
@@ -226,29 +248,25 @@ export function MicrophoneButton({
         />
       </div>
 
-      <div className="flex flex-col items-center gap-2 text-center">
-        <p className="max-w-sm font-sans text-lg font-normal tracking-tight text-foreground">
-          {isBusy
-            ? "Processing your note…"
-            : isRecording
-              ? "Listening…"
-              : isSpeaking
-                ? "Tap to interrupt"
-                : "Summarize, ask, or schedule."}
-        </p>
-
-        {(isBusy || isRecording || isSpeaking) && (
-          <p className="type-editorial max-w-xs text-sm text-muted">
-            {isBusy ? (
-              <span className="text-foreground">KinSight is on it</span>
-            ) : isRecording ? (
-              <span className="text-foreground">Tap again when you&apos;re done</span>
-            ) : (
-              <span className="text-foreground">Tap the mic to stop and add more</span>
-            )}
+      {showCaption ? (
+        <div className="flex flex-col items-center gap-2 text-center">
+          <p className="max-w-sm font-sans text-lg font-normal tracking-tight text-foreground">
+            {getHomeMicPrompt({ isBusy, isRecording, isSpeaking })}
           </p>
-        )}
-      </div>
+
+          {(isBusy || isRecording || isSpeaking) && (
+            <p className="type-editorial max-w-xs text-sm text-muted">
+              {isBusy ? (
+                <span className="text-foreground">KinSight is on it</span>
+              ) : isRecording ? (
+                <span className="text-foreground">Tap again when you&apos;re done</span>
+              ) : (
+                <span className="text-foreground">Tap the mic to stop and add more</span>
+              )}
+            </p>
+          )}
+        </div>
+      ) : null}
     </div>
   );
 }

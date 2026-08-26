@@ -4,9 +4,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
-import { Header, HomeTagline } from "@/components/Header";
+import { Header } from "@/components/Header";
 import { PageHeader } from "@/components/PageHeader";
-import { MicrophoneButton } from "@/components/MicrophoneButton";
+import { MicrophoneButton, getHomeMicPrompt } from "@/components/MicrophoneButton";
 import { KinSightConversationPanel } from "@/components/KinSightConversationPanel";
 import { ProposedContactModal } from "@/components/ProposedContactModal";
 import { MicPermissionModal } from "@/components/MicPermissionModal";
@@ -419,20 +419,15 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
           </main>
         </div>
       ) : (
-        <div className="home-dashboard home-dashboard--state-a flex h-full min-h-[calc(100dvh-120px)] flex-col justify-between py-4">
-          <div className="w-full shrink-0">
-            <PageHeader className="home-dashboard__header">{header}</PageHeader>
-            <div className="mb-2">
-              <HomeTagline />
-            </div>
-          </div>
+        <div className="home-dashboard home-dashboard--state-a flex h-full flex-col px-0 pt-0">
+          <PageHeader className="home-dashboard__header shrink-0">{header}</PageHeader>
 
-          <div className="my-auto flex w-full flex-col items-center justify-center gap-6">
+          <div className="flex w-full flex-1 flex-col items-center justify-start space-y-6 pt-6">
             <div
               className={
                 hideHomeMic
-                  ? "home-hero-mic-zone home-hero-mic-zone--hidden"
-                  : "home-hero-mic-zone"
+                  ? "home-hero-mic-zone home-hero-mic-zone--hidden relative flex items-center justify-center"
+                  : "home-hero-mic-zone relative flex items-center justify-center"
               }
               aria-hidden={hideHomeMic}
             >
@@ -443,48 +438,59 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
                 onToggle={handleMicToggle}
                 onMicAccessFailure={handleMicAccessFailure}
                 volumeLevel={volumeLevel}
+                showCaption={false}
               />
             </div>
 
-            <KinSightConversationPanel
-              transcript={transcript}
-              isRecording={isRecording}
-              isTranscribing={isTranscribing}
-              isAgentResponding={isChatLoading}
-              isSpeaking={isSpeaking}
-              isDetectingContacts={isDetecting}
-              voiceError={voiceError}
-              onTranscriptChange={setTranscriptText}
-              onTranscriptClear={clearTranscript}
-              onSubmitNotes={handleNotesSubmit}
-              messages={messages}
-              isLoading={isChatLoading}
-              onUpdateMessage={handleUpdateMessage}
-              onLogToKinSight={handleLogToKinSight}
-              messageLogStates={messageLogStates}
-              messageLogSuccessLabels={messageLogSuccessLabels}
-              speechEnabled={speechEnabled}
-              onToggleSpeech={toggleSpeechEnabled}
-              replyValue={replyText}
-              onReplyChange={setReplyText}
-              onReplySubmit={handleReplySubmit}
-              chatError={chatError}
-              conversationStarted={hasConversationStarted}
-              onMicToggle={handleMicToggle}
-              onMicAccessFailure={handleMicAccessFailure}
-              micDisabled={false}
-              isMicBusy={isBusy || isDetecting}
-              volumeLevel={volumeLevel}
-            />
+            <p className="text-center text-lg font-medium text-foreground/90">
+              {getHomeMicPrompt({
+                isBusy: isBusy || isDetecting,
+                isRecording,
+                isSpeaking,
+              })}
+            </p>
+
+            <div className="w-full max-w-md pt-2">
+              <KinSightConversationPanel
+                transcript={transcript}
+                isRecording={isRecording}
+                isTranscribing={isTranscribing}
+                isAgentResponding={isChatLoading}
+                isSpeaking={isSpeaking}
+                isDetectingContacts={isDetecting}
+                voiceError={voiceError}
+                onTranscriptChange={setTranscriptText}
+                onTranscriptClear={clearTranscript}
+                onSubmitNotes={handleNotesSubmit}
+                messages={messages}
+                isLoading={isChatLoading}
+                onUpdateMessage={handleUpdateMessage}
+                onLogToKinSight={handleLogToKinSight}
+                messageLogStates={messageLogStates}
+                messageLogSuccessLabels={messageLogSuccessLabels}
+                speechEnabled={speechEnabled}
+                onToggleSpeech={toggleSpeechEnabled}
+                replyValue={replyText}
+                onReplyChange={setReplyText}
+                onReplySubmit={handleReplySubmit}
+                chatError={chatError}
+                conversationStarted={hasConversationStarted}
+                onMicToggle={handleMicToggle}
+                onMicAccessFailure={handleMicAccessFailure}
+                micDisabled={false}
+                isMicBusy={isBusy || isDetecting}
+                volumeLevel={volumeLevel}
+              />
+            </div>
 
             {contactQueueError && !hasQueue && (
-              <p className="max-w-sm px-1 text-center text-xs text-red-400" role="alert">
+              <p className="max-w-md px-1 text-center text-xs text-red-400" role="alert">
                 {contactQueueError}
               </p>
             )}
 
             {supportChecked && !isSupported && (
-              <p className="type-meta max-w-sm text-center" role="status">
+              <p className="type-meta max-w-md text-center" role="status">
                 {voiceUnsupportedMessage(unsupportedReason)}
               </p>
             )}

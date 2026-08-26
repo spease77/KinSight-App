@@ -215,7 +215,7 @@ export function KinSightConversationPanel({
       className={`flex min-h-0 flex-col gap-3 ${
         conversationStarted
           ? "w-full flex-1 px-0 pt-2"
-          : "w-full max-w-sm"
+          : "w-full"
       }`}
     >
       {conversationStarted && (isSpeaking || onToggleSpeech) && (
