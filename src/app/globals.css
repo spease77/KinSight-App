@@ -1036,6 +1036,14 @@ b {
   flex-shrink: 0;
 }
 
+.home-page-header {
+  height: auto;
+  min-height: 44px;
+  align-items: flex-start;
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+}
+
 .home-hero {
   display: flex;
   flex-direction: column;
@@ -1069,6 +1077,19 @@ html.keyboard-composer-active .home-dashboard--state-a .home-hero-mic-zone {
   display: flex;
   min-height: 0;
   align-items: center;
+}
+
+.home-ask-bar--state-a {
+  border: none;
+  background: transparent;
+  padding: 0;
+  gap: 0;
+  box-shadow: none;
+}
+
+.home-ask-bar--state-a:focus-within {
+  border-color: transparent;
+  box-shadow: none;
 }
 
 .home-ask-bar:focus-within {

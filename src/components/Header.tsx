@@ -84,16 +84,18 @@ export function Header({
 
   return (
     <>
-      <div className="flex h-full w-full min-w-0 items-center justify-between gap-2">
+      <div className="flex h-full w-full min-w-0 items-start justify-between gap-2">
         {isHome ? (
-          <div className="flex min-w-0 items-center gap-2">
-            <h1 className="min-w-0 shrink truncate font-sans text-2xl font-bold tracking-tight text-foreground">
+          <div className="flex min-w-0 flex-col">
+            <h1 className="font-sans text-2xl font-bold tracking-tight text-foreground">
               KinSight
             </h1>
-            <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium uppercase text-primary">
-              <Sparkles className="h-3 w-3" aria-hidden="true" />
-              People Intelligence
-            </span>
+            <div className="flex items-center gap-1.5 pt-0.5">
+              <Sparkles className="h-3 w-3 text-primary" aria-hidden="true" />
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-primary">
+                People Intelligence
+              </span>
+            </div>
           </div>
         ) : (
           <h1 className="min-w-0 truncate font-sans text-2xl font-bold tracking-tight text-foreground">

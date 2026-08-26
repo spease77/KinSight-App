@@ -39,6 +39,9 @@ interface KinSightConversationPanelProps {
   micDisabled?: boolean;
   isMicBusy?: boolean;
   volumeLevel?: number;
+  onReplyFocus?: () => void;
+  onReplyBlur?: () => void;
+  homeComposerAnchored?: boolean;
 }
 
 export function KinSightConversationPanel({
@@ -70,6 +73,9 @@ export function KinSightConversationPanel({
   micDisabled = false,
   isMicBusy = false,
   volumeLevel = 0,
+  onReplyFocus,
+  onReplyBlur,
+  homeComposerAnchored = false,
 }: KinSightConversationPanelProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const replyInputRef = useRef<HTMLInputElement>(null);
@@ -131,7 +137,9 @@ export function KinSightConversationPanel({
       className={
         conversationStarted
           ? "home-ask-bar home-ask-bar--conversation"
-          : "home-ask-bar shrink-0"
+          : homeComposerAnchored
+            ? "home-ask-bar home-ask-bar--state-a relative flex w-full items-center"
+            : "home-ask-bar shrink-0"
       }
       suppressHydrationWarning
     >
@@ -145,6 +153,14 @@ export function KinSightConversationPanel({
           disabled={micDisabled}
           volumeLevel={volumeLevel}
         />
+      ) : homeComposerAnchored ? (
+        <button
+          type="button"
+          className="absolute left-3 z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground"
+          aria-label="Add to message"
+        >
+          <Plus className="h-4 w-4" strokeWidth={2} />
+        </button>
       ) : (
         <button
           type="button"
@@ -156,7 +172,11 @@ export function KinSightConversationPanel({
       )}
       {isClient ? (
         <label
-          className="home-ask-bar__field min-w-0 flex-1 cursor-text"
+          className={
+            homeComposerAnchored
+              ? "home-ask-bar__field min-w-0 flex-1 cursor-text"
+              : "home-ask-bar__field min-w-0 flex-1 cursor-text"
+          }
           onMouseDown={(event) => {
             event.preventDefault();
           }}
@@ -170,6 +190,8 @@ export function KinSightConversationPanel({
             type="text"
             value={replyValue}
             onChange={(e) => onReplyChange(e.target.value)}
+            onFocus={() => onReplyFocus?.()}
+            onBlur={() => onReplyBlur?.()}
             placeholder={
               isLoading ? "KinSight is thinking…" : "Ask about a contact..."
             }
@@ -184,7 +206,11 @@ export function KinSightConversationPanel({
             data-1p-ignore="true"
             data-lpignore="true"
             suppressHydrationWarning
-            className="w-full min-w-0 border-0 bg-transparent px-1 py-2 text-base text-foreground placeholder:text-muted focus:outline-none disabled:opacity-50 sm:text-sm"
+            className={
+              homeComposerAnchored
+                ? "w-full min-w-0 rounded-2xl border border-border/50 bg-secondary/30 py-3.5 pl-10 pr-12 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-50"
+                : "w-full min-w-0 border-0 bg-transparent px-1 py-2 text-base text-foreground placeholder:text-muted focus:outline-none disabled:opacity-50 sm:text-sm"
+            }
           />
         </label>
       ) : (
@@ -198,10 +224,14 @@ export function KinSightConversationPanel({
       <button
         type="submit"
         disabled={!replyValue.trim() || isLoading}
-        className="
+        className={
+          homeComposerAnchored
+            ? "absolute right-2 z-10 flex h-9 w-9 shrink-0 items-center justify-center rounded-full ui-btn-orange active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+            : `
           flex h-9 w-9 shrink-0 items-center justify-center rounded-full ui-btn-orange
           active:scale-95 disabled:cursor-not-allowed disabled:opacity-40
-        "
+        `
+        }
         aria-label="Send message"
       >
         <Send className="h-4 w-4" strokeWidth={2} />

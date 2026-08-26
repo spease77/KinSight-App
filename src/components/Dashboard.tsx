@@ -345,8 +345,9 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
   const activeMicFailure = micAccessFailure ?? permissionFailure;
 
   const hasConversationStarted = conversationEngaged;
+  const [isFocused, setIsFocused] = useState(false);
   const { composerActive } = useKeyboardOpen();
-  const hideHomeMic = !hasConversationStarted && composerActive;
+  const hideHomeMic = !hasConversationStarted && (isFocused || composerActive);
 
   useEffect(() => {
     const scrollEl = document.querySelector<HTMLElement>(".app-scroll");
@@ -420,37 +421,49 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
         </div>
       ) : (
         <div className="home-dashboard home-dashboard--state-a flex h-full flex-col px-0 pt-0">
-          <PageHeader className="home-dashboard__header shrink-0">{header}</PageHeader>
+          <PageHeader className="home-dashboard__header home-page-header shrink-0">
+            {header}
+          </PageHeader>
 
-          <div className="flex w-full flex-1 flex-col items-center justify-start space-y-6 pt-6">
-            <div
-              className={
-                hideHomeMic
-                  ? "home-hero-mic-zone home-hero-mic-zone--hidden relative flex items-center justify-center"
-                  : "home-hero-mic-zone relative flex items-center justify-center"
-              }
-              aria-hidden={hideHomeMic}
-            >
-              <MicrophoneButton
-                isRecording={isRecording}
-                isSpeaking={isSpeaking}
-                isBusy={isBusy || isDetecting}
-                onToggle={handleMicToggle}
-                onMicAccessFailure={handleMicAccessFailure}
-                volumeLevel={volumeLevel}
-                showCaption={false}
-              />
+          <div className="flex w-full flex-1 flex-col justify-between pb-2">
+            <div className="flex flex-1 flex-col items-center justify-center space-y-4">
+              {!isFocused && (
+                <>
+                  <div
+                    className={
+                      hideHomeMic
+                        ? "home-hero-mic-zone home-hero-mic-zone--hidden relative flex items-center justify-center"
+                        : "home-hero-mic-zone relative flex items-center justify-center"
+                    }
+                    aria-hidden={hideHomeMic}
+                  >
+                    <MicrophoneButton
+                      isRecording={isRecording}
+                      isSpeaking={isSpeaking}
+                      isBusy={isBusy || isDetecting}
+                      onToggle={handleMicToggle}
+                      onMicAccessFailure={handleMicAccessFailure}
+                      volumeLevel={volumeLevel}
+                      showCaption={false}
+                    />
+                  </div>
+
+                  <p className="text-center text-lg font-medium text-foreground/90">
+                    {getHomeMicPrompt({
+                      isBusy: isBusy || isDetecting,
+                      isRecording,
+                      isSpeaking,
+                    })}
+                  </p>
+                </>
+              )}
             </div>
 
-            <p className="text-center text-lg font-medium text-foreground/90">
-              {getHomeMicPrompt({
-                isBusy: isBusy || isDetecting,
-                isRecording,
-                isSpeaking,
-              })}
-            </p>
-
-            <div className="w-full max-w-md pt-2">
+            <div
+              className={`w-full transition-all duration-200 ${
+                isFocused ? "mb-[290px] sm:mb-[320px]" : ""
+              }`}
+            >
               <KinSightConversationPanel
                 transcript={transcript}
                 isRecording={isRecording}
@@ -480,20 +493,23 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
                 micDisabled={false}
                 isMicBusy={isBusy || isDetecting}
                 volumeLevel={volumeLevel}
+                onReplyFocus={() => setIsFocused(true)}
+                onReplyBlur={() => setIsFocused(false)}
+                homeComposerAnchored
               />
+
+              {contactQueueError && !hasQueue && (
+                <p className="mt-2 px-1 text-center text-xs text-red-400" role="alert">
+                  {contactQueueError}
+                </p>
+              )}
+
+              {supportChecked && !isSupported && (
+                <p className="type-meta mt-2 text-center" role="status">
+                  {voiceUnsupportedMessage(unsupportedReason)}
+                </p>
+              )}
             </div>
-
-            {contactQueueError && !hasQueue && (
-              <p className="max-w-md px-1 text-center text-xs text-red-400" role="alert">
-                {contactQueueError}
-              </p>
-            )}
-
-            {supportChecked && !isSupported && (
-              <p className="type-meta max-w-md text-center" role="status">
-                {voiceUnsupportedMessage(unsupportedReason)}
-              </p>
-            )}
           </div>
         </div>
       )}
