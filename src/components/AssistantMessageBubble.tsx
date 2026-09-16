@@ -76,7 +76,7 @@ export function AssistantMessageBubble({
     showLogButton && onLogToKinSight && logStatus !== "saved";
 
   return (
-    <div className="w-full rounded-xl border border-border-green/40 bg-tint-green px-3.5 py-2.5 type-editorial text-sm text-foreground">
+    <div className="w-full px-0.5 py-1 type-editorial text-sm text-foreground">
       {isEditing ? (
         <div className="flex flex-col gap-2">
           <textarea
@@ -107,7 +107,7 @@ export function AssistantMessageBubble({
       ) : (
         <>
           <AssistantMessageText text={text} />
-          <div className="mt-2 flex items-center gap-1 border-t border-border-green/20 pt-2">
+          <div className="mt-3 flex items-center gap-1 pt-1">
             <div className="flex items-center gap-0.5">
               <button
                 type="button"

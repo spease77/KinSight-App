@@ -273,10 +273,10 @@ export function KinSightConversationPanel({
       {showMessageHistory && (
         <div
           ref={scrollRef}
-          className={`contacts-scroll ui-card ui-card-tint-green flex flex-col gap-3 overflow-y-auto border-border-green p-3 ${
+          className={`contacts-scroll flex flex-col gap-4 overflow-y-auto ${
             conversationStarted
               ? "kinsight-conversation-messages min-h-0 flex-1"
-              : "max-h-[34vh] sm:max-h-[38vh]"
+              : "ui-card ui-card-tint-green max-h-[34vh] border-border-green p-3 sm:max-h-[38vh]"
           }`}
         >
           {messages.map((message, index) => {
@@ -328,8 +328,8 @@ export function KinSightConversationPanel({
           })}
 
           {isLoading && (
-            <div className="w-full">
-              <div className="flex w-full items-center gap-1 rounded-xl border border-border bg-card-hover px-3.5 py-3">
+            <div className="w-full px-0.5">
+              <div className="flex w-full items-center gap-1 py-2">
                 <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-accent-blue [animation-delay:0ms]" />
                 <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-accent-orange [animation-delay:150ms]" />
                 <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-accent-green [animation-delay:300ms]" />
