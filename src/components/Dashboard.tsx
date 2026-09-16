@@ -427,43 +427,45 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
           <main className="home-dashboard__main relative flex min-h-0 flex-1 flex-col">
             <section
               aria-label="Voice capture"
-              className="home-hero flex min-h-0 flex-1 flex-col items-center gap-4"
+              className="home-hero flex min-h-0 flex-1 flex-col"
             >
-              {!hideHomeMic && (
-                <>
-                  <div className="home-hero-mic-zone relative flex items-center justify-center">
-                    <MicrophoneButton
-                      isRecording={isRecording}
-                      isSpeaking={isSpeaking}
-                      isBusy={isBusy || isDetecting}
-                      onToggle={handleMicToggle}
-                      onMicAccessFailure={handleMicAccessFailure}
-                      volumeLevel={volumeLevel}
-                      showCaption={false}
-                    />
-                  </div>
+              <div className="home-hero__content">
+                {!hideHomeMic && (
+                  <>
+                    <div className="home-hero-mic-zone relative flex items-center justify-center">
+                      <MicrophoneButton
+                        isRecording={isRecording}
+                        isSpeaking={isSpeaking}
+                        isBusy={isBusy || isDetecting}
+                        onToggle={handleMicToggle}
+                        onMicAccessFailure={handleMicAccessFailure}
+                        volumeLevel={volumeLevel}
+                        showCaption={false}
+                      />
+                    </div>
 
-                  <p className="text-center text-lg font-medium text-foreground/90">
-                    {getHomeMicPrompt({
-                      isBusy: isBusy || isDetecting,
-                      isRecording,
-                      isSpeaking,
-                    })}
+                    <p className="text-center text-lg font-medium text-foreground/90">
+                      {getHomeMicPrompt({
+                        isBusy: isBusy || isDetecting,
+                        isRecording,
+                        isSpeaking,
+                      })}
+                    </p>
+                  </>
+                )}
+
+                {contactQueueError && !hasQueue && (
+                  <p className="max-w-md px-1 text-center text-xs text-red-400" role="alert">
+                    {contactQueueError}
                   </p>
-                </>
-              )}
+                )}
 
-              {contactQueueError && !hasQueue && (
-                <p className="max-w-md px-1 text-center text-xs text-red-400" role="alert">
-                  {contactQueueError}
-                </p>
-              )}
-
-              {supportChecked && !isSupported && (
-                <p className="type-meta max-w-md text-center" role="status">
-                  {voiceUnsupportedMessage(unsupportedReason)}
-                </p>
-              )}
+                {supportChecked && !isSupported && (
+                  <p className="type-meta max-w-md text-center" role="status">
+                    {voiceUnsupportedMessage(unsupportedReason)}
+                  </p>
+                )}
+              </div>
             </section>
 
             <KinSightConversationPanel

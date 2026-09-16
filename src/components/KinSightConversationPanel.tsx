@@ -156,7 +156,7 @@ export function KinSightConversationPanel({
       ) : homeComposerAnchored ? (
         <button
           type="button"
-          className="absolute left-3 z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground"
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground"
           aria-label="Add to message"
         >
           <Plus className="h-4 w-4" strokeWidth={2} />
@@ -208,7 +208,7 @@ export function KinSightConversationPanel({
             suppressHydrationWarning
             className={
               homeComposerAnchored
-                ? "w-full min-w-0 rounded-2xl border border-border/50 bg-secondary/30 py-3.5 pl-10 pr-12 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-50"
+                ? "w-full min-w-0 border-0 bg-transparent py-2 pl-1 pr-10 text-sm text-foreground placeholder:text-muted focus:outline-none disabled:opacity-50"
                 : "w-full min-w-0 border-0 bg-transparent px-1 py-2 text-base text-foreground placeholder:text-muted focus:outline-none disabled:opacity-50 sm:text-sm"
             }
           />
@@ -226,7 +226,7 @@ export function KinSightConversationPanel({
         disabled={!replyValue.trim() || isLoading}
         className={
           homeComposerAnchored
-            ? "absolute right-2 z-10 flex h-9 w-9 shrink-0 items-center justify-center rounded-full ui-btn-orange active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+            ? "flex h-9 w-9 shrink-0 items-center justify-center rounded-full ui-btn-orange active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
             : `
           flex h-9 w-9 shrink-0 items-center justify-center rounded-full ui-btn-orange
           active:scale-95 disabled:cursor-not-allowed disabled:opacity-40
