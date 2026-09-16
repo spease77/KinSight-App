@@ -68,6 +68,10 @@ function isHomeConversationActive(): boolean {
   return Boolean(document.querySelector(".home-dashboard--conversation"));
 }
 
+function isHomeStateA(): boolean {
+  return Boolean(document.querySelector(".home-dashboard--state-a"));
+}
+
 /** Pin composer bottom edge to the visual viewport bottom (flush above keyboard). */
 function syncVisualViewportGeometry(viewport: VisualViewport) {
   let gapFromLayoutBottom = Math.max(
@@ -147,7 +151,7 @@ export function useKeyboardOpen(): KeyboardChromeState {
 
     const handleFocusIn = (event: FocusEvent) => {
       if (isEditableField(event.target as Element) && isTouchLikeDevice()) {
-        if (!isHomeConversationActive()) {
+        if (!isHomeConversationActive() && !isHomeStateA()) {
           lockPageScroll();
         }
         scheduleVisualViewportSync(viewport);

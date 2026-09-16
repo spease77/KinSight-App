@@ -345,9 +345,8 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
   const activeMicFailure = micAccessFailure ?? permissionFailure;
 
   const hasConversationStarted = conversationEngaged;
-  const [isFocused, setIsFocused] = useState(false);
   const { composerActive } = useKeyboardOpen();
-  const hideHomeMic = !hasConversationStarted && (isFocused || composerActive);
+  const hideHomeMic = !hasConversationStarted && composerActive;
 
   useEffect(() => {
     const scrollEl = document.querySelector<HTMLElement>(".app-scroll");
@@ -425,18 +424,14 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
             {header}
           </PageHeader>
 
-          <div className="flex w-full flex-1 flex-col justify-between pb-2">
-            <div className="flex flex-1 flex-col items-center justify-center space-y-4">
-              {!isFocused && (
+          <main className="home-dashboard__main relative flex min-h-0 flex-1 flex-col">
+            <section
+              aria-label="Voice capture"
+              className="home-hero flex min-h-0 flex-1 flex-col items-center gap-4"
+            >
+              {!hideHomeMic && (
                 <>
-                  <div
-                    className={
-                      hideHomeMic
-                        ? "home-hero-mic-zone home-hero-mic-zone--hidden relative flex items-center justify-center"
-                        : "home-hero-mic-zone relative flex items-center justify-center"
-                    }
-                    aria-hidden={hideHomeMic}
-                  >
+                  <div className="home-hero-mic-zone relative flex items-center justify-center">
                     <MicrophoneButton
                       isRecording={isRecording}
                       isSpeaking={isSpeaking}
@@ -457,60 +452,52 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
                   </p>
                 </>
               )}
-            </div>
-
-            <div
-              className={`w-full transition-all duration-200 ${
-                isFocused ? "mb-[290px] sm:mb-[320px]" : ""
-              }`}
-            >
-              <KinSightConversationPanel
-                transcript={transcript}
-                isRecording={isRecording}
-                isTranscribing={isTranscribing}
-                isAgentResponding={isChatLoading}
-                isSpeaking={isSpeaking}
-                isDetectingContacts={isDetecting}
-                voiceError={voiceError}
-                onTranscriptChange={setTranscriptText}
-                onTranscriptClear={clearTranscript}
-                onSubmitNotes={handleNotesSubmit}
-                messages={messages}
-                isLoading={isChatLoading}
-                onUpdateMessage={handleUpdateMessage}
-                onLogToKinSight={handleLogToKinSight}
-                messageLogStates={messageLogStates}
-                messageLogSuccessLabels={messageLogSuccessLabels}
-                speechEnabled={speechEnabled}
-                onToggleSpeech={toggleSpeechEnabled}
-                replyValue={replyText}
-                onReplyChange={setReplyText}
-                onReplySubmit={handleReplySubmit}
-                chatError={chatError}
-                conversationStarted={hasConversationStarted}
-                onMicToggle={handleMicToggle}
-                onMicAccessFailure={handleMicAccessFailure}
-                micDisabled={false}
-                isMicBusy={isBusy || isDetecting}
-                volumeLevel={volumeLevel}
-                onReplyFocus={() => setIsFocused(true)}
-                onReplyBlur={() => setIsFocused(false)}
-                homeComposerAnchored
-              />
 
               {contactQueueError && !hasQueue && (
-                <p className="mt-2 px-1 text-center text-xs text-red-400" role="alert">
+                <p className="max-w-md px-1 text-center text-xs text-red-400" role="alert">
                   {contactQueueError}
                 </p>
               )}
 
               {supportChecked && !isSupported && (
-                <p className="type-meta mt-2 text-center" role="status">
+                <p className="type-meta max-w-md text-center" role="status">
                   {voiceUnsupportedMessage(unsupportedReason)}
                 </p>
               )}
-            </div>
-          </div>
+            </section>
+
+            <KinSightConversationPanel
+              transcript={transcript}
+              isRecording={isRecording}
+              isTranscribing={isTranscribing}
+              isAgentResponding={isChatLoading}
+              isSpeaking={isSpeaking}
+              isDetectingContacts={isDetecting}
+              voiceError={voiceError}
+              onTranscriptChange={setTranscriptText}
+              onTranscriptClear={clearTranscript}
+              onSubmitNotes={handleNotesSubmit}
+              messages={messages}
+              isLoading={isChatLoading}
+              onUpdateMessage={handleUpdateMessage}
+              onLogToKinSight={handleLogToKinSight}
+              messageLogStates={messageLogStates}
+              messageLogSuccessLabels={messageLogSuccessLabels}
+              speechEnabled={speechEnabled}
+              onToggleSpeech={toggleSpeechEnabled}
+              replyValue={replyText}
+              onReplyChange={setReplyText}
+              onReplySubmit={handleReplySubmit}
+              chatError={chatError}
+              conversationStarted={hasConversationStarted}
+              onMicToggle={handleMicToggle}
+              onMicAccessFailure={handleMicAccessFailure}
+              micDisabled={false}
+              isMicBusy={isBusy || isDetecting}
+              volumeLevel={volumeLevel}
+              homeComposerAnchored
+            />
+          </main>
         </div>
       )}
 

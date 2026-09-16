@@ -529,8 +529,15 @@ b {
     var(--bottom-nav-clearance) + var(--home-composer-dock-height) + 0.5rem
   );
   --home-state-a-composer-clearance: calc(
-    var(--bottom-nav-clearance) + var(--home-composer-dock-height) + 0.5rem
+    var(--home-state-a-composer-rest-bottom) + var(--home-composer-dock-height) + 1rem
   );
+  --home-state-a-composer-rest-bottom: 290px;
+}
+
+@media (min-width: 640px) {
+  :root {
+    --home-state-a-composer-rest-bottom: 320px;
+  }
 }
 
 .app-scroll {
@@ -1024,8 +1031,10 @@ b {
 }
 
 .home-dashboard--state-a .home-hero {
-  flex: 0 0 auto;
+  flex: 1 1 auto;
   justify-content: center;
+  min-height: 0;
+  padding-bottom: var(--home-state-a-composer-clearance);
 }
 
 .home-dashboard__main {
@@ -1111,22 +1120,22 @@ html.keyboard-composer-active .home-dashboard--state-a .home-hero-mic-zone {
   );
 }
 
-/* Home state A: composer flows in centered interaction block (not fixed). */
+/* Home state A: composer pinned at keyboard-rest height; keyboard open uses vv gap. */
 .home-dashboard--state-a .home-composer-dock {
-  position: relative;
-  right: auto;
-  left: auto;
-  bottom: auto;
+  position: fixed;
+  right: 0;
+  left: 0;
+  bottom: var(--home-state-a-composer-rest-bottom);
   top: auto;
-  z-index: 1;
-  margin: 0;
-  max-width: none;
+  z-index: 40;
+  margin: 0 auto;
+  max-width: 32rem;
   width: 100%;
-  padding-inline: 0;
-  padding-top: 0;
-  padding-bottom: 0;
-  background: transparent;
-  box-shadow: none;
+  padding-inline: 0.75rem;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  background: var(--bg-main);
+  box-shadow: 0 -8px 24px rgb(0 0 0 / 0.08);
 }
 
 /* Home conversation + keyboard: composer pinned above nav/keyboard. */
