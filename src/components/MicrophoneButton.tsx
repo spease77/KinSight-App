@@ -59,29 +59,6 @@ export function getHomeMicPrompt({
   return "Summarize, ask, or schedule.";
 }
 
-function ListeningDots({ variant }: { variant: "hero" | "compact" }) {
-  const gap = variant === "hero" ? "gap-1.5 sm:gap-2" : "gap-1";
-  const dotClass =
-    variant === "hero"
-      ? "mic-listening-dot mic-listening-dot--hero"
-      : "mic-listening-dot mic-listening-dot--compact";
-
-  return (
-    <div
-      className={`flex items-center justify-center ${gap}`}
-      aria-hidden="true"
-    >
-      {[0, 1, 2, 3].map((index) => (
-        <span
-          key={index}
-          className={dotClass}
-          style={{ animationDelay: `${index * 0.14}s` }}
-        />
-      ))}
-    </div>
-  );
-}
-
 function getMicVolumePresentation(
   volumeLevel: number,
   isRecording: boolean,
@@ -181,7 +158,9 @@ function MicToggleControl({
         aria-label={isRecording ? "Stop recording" : "Start recording"}
         aria-pressed={isRecording}
         style={shell}
-        className={`mic-button relative z-10 flex items-center justify-center rounded-full border-0 bg-transparent p-0 shadow-none transition-all duration-300 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 ${sizes.button} ${VOLUME_TRANSITION_CLASS}`}
+        className={`mic-button relative z-10 flex items-center justify-center rounded-full border-0 bg-transparent p-0 shadow-none transition-all duration-300 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 ${sizes.button} ${VOLUME_TRANSITION_CLASS} ${
+          isRecording ? "mic-button--listening" : ""
+        }`}
       >
         <div
           className={`mic-shell absolute inset-0 rounded-full ${
@@ -195,7 +174,16 @@ function MicToggleControl({
           }`}
         >
           {isRecording ? (
-            <ListeningDots variant={variant} />
+            <>
+              <span
+                className="mic-listening-pulse pointer-events-none absolute inset-0 rounded-full"
+                aria-hidden="true"
+              />
+              <Mic
+                className={`${sizes.icon} relative z-10 text-white mic-icon-listening`}
+                strokeWidth={2.25}
+              />
+            </>
           ) : (
             <Mic className={`${sizes.icon} text-foreground`} strokeWidth={2.25} />
           )}

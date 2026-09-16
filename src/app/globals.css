@@ -3626,6 +3626,54 @@ html.keyboard-composer-active .bottom-nav {
   animation-duration: 1.2s;
 }
 
+.mic-button--listening {
+  animation: mic-button-listening 1.4s ease-in-out infinite;
+}
+
+.mic-listening-pulse {
+  background: rgba(255, 255, 255, 0.18);
+  animation: mic-listening-pulse 1.4s ease-in-out infinite;
+}
+
+.mic-icon-listening {
+  animation: mic-icon-listening 1.1s ease-in-out infinite;
+  filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.35));
+}
+
+@keyframes mic-button-listening {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.04);
+  }
+}
+
+@keyframes mic-listening-pulse {
+  0%,
+  100% {
+    transform: scale(0.92);
+    opacity: 0.35;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 0.75;
+  }
+}
+
+@keyframes mic-icon-listening {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.92;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+}
+
 /* ── Add Meeting sheet (Apple Calendar–inspired, KinSight palette) ── */
 .meeting-sheet {
   border-radius: 1.25rem 1.25rem 0 0;

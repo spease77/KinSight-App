@@ -161,11 +161,13 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
   const setMessagesRef = useRef(setMessages);
   const interruptSpeechRef = useRef(interruptSpeech);
   const clearTranscriptRef = useRef(clearTranscript);
+  const isRecordingRef = useRef(isRecording);
 
   stopRef.current = stop;
   setMessagesRef.current = setMessages;
   interruptSpeechRef.current = interruptSpeech;
   clearTranscriptRef.current = clearTranscript;
+  isRecordingRef.current = isRecording;
 
   const resetToStateA = useCallback(() => {
     setConversationEngaged(false);
@@ -319,10 +321,9 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
 
   const handleMicToggle = useCallback(
     (stream?: MediaStream) => {
-      // Synchronous on the tap call stack — required for iOS Safari audio unlock.
       unlockSpeechSynthesis();
 
-      if (isRecording) {
+      if (isRecordingRef.current) {
         toggleRecording();
         return;
       }
@@ -332,7 +333,7 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
       interruptSpeech();
       toggleRecording(stream);
     },
-    [interruptSpeech, isRecording, toggleRecording]
+    [interruptSpeech, toggleRecording]
   );
 
   const handleMicAccessFailure = useCallback(
@@ -406,7 +407,7 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
                 onMicToggle={handleMicToggle}
                 onMicAccessFailure={handleMicAccessFailure}
                 micDisabled={false}
-                isMicBusy={isBusy || isDetecting}
+                isMicBusy={isBusy}
                 volumeLevel={volumeLevel}
               />
 
@@ -436,7 +437,7 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
                       <MicrophoneButton
                         isRecording={isRecording}
                         isSpeaking={isSpeaking}
-                        isBusy={isBusy || isDetecting}
+                        isBusy={isBusy}
                         onToggle={handleMicToggle}
                         onMicAccessFailure={handleMicAccessFailure}
                         volumeLevel={volumeLevel}
@@ -446,12 +447,18 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
 
                     <p className="text-center text-lg font-medium text-foreground/90">
                       {getHomeMicPrompt({
-                        isBusy: isBusy || isDetecting,
+                        isBusy: isBusy || isTranscribing,
                         isRecording,
                         isSpeaking,
                       })}
                     </p>
                   </>
+                )}
+
+                {voiceError && (
+                  <p className="max-w-md px-2 text-center text-xs text-red-400" role="alert">
+                    {voiceError}
+                  </p>
                 )}
 
                 {contactQueueError && !hasQueue && (
@@ -495,7 +502,7 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
               onMicToggle={handleMicToggle}
               onMicAccessFailure={handleMicAccessFailure}
               micDisabled={false}
-              isMicBusy={isBusy || isDetecting}
+              isMicBusy={isBusy}
               volumeLevel={volumeLevel}
               homeComposerAnchored
             />

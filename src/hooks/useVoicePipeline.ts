@@ -22,6 +22,14 @@ type PipelineStatus = "idle" | "recording" | "transcribing";
 
 const MIN_RECORDING_MS = 1500;
 const CHUNK_INTERVAL_MS = 250;
+const IOS_CHUNK_INTERVAL_MS = 1000;
+
+function isAppleMobileDevice(): boolean {
+  return (
+    typeof navigator !== "undefined" &&
+    /iPhone|iPad|iPod/i.test(navigator.userAgent)
+  );
+}
 
 export type VoiceTranscriptResult = {
   text: string;
@@ -54,6 +62,10 @@ export function useVoicePipeline(options: UseVoicePipelineOptions = {}) {
   const chunksRef = useRef<Blob[]>([]);
   const mimeTypeRef = useRef("audio/webm");
   const recordingStartedAtRef = useRef(0);
+  const statusRef = useRef<PipelineStatus>("idle");
+  const startingRef = useRef(false);
+
+  statusRef.current = status;
 
   const applySupportCheck = useCallback(() => {
     const check = checkVoiceRecordingSupport();
@@ -119,6 +131,7 @@ export function useVoicePipeline(options: UseVoicePipelineOptions = {}) {
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
+      statusRef.current = "idle";
       setStatus("idle");
     }
   },
@@ -135,6 +148,7 @@ export function useVoicePipeline(options: UseVoicePipelineOptions = {}) {
       cleanupStream();
       mediaRecorderRef.current = null;
       chunksRef.current = [];
+      statusRef.current = "idle";
       setStatus("idle");
       setError(
         "Recording too short. Hold the mic button and speak for at least 2 seconds."
@@ -150,49 +164,62 @@ export function useVoicePipeline(options: UseVoicePipelineOptions = {}) {
 
   const startRecording = useCallback(
     async (preacquiredStream?: MediaStream) => {
+      if (statusRef.current !== "idle" || startingRef.current) {
+        preacquiredStream?.getTracks().forEach((track) => track.stop());
+        return;
+      }
+
+      startingRef.current = true;
       setError(null);
       setPermissionFailure(null);
       unlockSpeechSynthesis();
 
-      const support = applySupportCheck();
-      if (!support.supported) {
-        const message = voiceUnsupportedMessage(support.reason);
-        setError(message);
-        if (support.reason === "insecure_context" || support.reason === "no_api") {
-          setPermissionFailure({
-            reason: support.reason,
-            message,
-            showSettingsGuide: false,
-          });
-        }
+      const releasePreacquiredStream = () => {
         preacquiredStream?.getTracks().forEach((track) => track.stop());
-        return;
-      }
-
-      const mimeType = pickRecorderMimeType();
-      if (!mimeType) {
-        preacquiredStream?.getTracks().forEach((track) => track.stop());
-        setError("Audio recording is not supported in this browser.");
-        return;
-      }
-
-      let stream = preacquiredStream;
-      if (!stream) {
-        const environment = checkMicrophoneEnvironment();
-        if (!environment.ok) {
-          reportAccessFailure(environment.failure);
-          return;
-        }
-
-        try {
-          stream = await requestMicrophoneStream();
-        } catch (accessError) {
-          reportAccessFailure(parseMicrophoneAccessError(accessError));
-          return;
-        }
-      }
+      };
 
       try {
+        const support = applySupportCheck();
+        if (!support.supported) {
+          const message = voiceUnsupportedMessage(support.reason);
+          setError(message);
+          if (
+            support.reason === "insecure_context" ||
+            support.reason === "no_api"
+          ) {
+            setPermissionFailure({
+              reason: support.reason,
+              message,
+              showSettingsGuide: false,
+            });
+          }
+          releasePreacquiredStream();
+          return;
+        }
+
+        const mimeType = pickRecorderMimeType();
+        if (!mimeType) {
+          releasePreacquiredStream();
+          setError("Audio recording is not supported in this browser.");
+          return;
+        }
+
+        let stream = preacquiredStream;
+        if (!stream) {
+          const environment = checkMicrophoneEnvironment();
+          if (!environment.ok) {
+            reportAccessFailure(environment.failure);
+            return;
+          }
+
+          try {
+            stream = await requestMicrophoneStream();
+          } catch (accessError) {
+            reportAccessFailure(parseMicrophoneAccessError(accessError));
+            return;
+          }
+        }
+
         streamRef.current = stream;
         setMediaStream(stream);
         chunksRef.current = [];
@@ -220,6 +247,7 @@ export function useVoicePipeline(options: UseVoicePipelineOptions = {}) {
           if (blob.size > 0) {
             void transcribeAudio(blob, capturedMime, durationMs);
           } else {
+            statusRef.current = "idle";
             setStatus("idle");
             setError("No audio captured. Try recording again.");
           }
@@ -229,19 +257,29 @@ export function useVoicePipeline(options: UseVoicePipelineOptions = {}) {
           cleanupStream();
           mediaRecorderRef.current = null;
           chunksRef.current = [];
+          statusRef.current = "idle";
           setStatus("idle");
           setError("Recording failed. Please try again.");
         };
 
         mediaRecorderRef.current = recorder;
         recordingStartedAtRef.current = Date.now();
-        recorder.start(CHUNK_INTERVAL_MS);
+
+        const chunkInterval = isAppleMobileDevice()
+          ? IOS_CHUNK_INTERVAL_MS
+          : CHUNK_INTERVAL_MS;
+        recorder.start(chunkInterval);
+
+        statusRef.current = "recording";
         setStatus("recording");
       } catch {
         cleanupStream();
-        preacquiredStream?.getTracks().forEach((track) => track.stop());
+        releasePreacquiredStream();
+        statusRef.current = "idle";
         setStatus("idle");
         setError("Recording failed. Please try again.");
+      } finally {
+        startingRef.current = false;
       }
     },
     [applySupportCheck, cleanupStream, reportAccessFailure, transcribeAudio]
@@ -249,13 +287,13 @@ export function useVoicePipeline(options: UseVoicePipelineOptions = {}) {
 
   const toggleRecording = useCallback(
     (preacquiredStream?: MediaStream) => {
-      if (status === "recording") {
+      if (statusRef.current === "recording") {
         stopRecording();
-      } else if (status === "idle") {
+      } else if (statusRef.current === "idle") {
         void startRecording(preacquiredStream);
       }
     },
-    [status, startRecording, stopRecording]
+    [startRecording, stopRecording]
   );
 
   const clearTranscript = useCallback(() => {
@@ -268,6 +306,7 @@ export function useVoicePipeline(options: UseVoicePipelineOptions = {}) {
       cleanupStream();
       mediaRecorderRef.current = null;
       chunksRef.current = [];
+      statusRef.current = "idle";
       setStatus("idle");
     }
     setTranscript("");
