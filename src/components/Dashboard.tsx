@@ -114,17 +114,19 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
   );
 
   const handleTranscriptReady = useCallback(
-    ({ text, recordingId }: { text: string; recordingId: string }) => {
-      unlockSpeechSynthesis();
-      processNote(text, { recordingId, entryMethod: "voice" });
-
-      sendMessage({
-        text: `🎤 [recording:${recordingId}] ${text}`,
-        metadata: { entry_method: "voice" } satisfies KinSightMessageMetadata,
-      });
+    ({ text }: { text: string; recordingId: string }) => {
+      const trimmed = text.trim();
+      if (!trimmed) return;
+      setReplyText(trimmed);
     },
-    [processNote, sendMessage]
+    []
   );
+
+  const handleRecordingComplete = useCallback((text: string) => {
+    const trimmed = text.trim();
+    if (!trimmed) return;
+    setReplyText(trimmed);
+  }, []);
 
   const {
     isRecording,
@@ -134,6 +136,7 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
     supportChecked,
     unsupportedReason,
     transcript,
+    liveTranscript,
     error: voiceError,
     permissionFailure,
     mediaStream,
@@ -142,7 +145,10 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
     clearTranscript,
     clearPermissionFailure,
     setTranscriptText,
-  } = useVoicePipeline({ onTranscriptReady: handleTranscriptReady });
+  } = useVoicePipeline({
+    onTranscriptReady: handleTranscriptReady,
+    onRecordingComplete: handleRecordingComplete,
+  });
 
   const {
     registerVoiceHandlers,
@@ -150,7 +156,7 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
     flushPendingVoiceStart,
   } = useVoiceExperience();
 
-  const { volumeLevel } = useAudioVisualizer({
+  const { volumeLevel, waveformBands } = useAudioVisualizer({
     stream: mediaStream,
     enabled: isRecording,
   });
@@ -424,7 +430,7 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
                 {!hideHomeMic && (
                   <>
                     <div className="home-hero__spacer" aria-hidden="true" />
-                    <div className="home-hero-mic-zone relative flex shrink-0 items-center justify-center">
+                    <div className="home-hero-mic-zone relative flex w-full shrink-0 items-center justify-center">
                       <MicrophoneButton
                         isRecording={isRecording}
                         isSpeaking={isSpeaking}
@@ -432,17 +438,26 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
                         onToggle={handleMicToggle}
                         onMicAccessFailure={handleMicAccessFailure}
                         volumeLevel={volumeLevel}
+                        waveformBands={waveformBands}
+                        liveTranscript={liveTranscript}
                         showCaption={false}
                       />
                     </div>
                     <div className="home-hero__spacer" aria-hidden="true" />
-                    <p className="home-hero__prompt text-center text-lg font-medium text-foreground/90">
-                      {getHomeMicPrompt({
-                        isBusy: isBusy || isTranscribing,
-                        isRecording,
-                        isSpeaking,
-                      })}
-                    </p>
+                    {!isRecording && (
+                      <p className="home-hero__prompt text-center text-lg font-medium text-foreground/90">
+                        {getHomeMicPrompt({
+                          isBusy: isBusy || isTranscribing,
+                          isRecording,
+                          isSpeaking,
+                        })}
+                      </p>
+                    )}
+                    {!isRecording && isTranscribing && (
+                      <p className="type-meta text-center text-sm text-muted">
+                        Saving your note…
+                      </p>
+                    )}
                   </>
                 )}
 

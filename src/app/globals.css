@@ -1084,6 +1084,14 @@ b {
   /* Bias mic center toward midpoint between header and ask bar (caption sits below). */
   transform: translateY(calc(0.55 * (1.75rem + 0.875rem)));
 }
+
+.home-dashboard--state-a .home-hero-mic-zone:has(.listening-hero-control) {
+  transform: none;
+}
+
+.listening-hero-control {
+  touch-action: manipulation;
+}
 html.keyboard-composer-active .home-dashboard--state-a .home-hero-mic-zone {
   display: none;
   pointer-events: none;

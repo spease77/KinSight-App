@@ -19,6 +19,9 @@ export async function POST(req: Request) {
   const formData = await req.formData();
   const audio = formData.get("audio");
   const durationRaw = formData.get("durationMs");
+  const clientTranscriptRaw = formData.get("clientTranscript");
+  const clientTranscript =
+    typeof clientTranscriptRaw === "string" ? clientTranscriptRaw.trim() : "";
 
   if (!audio || typeof audio === "string") {
     return Response.json({ error: "No audio file provided" }, { status: 400 });
@@ -40,7 +43,9 @@ export async function POST(req: Request) {
   }
 
   try {
-    const text = await transcribeAudioBuffer(buffer, mimeType);
+    const text = clientTranscript
+      ? clientTranscript
+      : await transcribeAudioBuffer(buffer, mimeType);
 
     const { recording, error } = await saveVoiceRecording({
       buffer,

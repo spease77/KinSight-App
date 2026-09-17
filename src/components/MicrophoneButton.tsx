@@ -2,6 +2,7 @@
 
 import { useState, type CSSProperties } from "react";
 import { Mic } from "lucide-react";
+import { ListeningWaveform } from "@/components/ListeningWaveform";
 import type { MicrophoneAccessFailure } from "@/lib/audio/voice-support";
 import {
   checkMicrophoneEnvironment,
@@ -22,6 +23,10 @@ interface MicrophoneButtonProps {
   variant?: "hero" | "compact";
   /** Real-time mic level from `useAudioVisualizer` (0–100). */
   volumeLevel?: number;
+  /** Frequency bands (0–1) for the live listening waveform. */
+  waveformBands?: number[];
+  /** Interim/final speech-to-text while listening (hero). */
+  liveTranscript?: string;
   /** When false, only the mic graphic is shown (caption rendered elsewhere). */
   showCaption?: boolean;
 }
@@ -99,6 +104,8 @@ function MicToggleControl({
   disabled = false,
   variant = "hero",
   volumeLevel = 0,
+  waveformBands,
+  liveTranscript = "",
 }: Omit<MicrophoneButtonProps, "isSpeaking" | "variant"> & {
   variant?: "hero" | "compact";
 }) {
@@ -106,6 +113,7 @@ function MicToggleControl({
   const [isAwaitingStream, setIsAwaitingStream] = useState(false);
   const showListening = isRecording || isAwaitingStream;
   const { shell } = getMicVolumePresentation(volumeLevel, showListening, variant);
+  const showHeroListeningUi = showListening && variant === "hero";
 
   const handleClick = () => {
     if (disabled || isBusy || isAwaitingStream) return;
@@ -143,29 +151,35 @@ function MicToggleControl({
 
   return (
     <div
-      className={`relative flex shrink-0 items-center justify-center bg-transparent ${sizes.wrapper}`}
+      className={`relative flex shrink-0 items-center justify-center bg-transparent ${
+        showHeroListeningUi ? "w-full max-w-md px-2" : sizes.wrapper
+      }`}
     >
-      <span
-        className={`mic-ring pointer-events-none absolute rounded-full border ${
-          sizes.ring
-        } ${
-          showListening
-            ? "mic-ring-recording mic-ring-fast"
-            : "border-accent-mic/50"
-        }`}
-        aria-hidden="true"
-      />
-      {variant === "hero" && (
-        <span
-          className={`mic-ring mic-ring-delay pointer-events-none absolute rounded-full border ${
-            sizes.ring
-          } ${
-            showListening
-              ? "mic-ring-recording mic-ring-recording--soft mic-ring-fast"
-              : "border-accent-mic/35"
-          }`}
-          aria-hidden="true"
-        />
+      {!showHeroListeningUi && (
+        <>
+          <span
+            className={`mic-ring pointer-events-none absolute rounded-full border ${
+              sizes.ring
+            } ${
+              showListening
+                ? "mic-ring-recording mic-ring-fast"
+                : "border-accent-mic/50"
+            }`}
+            aria-hidden="true"
+          />
+          {variant === "hero" && (
+            <span
+              className={`mic-ring mic-ring-delay pointer-events-none absolute rounded-full border ${
+                sizes.ring
+              } ${
+                showListening
+                  ? "mic-ring-recording mic-ring-recording--soft mic-ring-fast"
+                  : "border-accent-mic/35"
+              }`}
+              aria-hidden="true"
+            />
+          )}
+        </>
       )}
 
       <button
@@ -174,37 +188,60 @@ function MicToggleControl({
         disabled={disabled || isBusy || isAwaitingStream}
         aria-label={showListening ? "Stop recording" : "Start recording"}
         aria-pressed={showListening}
-        style={shell}
-        className={`mic-button relative z-10 flex items-center justify-center rounded-full border-0 bg-transparent p-0 shadow-none transition-all duration-300 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 ${sizes.button} ${VOLUME_TRANSITION_CLASS} ${
-          showListening ? "mic-button--listening" : ""
-        }`}
+        style={showHeroListeningUi ? undefined : shell}
+        className={
+          showHeroListeningUi
+            ? "listening-hero-control flex w-full flex-col items-center gap-4 rounded-2xl border-0 bg-transparent p-2 active:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+            : `mic-button relative z-10 flex items-center justify-center rounded-full border-0 bg-transparent p-0 shadow-none transition-all duration-300 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 ${sizes.button} ${VOLUME_TRANSITION_CLASS} ${
+                showListening ? "mic-button--listening" : ""
+              }`
+        }
       >
-        <div
-          className={`mic-shell absolute inset-0 rounded-full ${
-            showListening ? "mic-shell-recording" : ""
-          }`}
-        />
+        {showHeroListeningUi ? (
+          <>
+            <ListeningWaveform
+              volumeLevel={volumeLevel}
+              waveformBands={waveformBands}
+              className="pointer-events-none"
+            />
+            <p className="pointer-events-none min-h-[1.75rem] max-w-sm text-center text-lg font-medium leading-snug text-foreground">
+              {liveTranscript.trim() ||
+                (isAwaitingStream ? "Starting microphone…" : "Listening…")}
+            </p>
+            <p className="pointer-events-none type-meta text-sm text-muted">
+              Tap to finish
+            </p>
+          </>
+        ) : (
+          <>
+            <div
+              className={`mic-shell absolute inset-0 rounded-full ${
+                showListening ? "mic-shell-recording" : ""
+              }`}
+            />
 
-        <div
-          className={`relative z-10 flex items-center justify-center rounded-full transition-all duration-300 ${sizes.inner} ${
-            showListening ? "mic-inner-recording" : "mic-inner-idle"
-          }`}
-        >
-          {showListening ? (
-            <>
-              <span
-                className="mic-listening-pulse pointer-events-none absolute inset-0 rounded-full"
-                aria-hidden="true"
-              />
-              <Mic
-                className={`${sizes.icon} relative z-10 text-white mic-icon-listening`}
-                strokeWidth={2.25}
-              />
-            </>
-          ) : (
-            <Mic className={`${sizes.icon} text-foreground`} strokeWidth={2.25} />
-          )}
-        </div>
+            <div
+              className={`relative z-10 flex items-center justify-center rounded-full transition-all duration-300 ${sizes.inner} ${
+                showListening ? "mic-inner-recording" : "mic-inner-idle"
+              }`}
+            >
+              {showListening ? (
+                <>
+                  <span
+                    className="mic-listening-pulse pointer-events-none absolute inset-0 rounded-full"
+                    aria-hidden="true"
+                  />
+                  <Mic
+                    className={`${sizes.icon} relative z-10 text-white mic-icon-listening`}
+                    strokeWidth={2.25}
+                  />
+                </>
+              ) : (
+                <Mic className={`${sizes.icon} text-foreground`} strokeWidth={2.25} />
+              )}
+            </div>
+          </>
+        )}
       </button>
     </div>
   );
@@ -219,6 +256,8 @@ export function MicrophoneButton({
   disabled = false,
   variant = "hero",
   volumeLevel = 0,
+  waveformBands,
+  liveTranscript = "",
   showCaption = true,
 }: MicrophoneButtonProps) {
   if (variant === "compact") {
@@ -231,6 +270,8 @@ export function MicrophoneButton({
         disabled={disabled}
         variant="compact"
         volumeLevel={volumeLevel}
+        waveformBands={waveformBands}
+        liveTranscript={liveTranscript}
       />
     );
   }
@@ -250,6 +291,8 @@ export function MicrophoneButton({
           disabled={disabled}
           variant="hero"
           volumeLevel={volumeLevel}
+          waveformBands={waveformBands}
+          liveTranscript={liveTranscript}
         />
       </div>
 

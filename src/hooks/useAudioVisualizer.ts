@@ -13,6 +13,8 @@ export interface UseAudioVisualizerOptions {
 export interface UseAudioVisualizerResult {
   /** Normalized loudness from 0 (silent) to 100 (peak). */
   volumeLevel: number;
+  /** Frequency bands normalized 0–1 for waveform rendering. */
+  waveformBands: number[];
   /** Whether the analyser loop is currently running. */
   isActive: boolean;
 }
@@ -51,17 +53,23 @@ export function measureAnalyserVolume(
   return scaled;
 }
 
+const DEFAULT_WAVEFORM_BANDS = 48;
+
 export function useAudioVisualizer({
   stream,
   enabled = true,
 }: UseAudioVisualizerOptions): UseAudioVisualizerResult {
   const [volumeLevel, setVolumeLevel] = useState(0);
+  const [waveformBands, setWaveformBands] = useState<number[]>(() =>
+    Array(DEFAULT_WAVEFORM_BANDS).fill(0)
+  );
   const [isActive, setIsActive] = useState(false);
   const timeDomainBufferRef = useRef<Uint8Array | null>(null);
 
   useEffect(() => {
     if (!stream || !enabled) {
       setVolumeLevel(0);
+      setWaveformBands(Array(DEFAULT_WAVEFORM_BANDS).fill(0));
       setIsActive(false);
       return;
     }
@@ -69,6 +77,7 @@ export function useAudioVisualizer({
     const audioTracks = stream.getAudioTracks();
     if (audioTracks.length === 0 || audioTracks.every((track) => !track.enabled)) {
       setVolumeLevel(0);
+      setWaveformBands(Array(DEFAULT_WAVEFORM_BANDS).fill(0));
       setIsActive(false);
       return;
     }
@@ -97,6 +106,7 @@ export function useAudioVisualizer({
     source.connect(analyser);
 
     const timeDomainBuffer = new Uint8Array(analyser.fftSize) as Uint8Array<ArrayBuffer>;
+    const frequencyBuffer = new Uint8Array(analyser.frequencyBinCount) as Uint8Array<ArrayBuffer>;
     timeDomainBufferRef.current = timeDomainBuffer;
 
     let frameId = 0;
@@ -107,6 +117,25 @@ export function useAudioVisualizer({
 
       const level = measureAnalyserVolume(analyser, timeDomainBuffer);
       setVolumeLevel(level);
+
+      analyser.getByteFrequencyData(frequencyBuffer);
+      const bucketSize = Math.max(
+        1,
+        Math.floor(frequencyBuffer.length / DEFAULT_WAVEFORM_BANDS)
+      );
+      const bands: number[] = [];
+      for (let bucket = 0; bucket < DEFAULT_WAVEFORM_BANDS; bucket += 1) {
+        const start = bucket * bucketSize;
+        const end = Math.min(frequencyBuffer.length, start + bucketSize);
+        let sum = 0;
+        for (let index = start; index < end; index += 1) {
+          sum += frequencyBuffer[index];
+        }
+        const average = sum / Math.max(1, end - start);
+        bands.push(Math.min(1, average / 255));
+      }
+      setWaveformBands(bands);
+
       frameId = requestAnimationFrame(tick);
     };
 
@@ -138,6 +167,7 @@ export function useAudioVisualizer({
       analyser.disconnect();
       timeDomainBufferRef.current = null;
       setVolumeLevel(0);
+      setWaveformBands(Array(DEFAULT_WAVEFORM_BANDS).fill(0));
       setIsActive(false);
       if (createdLocalContext) {
         void audioContext.close();
@@ -145,5 +175,5 @@ export function useAudioVisualizer({
     };
   }, [stream, enabled]);
 
-  return { volumeLevel, isActive };
+  return { volumeLevel, waveformBands, isActive };
 }

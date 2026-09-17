@@ -18,6 +18,10 @@ import type {
   VoiceUnsupportedReason,
 } from "@/lib/audio/voice-support";
 import { unlockSpeechSynthesis } from "@/lib/audio/speech";
+import {
+  startLiveSpeechRecognition,
+  type LiveSpeechSession,
+} from "@/lib/audio/live-speech-recognition";
 
 type PipelineStatus = "idle" | "recording" | "transcribing";
 
@@ -39,15 +43,20 @@ export type VoiceTranscriptResult = {
 
 interface UseVoicePipelineOptions {
   onTranscriptReady?: (result: VoiceTranscriptResult) => void;
+  /** Fired when recording ends with text (live STT immediately, server text later). */
+  onRecordingComplete?: (text: string) => void;
 }
 
 export function useVoicePipeline(options: UseVoicePipelineOptions = {}) {
-  const { onTranscriptReady } = options;
+  const { onTranscriptReady, onRecordingComplete } = options;
   const onTranscriptReadyRef = useRef(onTranscriptReady);
   onTranscriptReadyRef.current = onTranscriptReady;
+  const onRecordingCompleteRef = useRef(onRecordingComplete);
+  onRecordingCompleteRef.current = onRecordingComplete;
 
   const [status, setStatus] = useState<PipelineStatus>("idle");
   const [transcript, setTranscript] = useState("");
+  const [liveTranscript, setLiveTranscript] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [permissionFailure, setPermissionFailure] =
     useState<MicrophoneAccessFailure | null>(null);
@@ -66,6 +75,8 @@ export function useVoicePipeline(options: UseVoicePipelineOptions = {}) {
   const statusRef = useRef<PipelineStatus>("idle");
   const startingRef = useRef(false);
   const trackCleanupRef = useRef<(() => void) | null>(null);
+  const liveSpeechSessionRef = useRef<LiveSpeechSession | null>(null);
+  const usingLiveSpeechRef = useRef(false);
 
   statusRef.current = status;
 
@@ -90,6 +101,37 @@ export function useVoicePipeline(options: UseVoicePipelineOptions = {}) {
     setMediaStream(null);
   }, []);
 
+  const stopLiveSpeech = useCallback(() => {
+    liveSpeechSessionRef.current?.stop();
+    liveSpeechSessionRef.current = null;
+    usingLiveSpeechRef.current = false;
+  }, []);
+
+  const startLiveSpeech = useCallback(() => {
+    stopLiveSpeech();
+    setLiveTranscript("");
+
+    const session = startLiveSpeechRecognition({
+      onInterim: (text) => {
+        setLiveTranscript(text);
+        setTranscript(text);
+      },
+      onFinal: () => {
+        const text = liveSpeechSessionRef.current?.getTranscript() ?? "";
+        if (text) {
+          setTranscript(text);
+          setLiveTranscript(text);
+        }
+      },
+      shouldRestart: () => statusRef.current === "recording",
+    });
+
+    if (session) {
+      liveSpeechSessionRef.current = session;
+      usingLiveSpeechRef.current = true;
+    }
+  }, [stopLiveSpeech]);
+
   const resetRecordingState = useCallback(
     (message?: string, cause?: unknown) => {
       const recorder = mediaRecorderRef.current;
@@ -105,6 +147,7 @@ export function useVoicePipeline(options: UseVoicePipelineOptions = {}) {
 
       mediaRecorderRef.current = null;
       chunksRef.current = [];
+      stopLiveSpeech();
       cleanupStream();
 
       statusRef.current = "idle";
@@ -119,7 +162,7 @@ export function useVoicePipeline(options: UseVoicePipelineOptions = {}) {
         );
       }
     },
-    [cleanupStream]
+    [cleanupStream, stopLiveSpeech]
   );
 
   const attachStreamDiagnostics = useCallback(
@@ -161,16 +204,25 @@ export function useVoicePipeline(options: UseVoicePipelineOptions = {}) {
   );
 
   const transcribeAudio = useCallback(
-    async (blob: Blob, mimeType: string, durationMs: number) => {
+    async (
+      blob: Blob,
+      mimeType: string,
+      durationMs: number,
+      clientTranscript?: string
+    ) => {
       setStatus("transcribing");
       setError(null);
 
       const extension = extensionForMimeType(mimeType);
+      const trimmedClient = clientTranscript?.trim() ?? "";
 
       try {
         const formData = new FormData();
         formData.append("audio", blob, `recording.${extension}`);
         formData.append("durationMs", String(durationMs));
+        if (trimmedClient) {
+          formData.append("clientTranscript", trimmedClient);
+        }
 
         const recordingRes = await fetch("/api/recordings", {
           method: "POST",
@@ -187,15 +239,18 @@ export function useVoicePipeline(options: UseVoicePipelineOptions = {}) {
           throw new Error(recordingData.error ?? "Voice note upload failed");
         }
 
-        const text = recordingData.text ?? "";
+        const text = recordingData.text ?? trimmedClient;
         const recordingId = recordingData.recordingId ?? "";
 
         setTranscript(text);
+        setLiveTranscript("");
 
         if (!text.trim()) {
           setError("No speech detected. Try speaking louder and closer to the mic.");
           return;
         }
+
+        onRecordingCompleteRef.current?.(text);
 
         if (!recordingId) {
           throw new Error("Voice note was not saved. Please try again.");
@@ -203,9 +258,7 @@ export function useVoicePipeline(options: UseVoicePipelineOptions = {}) {
 
         onTranscriptReadyRef.current?.({ text, recordingId });
       } catch (err) {
-        setError(
-          voiceFailureMessage("Transcription failed", err)
-        );
+        setError(voiceFailureMessage("Transcription failed", err));
       } finally {
         statusRef.current = "idle";
         setStatus("idle");
@@ -339,10 +392,22 @@ export function useVoicePipeline(options: UseVoicePipelineOptions = {}) {
           const blob = new Blob(chunksRef.current, { type: capturedMime });
           chunksRef.current = [];
           mediaRecorderRef.current = null;
+
+          const liveText = liveSpeechSessionRef.current?.getTranscript().trim() ?? "";
+          stopLiveSpeech();
+
+          if (liveText) {
+            setTranscript(liveText);
+            onRecordingCompleteRef.current?.(liveText);
+          }
+
           cleanupStream();
 
           if (blob.size > 0) {
-            void transcribeAudio(blob, capturedMime, durationMs);
+            void transcribeAudio(blob, capturedMime, durationMs, liveText);
+          } else if (liveText) {
+            statusRef.current = "idle";
+            setStatus("idle");
           } else {
             statusRef.current = "idle";
             setStatus("idle");
@@ -379,6 +444,7 @@ export function useVoicePipeline(options: UseVoicePipelineOptions = {}) {
 
         statusRef.current = "recording";
         setStatus("recording");
+        startLiveSpeech();
       } catch (unexpected) {
         releasePreacquiredStream();
         resetRecordingState("Recording failed.", unexpected);
@@ -392,6 +458,8 @@ export function useVoicePipeline(options: UseVoicePipelineOptions = {}) {
       cleanupStream,
       reportAccessFailure,
       resetRecordingState,
+      startLiveSpeech,
+      stopLiveSpeech,
       transcribeAudio,
     ]
   );
@@ -412,6 +480,7 @@ export function useVoicePipeline(options: UseVoicePipelineOptions = {}) {
       resetRecordingState();
     }
     setTranscript("");
+    setLiveTranscript("");
     setError(null);
     setPermissionFailure(null);
   }, [status, resetRecordingState]);
@@ -442,6 +511,8 @@ export function useVoicePipeline(options: UseVoicePipelineOptions = {}) {
       trackCleanupRef.current = null;
       streamRef.current?.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
+      liveSpeechSessionRef.current?.stop();
+      liveSpeechSessionRef.current = null;
       statusRef.current = "idle";
       startingRef.current = false;
     };
@@ -455,6 +526,7 @@ export function useVoicePipeline(options: UseVoicePipelineOptions = {}) {
     supportChecked,
     unsupportedReason,
     transcript,
+    liveTranscript,
     error,
     permissionFailure,
     mediaStream,
