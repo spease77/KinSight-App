@@ -1,6 +1,6 @@
 "use client";
 
-import type { CSSProperties } from "react";
+import { useState, type CSSProperties } from "react";
 import { Mic } from "lucide-react";
 import type { MicrophoneAccessFailure } from "@/lib/audio/voice-support";
 import {
@@ -101,10 +101,12 @@ function MicToggleControl({
   variant?: "hero" | "compact";
 }) {
   const sizes = SIZE_CLASSES[variant];
-  const { shell } = getMicVolumePresentation(volumeLevel, isRecording, variant);
+  const [isAwaitingStream, setIsAwaitingStream] = useState(false);
+  const showListening = isRecording || isAwaitingStream;
+  const { shell } = getMicVolumePresentation(volumeLevel, showListening, variant);
 
   const handleClick = () => {
-    if (disabled || isBusy) return;
+    if (disabled || isBusy || isAwaitingStream) return;
 
     if (isRecording) {
       onToggle();
@@ -117,10 +119,18 @@ function MicToggleControl({
       return;
     }
 
+    setIsAwaitingStream(true);
+
     // Invoke getUserMedia synchronously on the tap/click call stack (iOS Safari).
     void requestMicrophoneStream().then(
-      (stream) => onToggle(stream),
-      (error) => onMicAccessFailure?.(parseMicrophoneAccessError(error))
+      (stream) => {
+        setIsAwaitingStream(false);
+        onToggle(stream);
+      },
+      (error) => {
+        setIsAwaitingStream(false);
+        onMicAccessFailure?.(parseMicrophoneAccessError(error));
+      }
     );
   };
 
@@ -132,7 +142,7 @@ function MicToggleControl({
         className={`mic-ring pointer-events-none absolute rounded-full border ${
           sizes.ring
         } ${
-          isRecording
+          showListening
             ? "mic-ring-recording mic-ring-fast"
             : "border-accent-mic/50"
         }`}
@@ -143,7 +153,7 @@ function MicToggleControl({
           className={`mic-ring mic-ring-delay pointer-events-none absolute rounded-full border ${
             sizes.ring
           } ${
-            isRecording
+            showListening
               ? "mic-ring-recording mic-ring-recording--soft mic-ring-fast"
               : "border-accent-mic/35"
           }`}
@@ -154,26 +164,26 @@ function MicToggleControl({
       <button
         type="button"
         onClick={handleClick}
-        disabled={disabled || isBusy}
-        aria-label={isRecording ? "Stop recording" : "Start recording"}
-        aria-pressed={isRecording}
+        disabled={disabled || isBusy || isAwaitingStream}
+        aria-label={showListening ? "Stop recording" : "Start recording"}
+        aria-pressed={showListening}
         style={shell}
         className={`mic-button relative z-10 flex items-center justify-center rounded-full border-0 bg-transparent p-0 shadow-none transition-all duration-300 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 ${sizes.button} ${VOLUME_TRANSITION_CLASS} ${
-          isRecording ? "mic-button--listening" : ""
+          showListening ? "mic-button--listening" : ""
         }`}
       >
         <div
           className={`mic-shell absolute inset-0 rounded-full ${
-            isRecording ? "mic-shell-recording" : ""
+            showListening ? "mic-shell-recording" : ""
           }`}
         />
 
         <div
           className={`relative z-10 flex items-center justify-center rounded-full transition-all duration-300 ${sizes.inner} ${
-            isRecording ? "mic-inner-recording" : "mic-inner-idle"
+            showListening ? "mic-inner-recording" : "mic-inner-idle"
           }`}
         >
-          {isRecording ? (
+          {showListening ? (
             <>
               <span
                 className="mic-listening-pulse pointer-events-none absolute inset-0 rounded-full"

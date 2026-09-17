@@ -22,13 +22,35 @@ type PipelineStatus = "idle" | "recording" | "transcribing";
 
 const MIN_RECORDING_MS = 1500;
 const CHUNK_INTERVAL_MS = 250;
-const IOS_CHUNK_INTERVAL_MS = 1000;
+const IOS_STOP_FLUSH_MS = 300;
 
 function isAppleMobileDevice(): boolean {
   return (
     typeof navigator !== "undefined" &&
     /iPhone|iPad|iPod/i.test(navigator.userAgent)
   );
+}
+
+function createMediaRecorder(
+  stream: MediaStream,
+  preferredMime: string
+): { recorder: MediaRecorder; mimeType: string } {
+  if (MediaRecorder.isTypeSupported(preferredMime)) {
+    try {
+      return {
+        recorder: new MediaRecorder(stream, { mimeType: preferredMime }),
+        mimeType: preferredMime,
+      };
+    } catch {
+      // Fall back to browser default below.
+    }
+  }
+
+  const recorder = new MediaRecorder(stream);
+  return {
+    recorder,
+    mimeType: recorder.mimeType || preferredMime,
+  };
 }
 
 export type VoiceTranscriptResult = {
@@ -158,7 +180,17 @@ export function useVoicePipeline(options: UseVoicePipelineOptions = {}) {
 
     if (recorder.state === "recording") {
       recorder.requestData();
-      recorder.stop();
+      const finishStop = () => {
+        if (recorder.state === "recording") {
+          recorder.stop();
+        }
+      };
+
+      if (isAppleMobileDevice()) {
+        window.setTimeout(finishStop, IOS_STOP_FLUSH_MS);
+      } else {
+        finishStop();
+      }
     }
   }, [cleanupStream]);
 
@@ -166,6 +198,11 @@ export function useVoicePipeline(options: UseVoicePipelineOptions = {}) {
     async (preacquiredStream?: MediaStream) => {
       if (statusRef.current !== "idle" || startingRef.current) {
         preacquiredStream?.getTracks().forEach((track) => track.stop());
+        if (statusRef.current === "transcribing") {
+          setError(
+            "Still processing your last recording. Wait a moment and try again."
+          );
+        }
         return;
       }
 
@@ -225,7 +262,11 @@ export function useVoicePipeline(options: UseVoicePipelineOptions = {}) {
         chunksRef.current = [];
         mimeTypeRef.current = mimeType;
 
-        const recorder = new MediaRecorder(stream, { mimeType });
+        const { recorder, mimeType: resolvedMime } = createMediaRecorder(
+          stream,
+          mimeType
+        );
+        mimeTypeRef.current = resolvedMime;
 
         recorder.ondataavailable = (event) => {
           if (event.data.size > 0) {
@@ -265,10 +306,12 @@ export function useVoicePipeline(options: UseVoicePipelineOptions = {}) {
         mediaRecorderRef.current = recorder;
         recordingStartedAtRef.current = Date.now();
 
-        const chunkInterval = isAppleMobileDevice()
-          ? IOS_CHUNK_INTERVAL_MS
-          : CHUNK_INTERVAL_MS;
-        recorder.start(chunkInterval);
+        // iOS Safari often produces empty blobs when using a timeslice interval.
+        if (isAppleMobileDevice()) {
+          recorder.start();
+        } else {
+          recorder.start(CHUNK_INTERVAL_MS);
+        }
 
         statusRef.current = "recording";
         setStatus("recording");

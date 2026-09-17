@@ -528,16 +528,12 @@ b {
   --home-conversation-composer-clearance: calc(
     var(--bottom-nav-height) + var(--home-composer-dock-height) + 0.75rem
   );
+  /* Composer sits just above the tab bar; clearance matches fixed dock in main flow. */
+  --home-state-a-composer-rest-bottom: calc(var(--bottom-nav-height) + 0.75rem);
   --home-state-a-composer-clearance: calc(
-    var(--home-state-a-composer-rest-bottom) + var(--home-composer-dock-height) + 1rem
+    var(--home-state-a-composer-rest-bottom) + var(--home-composer-dock-height) -
+      var(--bottom-nav-height) + 0.5rem
   );
-  --home-state-a-composer-rest-bottom: 290px;
-}
-
-@media (min-width: 640px) {
-  :root {
-    --home-state-a-composer-rest-bottom: 320px;
-  }
 }
 
 .app-scroll {
@@ -1046,8 +1042,19 @@ b {
   flex: 1 1 auto;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 1rem;
+  justify-content: flex-start;
+}
+
+.home-dashboard--state-a .home-hero__spacer {
+  flex: 1 1 0;
+  min-height: 0;
+  width: 100%;
+}
+
+.home-dashboard--state-a .home-hero__prompt {
+  flex-shrink: 0;
+  margin-top: 0.25rem;
+  padding-bottom: 0.25rem;
 }
 
 .home-dashboard__main {
@@ -1073,7 +1080,10 @@ b {
   flex-shrink: 0;
 }
 
-.home-hero-mic-zone--hidden,
+.home-dashboard--state-a .home-hero-mic-zone {
+  /* Bias mic center toward midpoint between header and ask bar (caption sits below). */
+  transform: translateY(calc(0.55 * (1.75rem + 0.875rem)));
+}
 html.keyboard-composer-active .home-dashboard--state-a .home-hero-mic-zone {
   display: none;
   pointer-events: none;

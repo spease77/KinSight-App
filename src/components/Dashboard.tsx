@@ -218,22 +218,12 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
   }, [isRecording, isTranscribing, syncPipelineActivity]);
 
   useEffect(() => {
-    if (
-      messages.length > 0 ||
-      isChatLoading ||
-      isRecording ||
-      isTranscribing ||
-      isDetecting
-    ) {
+    // Stay on State A while recording/transcribing so the hero mic keeps showing
+    // "Listening…" instead of flipping to an empty conversation layout.
+    if (messages.length > 0 || isChatLoading || isDetecting) {
       setConversationEngaged(true);
     }
-  }, [
-    messages.length,
-    isChatLoading,
-    isRecording,
-    isTranscribing,
-    isDetecting,
-  ]);
+  }, [messages.length, isChatLoading, isDetecting]);
 
   useEffect(() => {
     // Fresh State A whenever the Home tab session resets (returning from another tab).
@@ -433,7 +423,8 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
               <div className="home-hero__content">
                 {!hideHomeMic && (
                   <>
-                    <div className="home-hero-mic-zone relative flex items-center justify-center">
+                    <div className="home-hero__spacer" aria-hidden="true" />
+                    <div className="home-hero-mic-zone relative flex shrink-0 items-center justify-center">
                       <MicrophoneButton
                         isRecording={isRecording}
                         isSpeaking={isSpeaking}
@@ -444,8 +435,8 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
                         showCaption={false}
                       />
                     </div>
-
-                    <p className="text-center text-lg font-medium text-foreground/90">
+                    <div className="home-hero__spacer" aria-hidden="true" />
+                    <p className="home-hero__prompt text-center text-lg font-medium text-foreground/90">
                       {getHomeMicPrompt({
                         isBusy: isBusy || isTranscribing,
                         isRecording,

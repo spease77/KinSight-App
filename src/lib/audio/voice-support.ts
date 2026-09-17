@@ -95,13 +95,16 @@ export function checkMicrophoneEnvironment():
  * browser treats it as user-initiated (required on iOS Safari).
  */
 export function requestMicrophoneStream(): Promise<MediaStream> {
-  return navigator.mediaDevices.getUserMedia({
+  const preferred: MediaStreamConstraints = {
     audio: {
       echoCancellation: true,
       noiseSuppression: true,
-      channelCount: 1,
     },
-  });
+  };
+
+  return navigator.mediaDevices.getUserMedia(preferred).catch(() =>
+    navigator.mediaDevices.getUserMedia({ audio: true })
+  );
 }
 
 export function parseMicrophoneAccessError(error: unknown): MicrophoneAccessFailure {
