@@ -1,3 +1,4 @@
+import { unlockSpeechSynthesis } from "@/lib/audio/speech";
 import { pickRecorderMimeType } from "@/lib/audio/recorder-mime";
 
 export type VoiceUnsupportedReason =
@@ -41,8 +42,9 @@ export function checkVoiceRecordingSupport(): VoiceSupportCheck {
     return { supported: false, reason: "no_api" };
   }
 
+  // iOS Safari may report no supported MIME types but still record via default MediaRecorder.
   if (!pickRecorderMimeType()) {
-    return { supported: false, reason: "no_mime" };
+    return { supported: false, reason: "no_api" };
   }
 
   return { supported: true };
@@ -90,11 +92,79 @@ export function checkMicrophoneEnvironment():
   return { ok: true };
 }
 
+let recordingAudioContext: AudioContext | null = null;
+
+function getAudioContextConstructor():
+  | (typeof AudioContext)
+  | undefined {
+  if (typeof window === "undefined") return undefined;
+
+  return (
+    window.AudioContext ||
+    (window as Window & { webkitAudioContext?: typeof AudioContext })
+      .webkitAudioContext
+  );
+}
+
 /**
- * Request microphone access. Call synchronously from a click/tap handler so the
- * browser treats it as user-initiated (required on iOS Safari).
+ * Create/resume AudioContext synchronously inside a user gesture (required on iOS Safari).
+ */
+export function unlockRecordingAudioFromUserGesture(): AudioContext | null {
+  const AudioCtx = getAudioContextConstructor();
+  if (!AudioCtx) return null;
+
+  if (!recordingAudioContext || recordingAudioContext.state === "closed") {
+    recordingAudioContext = new AudioCtx();
+  }
+
+  void recordingAudioContext.resume().catch((error) => {
+    logVoiceDiagnostic("AudioContext.resume failed", error);
+  });
+
+  unlockSpeechSynthesis();
+  return recordingAudioContext;
+}
+
+/** Shared AudioContext unlocked from the mic tap; used by the level visualizer. */
+export function getRecordingAudioContext(): AudioContext | null {
+  return recordingAudioContext;
+}
+
+export function logVoiceDiagnostic(context: string, error?: unknown): void {
+  if (error !== undefined) {
+    console.error(`[KinSight voice] ${context}`, error);
+    return;
+  }
+  console.error(`[KinSight voice] ${context}`);
+}
+
+export function describeVoiceError(error: unknown): string {
+  if (error instanceof DOMException) {
+    return `${error.name}: ${error.message}`;
+  }
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return String(error);
+}
+
+export function voiceFailureMessage(context: string, error?: unknown): string {
+  logVoiceDiagnostic(context, error);
+  const detail = error !== undefined ? describeVoiceError(error) : "";
+  return detail ? `${context} (${detail})` : context;
+}
+
+/**
+ * Request microphone access. Call only after `unlockRecordingAudioFromUserGesture`
+ * in the same click/tap handler (required on iOS Safari).
  */
 export function requestMicrophoneStream(): Promise<MediaStream> {
+  if (!navigator.mediaDevices?.getUserMedia) {
+    return Promise.reject(
+      new DOMException("getUserMedia is not available", "NotSupportedError")
+    );
+  }
+
   const preferred: MediaStreamConstraints = {
     audio: {
       echoCancellation: true,
@@ -102,9 +172,18 @@ export function requestMicrophoneStream(): Promise<MediaStream> {
     },
   };
 
-  return navigator.mediaDevices.getUserMedia(preferred).catch(() =>
-    navigator.mediaDevices.getUserMedia({ audio: true })
-  );
+  return navigator.mediaDevices.getUserMedia(preferred).catch((firstError) => {
+    logVoiceDiagnostic("Preferred getUserMedia constraints failed", firstError);
+    return navigator.mediaDevices.getUserMedia({ audio: true });
+  });
+}
+
+/**
+ * Unlock iOS audio + start mic capture in one user-gesture call stack.
+ */
+export function requestMicrophoneStreamFromUserGesture(): Promise<MediaStream> {
+  unlockRecordingAudioFromUserGesture();
+  return requestMicrophoneStream();
 }
 
 export function parseMicrophoneAccessError(error: unknown): MicrophoneAccessFailure {

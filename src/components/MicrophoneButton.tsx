@@ -5,8 +5,10 @@ import { Mic } from "lucide-react";
 import type { MicrophoneAccessFailure } from "@/lib/audio/voice-support";
 import {
   checkMicrophoneEnvironment,
+  logVoiceDiagnostic,
   parseMicrophoneAccessError,
-  requestMicrophoneStream,
+  requestMicrophoneStreamFromUserGesture,
+  voiceFailureMessage,
 } from "@/lib/audio/voice-support";
 
 interface MicrophoneButtonProps {
@@ -121,15 +123,20 @@ function MicToggleControl({
 
     setIsAwaitingStream(true);
 
-    // Invoke getUserMedia synchronously on the tap/click call stack (iOS Safari).
-    void requestMicrophoneStream().then(
+    // AudioContext + getUserMedia must start in this click handler (iOS Safari).
+    void requestMicrophoneStreamFromUserGesture().then(
       (stream) => {
         setIsAwaitingStream(false);
         onToggle(stream);
       },
       (error) => {
         setIsAwaitingStream(false);
-        onMicAccessFailure?.(parseMicrophoneAccessError(error));
+        logVoiceDiagnostic("Microphone access failed", error);
+        const failure = parseMicrophoneAccessError(error);
+        onMicAccessFailure?.({
+          ...failure,
+          message: voiceFailureMessage(failure.message, error),
+        });
       }
     );
   };

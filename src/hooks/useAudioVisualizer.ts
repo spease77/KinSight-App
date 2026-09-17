@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { getRecordingAudioContext } from "@/lib/audio/voice-support";
 
 export interface UseAudioVisualizerOptions {
   /** Active `MediaStream` from the recording pipeline (e.g. while recording). */
@@ -72,7 +73,14 @@ export function useAudioVisualizer({
       return;
     }
 
-    const audioContext = createAudioContext();
+    const gestureContext = getRecordingAudioContext();
+    let createdLocalContext = false;
+    let audioContext = gestureContext;
+    if (!audioContext) {
+      audioContext = createAudioContext();
+      createdLocalContext = Boolean(audioContext);
+    }
+
     if (!audioContext) {
       setVolumeLevel(0);
       setIsActive(false);
@@ -131,7 +139,9 @@ export function useAudioVisualizer({
       timeDomainBufferRef.current = null;
       setVolumeLevel(0);
       setIsActive(false);
-      void audioContext.close();
+      if (createdLocalContext) {
+        void audioContext.close();
+      }
     };
   }, [stream, enabled]);
 

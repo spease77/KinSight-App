@@ -2,14 +2,15 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
+  createMediaRecorderForStream,
   extensionForMimeType,
-  pickRecorderMimeType,
 } from "@/lib/audio/recorder-mime";
 import {
   checkMicrophoneEnvironment,
   checkVoiceRecordingSupport,
   parseMicrophoneAccessError,
   requestMicrophoneStream,
+  voiceFailureMessage,
   voiceUnsupportedMessage,
 } from "@/lib/audio/voice-support";
 import type {
@@ -29,28 +30,6 @@ function isAppleMobileDevice(): boolean {
     typeof navigator !== "undefined" &&
     /iPhone|iPad|iPod/i.test(navigator.userAgent)
   );
-}
-
-function createMediaRecorder(
-  stream: MediaStream,
-  preferredMime: string
-): { recorder: MediaRecorder; mimeType: string } {
-  if (MediaRecorder.isTypeSupported(preferredMime)) {
-    try {
-      return {
-        recorder: new MediaRecorder(stream, { mimeType: preferredMime }),
-        mimeType: preferredMime,
-      };
-    } catch {
-      // Fall back to browser default below.
-    }
-  }
-
-  const recorder = new MediaRecorder(stream);
-  return {
-    recorder,
-    mimeType: recorder.mimeType || preferredMime,
-  };
 }
 
 export type VoiceTranscriptResult = {
@@ -82,10 +61,11 @@ export function useVoicePipeline(options: UseVoicePipelineOptions = {}) {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const chunksRef = useRef<Blob[]>([]);
-  const mimeTypeRef = useRef("audio/webm");
+  const mimeTypeRef = useRef("");
   const recordingStartedAtRef = useRef(0);
   const statusRef = useRef<PipelineStatus>("idle");
   const startingRef = useRef(false);
+  const trackCleanupRef = useRef<(() => void) | null>(null);
 
   statusRef.current = status;
 
@@ -103,61 +83,136 @@ export function useVoicePipeline(options: UseVoicePipelineOptions = {}) {
   }, []);
 
   const cleanupStream = useCallback(() => {
+    trackCleanupRef.current?.();
+    trackCleanupRef.current = null;
     streamRef.current?.getTracks().forEach((track) => track.stop());
     streamRef.current = null;
     setMediaStream(null);
   }, []);
 
-  const transcribeAudio = useCallback(
-    async (blob: Blob, mimeType: string, durationMs: number) => {
-    setStatus("transcribing");
-    setError(null);
-
-    const extension = extensionForMimeType(mimeType);
-
-    try {
-      const formData = new FormData();
-      formData.append("audio", blob, `recording.${extension}`);
-      formData.append("durationMs", String(durationMs));
-
-      const recordingRes = await fetch("/api/recordings", {
-        method: "POST",
-        body: formData,
-      });
-
-      const recordingData = (await recordingRes.json()) as {
-        text?: string;
-        recordingId?: string;
-        error?: string;
-      };
-
-      if (!recordingRes.ok) {
-        throw new Error(recordingData.error ?? "Voice note upload failed");
+  const resetRecordingState = useCallback(
+    (message?: string, cause?: unknown) => {
+      const recorder = mediaRecorderRef.current;
+      if (recorder && recorder.state !== "inactive") {
+        recorder.onstop = null;
+        recorder.onerror = null;
+        try {
+          recorder.stop();
+        } catch {
+          // Already stopped.
+        }
       }
 
-      const text = recordingData.text ?? "";
-      const recordingId = recordingData.recordingId ?? "";
+      mediaRecorderRef.current = null;
+      chunksRef.current = [];
+      cleanupStream();
 
-      setTranscript(text);
-
-      if (!text.trim()) {
-        setError("No speech detected. Try speaking louder and closer to the mic.");
-        return;
-      }
-
-      if (!recordingId) {
-        throw new Error("Voice note was not saved. Please try again.");
-      }
-
-      onTranscriptReadyRef.current?.({ text, recordingId });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
-    } finally {
       statusRef.current = "idle";
       setStatus("idle");
-    }
-  },
-  []);
+      startingRef.current = false;
+
+      if (message) {
+        setError(
+          cause !== undefined
+            ? voiceFailureMessage(message, cause)
+            : message
+        );
+      }
+    },
+    [cleanupStream]
+  );
+
+  const attachStreamDiagnostics = useCallback(
+    (stream: MediaStream) => {
+      trackCleanupRef.current?.();
+
+      const cleanups: Array<() => void> = [];
+
+      stream.getAudioTracks().forEach((track) => {
+        const onEnded = () => {
+          if (statusRef.current !== "recording") return;
+          resetRecordingState(
+            "Microphone stopped unexpectedly.",
+            new DOMException("Track ended", "AbortError")
+          );
+        };
+
+        const onMute = () => {
+          if (statusRef.current !== "recording") return;
+          resetRecordingState(
+            "Microphone was muted or interrupted.",
+            new DOMException("Track muted", "AbortError")
+          );
+        };
+
+        track.addEventListener("ended", onEnded);
+        track.addEventListener("mute", onMute);
+        cleanups.push(() => {
+          track.removeEventListener("ended", onEnded);
+          track.removeEventListener("mute", onMute);
+        });
+      });
+
+      trackCleanupRef.current = () => {
+        cleanups.forEach((cleanup) => cleanup());
+      };
+    },
+    [resetRecordingState]
+  );
+
+  const transcribeAudio = useCallback(
+    async (blob: Blob, mimeType: string, durationMs: number) => {
+      setStatus("transcribing");
+      setError(null);
+
+      const extension = extensionForMimeType(mimeType);
+
+      try {
+        const formData = new FormData();
+        formData.append("audio", blob, `recording.${extension}`);
+        formData.append("durationMs", String(durationMs));
+
+        const recordingRes = await fetch("/api/recordings", {
+          method: "POST",
+          body: formData,
+        });
+
+        const recordingData = (await recordingRes.json()) as {
+          text?: string;
+          recordingId?: string;
+          error?: string;
+        };
+
+        if (!recordingRes.ok) {
+          throw new Error(recordingData.error ?? "Voice note upload failed");
+        }
+
+        const text = recordingData.text ?? "";
+        const recordingId = recordingData.recordingId ?? "";
+
+        setTranscript(text);
+
+        if (!text.trim()) {
+          setError("No speech detected. Try speaking louder and closer to the mic.");
+          return;
+        }
+
+        if (!recordingId) {
+          throw new Error("Voice note was not saved. Please try again.");
+        }
+
+        onTranscriptReadyRef.current?.({ text, recordingId });
+      } catch (err) {
+        setError(
+          voiceFailureMessage("Transcription failed", err)
+        );
+      } finally {
+        statusRef.current = "idle";
+        setStatus("idle");
+      }
+    },
+    []
+  );
 
   const stopRecording = useCallback(() => {
     const recorder = mediaRecorderRef.current;
@@ -166,13 +221,9 @@ export function useVoicePipeline(options: UseVoicePipelineOptions = {}) {
     const elapsed = Date.now() - recordingStartedAtRef.current;
     if (elapsed < MIN_RECORDING_MS) {
       recorder.onstop = null;
+      recorder.onerror = null;
       recorder.stop();
-      cleanupStream();
-      mediaRecorderRef.current = null;
-      chunksRef.current = [];
-      statusRef.current = "idle";
-      setStatus("idle");
-      setError(
+      resetRecordingState(
         "Recording too short. Hold the mic button and speak for at least 2 seconds."
       );
       return;
@@ -192,7 +243,7 @@ export function useVoicePipeline(options: UseVoicePipelineOptions = {}) {
         finishStop();
       }
     }
-  }, [cleanupStream]);
+  }, [resetRecordingState]);
 
   const startRecording = useCallback(
     async (preacquiredStream?: MediaStream) => {
@@ -231,13 +282,7 @@ export function useVoicePipeline(options: UseVoicePipelineOptions = {}) {
             });
           }
           releasePreacquiredStream();
-          return;
-        }
-
-        const mimeType = pickRecorderMimeType();
-        if (!mimeType) {
-          releasePreacquiredStream();
-          setError("Audio recording is not supported in this browser.");
+          startingRef.current = false;
           return;
         }
 
@@ -246,6 +291,7 @@ export function useVoicePipeline(options: UseVoicePipelineOptions = {}) {
           const environment = checkMicrophoneEnvironment();
           if (!environment.ok) {
             reportAccessFailure(environment.failure);
+            startingRef.current = false;
             return;
           }
 
@@ -253,19 +299,29 @@ export function useVoicePipeline(options: UseVoicePipelineOptions = {}) {
             stream = await requestMicrophoneStream();
           } catch (accessError) {
             reportAccessFailure(parseMicrophoneAccessError(accessError));
+            startingRef.current = false;
             return;
           }
         }
 
         streamRef.current = stream;
         setMediaStream(stream);
+        attachStreamDiagnostics(stream);
         chunksRef.current = [];
-        mimeTypeRef.current = mimeType;
 
-        const { recorder, mimeType: resolvedMime } = createMediaRecorder(
-          stream,
-          mimeType
-        );
+        let recorder: MediaRecorder;
+        let resolvedMime: string;
+
+        try {
+          const created = createMediaRecorderForStream(stream);
+          recorder = created.recorder;
+          resolvedMime = created.mimeType;
+        } catch (recorderError) {
+          releasePreacquiredStream();
+          resetRecordingState("Could not start audio recording.", recorderError);
+          return;
+        }
+
         mimeTypeRef.current = resolvedMime;
 
         recorder.ondataavailable = (event) => {
@@ -275,7 +331,7 @@ export function useVoicePipeline(options: UseVoicePipelineOptions = {}) {
         };
 
         recorder.onstop = () => {
-          const capturedMime = mimeTypeRef.current;
+          const capturedMime = mimeTypeRef.current || recorder.mimeType || "audio/mp4";
           const durationMs = Math.max(
             0,
             Date.now() - recordingStartedAtRef.current
@@ -290,42 +346,54 @@ export function useVoicePipeline(options: UseVoicePipelineOptions = {}) {
           } else {
             statusRef.current = "idle";
             setStatus("idle");
-            setError("No audio captured. Try recording again.");
+            setError(
+              voiceFailureMessage(
+                "No audio captured. Try recording again.",
+                new Error(`empty blob (${capturedMime})`)
+              )
+            );
           }
         };
 
-        recorder.onerror = () => {
-          cleanupStream();
-          mediaRecorderRef.current = null;
-          chunksRef.current = [];
-          statusRef.current = "idle";
-          setStatus("idle");
-          setError("Recording failed. Please try again.");
+        recorder.onerror = (event: Event) => {
+          const recorderError =
+            "error" in event
+              ? (event as Event & { error?: DOMException }).error
+              : event;
+          resetRecordingState("Recording failed.", recorderError ?? event);
         };
 
         mediaRecorderRef.current = recorder;
         recordingStartedAtRef.current = Date.now();
 
-        // iOS Safari often produces empty blobs when using a timeslice interval.
-        if (isAppleMobileDevice()) {
-          recorder.start();
-        } else {
-          recorder.start(CHUNK_INTERVAL_MS);
+        try {
+          if (isAppleMobileDevice()) {
+            recorder.start();
+          } else {
+            recorder.start(CHUNK_INTERVAL_MS);
+          }
+        } catch (startError) {
+          resetRecordingState("Recording failed to start.", startError);
+          return;
         }
 
         statusRef.current = "recording";
         setStatus("recording");
-      } catch {
-        cleanupStream();
+      } catch (unexpected) {
         releasePreacquiredStream();
-        statusRef.current = "idle";
-        setStatus("idle");
-        setError("Recording failed. Please try again.");
+        resetRecordingState("Recording failed.", unexpected);
       } finally {
         startingRef.current = false;
       }
     },
-    [applySupportCheck, cleanupStream, reportAccessFailure, transcribeAudio]
+    [
+      applySupportCheck,
+      attachStreamDiagnostics,
+      cleanupStream,
+      reportAccessFailure,
+      resetRecordingState,
+      transcribeAudio,
+    ]
   );
 
   const toggleRecording = useCallback(
@@ -341,21 +409,12 @@ export function useVoicePipeline(options: UseVoicePipelineOptions = {}) {
 
   const clearTranscript = useCallback(() => {
     if (status === "recording") {
-      const recorder = mediaRecorderRef.current;
-      if (recorder && recorder.state !== "inactive") {
-        recorder.onstop = null;
-        recorder.stop();
-      }
-      cleanupStream();
-      mediaRecorderRef.current = null;
-      chunksRef.current = [];
-      statusRef.current = "idle";
-      setStatus("idle");
+      resetRecordingState();
     }
     setTranscript("");
     setError(null);
     setPermissionFailure(null);
-  }, [status, cleanupStream]);
+  }, [status, resetRecordingState]);
 
   const clearPermissionFailure = useCallback(() => {
     setPermissionFailure(null);
@@ -370,11 +429,23 @@ export function useVoicePipeline(options: UseVoicePipelineOptions = {}) {
       const recorder = mediaRecorderRef.current;
       if (recorder && recorder.state !== "inactive") {
         recorder.onstop = null;
-        recorder.stop();
+        recorder.onerror = null;
+        try {
+          recorder.stop();
+        } catch {
+          // Already inactive.
+        }
       }
-      cleanupStream();
+      mediaRecorderRef.current = null;
+      chunksRef.current = [];
+      trackCleanupRef.current?.();
+      trackCleanupRef.current = null;
+      streamRef.current?.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+      statusRef.current = "idle";
+      startingRef.current = false;
     };
-  }, [cleanupStream]);
+  }, []);
 
   return {
     isRecording: status === "recording",
