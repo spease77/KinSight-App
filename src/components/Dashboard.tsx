@@ -6,6 +6,7 @@ import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import { Header } from "@/components/Header";
 import { PageHeader } from "@/components/PageHeader";
+import { HomeVoiceCapture } from "@/components/HomeVoiceCapture";
 import { MicrophoneButton } from "@/components/MicrophoneButton";
 import { KinSightConversationPanel } from "@/components/KinSightConversationPanel";
 import { ProposedContactModal } from "@/components/ProposedContactModal";
@@ -130,6 +131,7 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
 
   const {
     isRecording,
+    isStarting,
     isTranscribing,
     isBusy,
     isSupported,
@@ -158,7 +160,7 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
 
   const { volumeLevel, waveformBands } = useAudioVisualizer({
     stream: mediaStream,
-    enabled: isRecording,
+    enabled: isRecording || isStarting,
   });
 
   const [conversationEngaged, setConversationEngaged] = useState(false);
@@ -431,16 +433,21 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
                   <>
                     <div className="home-hero__spacer" aria-hidden="true" />
                     <div className="home-hero-mic-zone relative flex w-full shrink-0 items-center justify-center">
-                      <MicrophoneButton
+                      <HomeVoiceCapture
                         isRecording={isRecording}
-                        isSpeaking={isSpeaking}
+                        isStarting={isStarting}
+                        isTranscribing={isTranscribing}
                         isBusy={isBusy}
-                        onToggle={handleMicToggle}
-                        onMicAccessFailure={handleMicAccessFailure}
                         volumeLevel={volumeLevel}
                         waveformBands={waveformBands}
                         liveTranscript={liveTranscript}
-                        showCaption={false}
+                        transcript={transcript}
+                        onStart={(stream) => {
+                          interruptSpeech();
+                          toggleRecording(stream);
+                        }}
+                        onStop={() => toggleRecording()}
+                        onMicAccessFailure={handleMicAccessFailure}
                       />
                     </div>
                     <div className="home-hero__spacer home-hero__spacer--lower" aria-hidden="true" />

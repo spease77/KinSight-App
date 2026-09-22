@@ -66,6 +66,7 @@ export function useVoicePipeline(options: UseVoicePipelineOptions = {}) {
   >(undefined);
   const [supportChecked, setSupportChecked] = useState(false);
   const [mediaStream, setMediaStream] = useState<MediaStream | null>(null);
+  const [isStarting, setIsStarting] = useState(false);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -153,6 +154,7 @@ export function useVoicePipeline(options: UseVoicePipelineOptions = {}) {
       statusRef.current = "idle";
       setStatus("idle");
       startingRef.current = false;
+      setIsStarting(false);
 
       if (message) {
         setError(
@@ -311,8 +313,11 @@ export function useVoicePipeline(options: UseVoicePipelineOptions = {}) {
       }
 
       startingRef.current = true;
+      setIsStarting(true);
       setError(null);
       setPermissionFailure(null);
+      setTranscript("");
+      setLiveTranscript("");
       unlockSpeechSynthesis();
 
       const releasePreacquiredStream = () => {
@@ -336,6 +341,7 @@ export function useVoicePipeline(options: UseVoicePipelineOptions = {}) {
           }
           releasePreacquiredStream();
           startingRef.current = false;
+          setIsStarting(false);
           return;
         }
 
@@ -345,6 +351,7 @@ export function useVoicePipeline(options: UseVoicePipelineOptions = {}) {
           if (!environment.ok) {
             reportAccessFailure(environment.failure);
             startingRef.current = false;
+            setIsStarting(false);
             return;
           }
 
@@ -353,6 +360,7 @@ export function useVoicePipeline(options: UseVoicePipelineOptions = {}) {
           } catch (accessError) {
             reportAccessFailure(parseMicrophoneAccessError(accessError));
             startingRef.current = false;
+            setIsStarting(false);
             return;
           }
         }
@@ -450,6 +458,7 @@ export function useVoicePipeline(options: UseVoicePipelineOptions = {}) {
         resetRecordingState("Recording failed.", unexpected);
       } finally {
         startingRef.current = false;
+        setIsStarting(false);
       }
     },
     [
@@ -520,6 +529,7 @@ export function useVoicePipeline(options: UseVoicePipelineOptions = {}) {
 
   return {
     isRecording: status === "recording",
+    isStarting,
     isTranscribing: status === "transcribing",
     isBusy: status === "transcribing",
     isSupported,

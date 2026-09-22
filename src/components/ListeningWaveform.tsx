@@ -2,12 +2,15 @@
 
 import { useEffect, useRef } from "react";
 
-const DEFAULT_BANDS = 48;
+const DEFAULT_BANDS = 32;
 
 type ListeningWaveformProps = {
   volumeLevel: number;
   waveformBands?: number[];
   className?: string;
+  /** `bars` = Gemini-style pills; `line` = flowing wave lines */
+  variant?: "bars" | "line";
+  active?: boolean;
 };
 
 function smoothBands(source: number[], targetLength: number): number[] {
@@ -31,10 +34,12 @@ export function ListeningWaveform({
   volumeLevel,
   waveformBands,
   className = "",
+  variant = "bars",
+  active = true,
 }: ListeningWaveformProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const phaseRef = useRef(0);
-  const bandsRef = useRef<number[]>(Array(DEFAULT_BANDS).fill(0));
+  const bandsRef = useRef<number[]>(Array(DEFAULT_BANDS).fill(0.15));
 
   useEffect(() => {
     if (waveformBands && waveformBands.length > 0) {
@@ -52,25 +57,43 @@ export function ListeningWaveform({
     let frameId = 0;
     let cancelled = false;
 
-    const draw = (timestamp: number) => {
-      if (cancelled) return;
+    const drawBars = (timestamp: number, width: number, height: number) => {
+      const intensity = Math.min(1, volumeLevel / 100);
+      phaseRef.current = timestamp * 0.003;
+      const bands = bandsRef.current;
+      const barCount = bands.length;
+      const gap = 5;
+      const barWidth = Math.max(3, (width - gap * (barCount - 1)) / barCount);
+      const maxBarHeight = height * 0.72;
 
-      const dpr = window.devicePixelRatio || 1;
-      const width = canvas.clientWidth;
-      const height = canvas.clientHeight;
+      for (let index = 0; index < barCount; index += 1) {
+        const energy = active
+          ? Math.max(0.12, bands[index] ?? 0.12)
+          : 0.12 + Math.sin(phaseRef.current + index * 0.35) * 0.06;
+        const breathe = active
+          ? Math.sin(phaseRef.current + index * 0.45) * 0.08
+          : 0;
+        const level = Math.min(1, energy + breathe + intensity * 0.25);
+        const barHeight = Math.max(8, level * maxBarHeight);
+        const x = index * (barWidth + gap);
+        const y = (height - barHeight) / 2;
 
-      if (canvas.width !== Math.floor(width * dpr) || canvas.height !== Math.floor(height * dpr)) {
-        canvas.width = Math.floor(width * dpr);
-        canvas.height = Math.floor(height * dpr);
-        context.setTransform(dpr, 0, 0, dpr, 0, 0);
+        const gradient = context.createLinearGradient(0, y, 0, y + barHeight);
+        gradient.addColorStop(0, "rgba(147, 197, 253, 0.95)");
+        gradient.addColorStop(0.5, "rgba(129, 140, 248, 0.9)");
+        gradient.addColorStop(1, "rgba(74, 222, 159, 0.85)");
+
+        context.fillStyle = gradient;
+        context.beginPath();
+        context.roundRect(x, y, barWidth, barHeight, barWidth / 2);
+        context.fill();
       }
+    };
 
-      context.clearRect(0, 0, width, height);
-
+    const drawLine = (timestamp: number, width: number, height: number) => {
       const centerY = height / 2;
       const intensity = Math.min(1, volumeLevel / 100);
       phaseRef.current = timestamp * 0.0025;
-
       const bands = bandsRef.current;
       const layers = [
         { color: "rgba(96, 165, 250, 0.55)", width: 2.5, phase: 0 },
@@ -82,10 +105,7 @@ export function ListeningWaveform({
         context.beginPath();
         for (let x = 0; x <= width; x += 2) {
           const t = x / Math.max(width, 1);
-          const bandIndex = Math.min(
-            bands.length - 1,
-            Math.floor(t * bands.length)
-          );
+          const bandIndex = Math.min(bands.length - 1, Math.floor(t * bands.length));
           const bandEnergy = bands[bandIndex] ?? 0;
           const wave =
             Math.sin(t * Math.PI * 4 + phaseRef.current + layer.phase) *
@@ -100,6 +120,31 @@ export function ListeningWaveform({
         context.lineJoin = "round";
         context.stroke();
       }
+    };
+
+    const draw = (timestamp: number) => {
+      if (cancelled) return;
+
+      const dpr = window.devicePixelRatio || 1;
+      const width = canvas.clientWidth;
+      const height = canvas.clientHeight;
+
+      if (
+        canvas.width !== Math.floor(width * dpr) ||
+        canvas.height !== Math.floor(height * dpr)
+      ) {
+        canvas.width = Math.floor(width * dpr);
+        canvas.height = Math.floor(height * dpr);
+        context.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+
+      context.clearRect(0, 0, width, height);
+
+      if (variant === "bars") {
+        drawBars(timestamp, width, height);
+      } else {
+        drawLine(timestamp, width, height);
+      }
 
       frameId = requestAnimationFrame(draw);
     };
@@ -110,13 +155,13 @@ export function ListeningWaveform({
       cancelled = true;
       cancelAnimationFrame(frameId);
     };
-  }, [volumeLevel]);
+  }, [volumeLevel, variant, active]);
 
   return (
     <canvas
       ref={canvasRef}
-      className={`listening-waveform block w-full max-w-md ${className}`}
-      style={{ height: "5.5rem" }}
+      className={`listening-waveform block w-full ${className}`}
+      style={{ height: variant === "bars" ? "6.5rem" : "5.5rem" }}
       aria-hidden="true"
     />
   );

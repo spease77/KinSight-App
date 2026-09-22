@@ -1112,6 +1112,38 @@ b {
 .listening-hero-control {
   touch-action: manipulation;
 }
+
+.home-voice-session {
+  touch-action: manipulation;
+}
+
+.home-voice-session__live {
+  text-wrap: pretty;
+}
+
+.home-voice-session__result {
+  text-wrap: pretty;
+  animation: home-voice-fade-in 0.35s ease-out;
+}
+
+.home-voice-stop {
+  touch-action: manipulation;
+}
+
+@keyframes home-voice-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.home-dashboard--state-a .home-hero-mic-zone:has(.home-voice-session) {
+  transform: none;
+}
 html.keyboard-composer-active .home-dashboard--state-a .home-hero-mic-zone {
   display: none;
   pointer-events: none;
