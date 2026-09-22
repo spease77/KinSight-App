@@ -20,21 +20,19 @@ import type {
 import { unlockSpeechSynthesis } from "@/lib/audio/speech";
 import {
   startLiveSpeechRecognition,
+  shouldUseBrowserLiveSpeech,
   type LiveSpeechSession,
 } from "@/lib/audio/live-speech-recognition";
+import {
+  appendRecordingChunk,
+  flushAndStopMediaRecorder,
+  mergeRecordingChunks,
+  recorderTimesliceMs,
+} from "@/lib/audio/recording-engine";
 
 type PipelineStatus = "idle" | "recording" | "transcribing";
 
 const MIN_RECORDING_MS = 1500;
-const CHUNK_INTERVAL_MS = 250;
-const IOS_STOP_FLUSH_MS = 300;
-
-function isAppleMobileDevice(): boolean {
-  return (
-    typeof navigator !== "undefined" &&
-    /iPhone|iPad|iPod/i.test(navigator.userAgent)
-  );
-}
 
 export type VoiceTranscriptResult = {
   text: string;
@@ -78,6 +76,7 @@ export function useVoicePipeline(options: UseVoicePipelineOptions = {}) {
   const trackCleanupRef = useRef<(() => void) | null>(null);
   const liveSpeechSessionRef = useRef<LiveSpeechSession | null>(null);
   const usingLiveSpeechRef = useRef(false);
+  const pendingClientTranscriptRef = useRef("");
 
   statusRef.current = status;
 
@@ -111,6 +110,10 @@ export function useVoicePipeline(options: UseVoicePipelineOptions = {}) {
   const startLiveSpeech = useCallback(() => {
     stopLiveSpeech();
     setLiveTranscript("");
+
+    if (!shouldUseBrowserLiveSpeech()) {
+      return;
+    }
 
     const session = startLiveSpeechRecognition({
       onInterim: (text) => {
@@ -254,13 +257,16 @@ export function useVoicePipeline(options: UseVoicePipelineOptions = {}) {
 
         onRecordingCompleteRef.current?.(text);
 
-        if (!recordingId) {
-          throw new Error("Voice note was not saved. Please try again.");
+        if (recordingId) {
+          onTranscriptReadyRef.current?.({ text, recordingId });
         }
-
-        onTranscriptReadyRef.current?.({ text, recordingId });
       } catch (err) {
-        setError(voiceFailureMessage("Transcription failed", err));
+        const message = voiceFailureMessage("Transcription failed", err);
+        setError(message);
+        if (trimmedClient) {
+          onRecordingCompleteRef.current?.(trimmedClient);
+          setTranscript(trimmedClient);
+        }
       } finally {
         statusRef.current = "idle";
         setStatus("idle");
@@ -270,35 +276,42 @@ export function useVoicePipeline(options: UseVoicePipelineOptions = {}) {
   );
 
   const stopRecording = useCallback(() => {
-    const recorder = mediaRecorderRef.current;
-    if (!recorder || recorder.state === "inactive") return;
-
-    const elapsed = Date.now() - recordingStartedAtRef.current;
-    if (elapsed < MIN_RECORDING_MS) {
-      recorder.onstop = null;
-      recorder.onerror = null;
-      recorder.stop();
-      resetRecordingState(
-        "Recording too short. Hold the mic button and speak for at least 2 seconds."
-      );
+    if (startingRef.current && !mediaRecorderRef.current) {
+      pendingClientTranscriptRef.current = "";
+      resetRecordingState();
       return;
     }
 
-    if (recorder.state === "recording") {
-      recorder.requestData();
-      const finishStop = () => {
-        if (recorder.state === "recording") {
-          recorder.stop();
-        }
-      };
-
-      if (isAppleMobileDevice()) {
-        window.setTimeout(finishStop, IOS_STOP_FLUSH_MS);
-      } else {
-        finishStop();
-      }
+    const recorder = mediaRecorderRef.current;
+    if (!recorder || recorder.state === "inactive") {
+      return;
     }
-  }, [resetRecordingState]);
+
+    pendingClientTranscriptRef.current =
+      liveSpeechSessionRef.current?.getTranscript().trim() ?? "";
+    stopLiveSpeech();
+
+    const elapsed = Date.now() - recordingStartedAtRef.current;
+    if (elapsed < MIN_RECORDING_MS) {
+      recorder.onerror = null;
+      recorder.onstop = () => {
+        chunksRef.current = [];
+        mediaRecorderRef.current = null;
+        cleanupStream();
+        statusRef.current = "idle";
+        setStatus("idle");
+        setError(
+          "Recording too short. Hold the mic button and speak for at least 2 seconds."
+        );
+      };
+      flushAndStopMediaRecorder(recorder);
+      return;
+    }
+
+    statusRef.current = "transcribing";
+    setStatus("transcribing");
+    flushAndStopMediaRecorder(recorder);
+  }, [cleanupStream, stopLiveSpeech]);
 
   const startRecording = useCallback(
     async (preacquiredStream?: MediaStream) => {
@@ -386,9 +399,7 @@ export function useVoicePipeline(options: UseVoicePipelineOptions = {}) {
         mimeTypeRef.current = resolvedMime;
 
         recorder.ondataavailable = (event) => {
-          if (event.data.size > 0) {
-            chunksRef.current.push(event.data);
-          }
+          appendRecordingChunk(chunksRef.current, event.data);
         };
 
         recorder.onstop = () => {
@@ -397,11 +408,15 @@ export function useVoicePipeline(options: UseVoicePipelineOptions = {}) {
             0,
             Date.now() - recordingStartedAtRef.current
           );
-          const blob = new Blob(chunksRef.current, { type: capturedMime });
+          const blob = mergeRecordingChunks(chunksRef.current, capturedMime);
           chunksRef.current = [];
           mediaRecorderRef.current = null;
 
-          const liveText = liveSpeechSessionRef.current?.getTranscript().trim() ?? "";
+          const liveText =
+            pendingClientTranscriptRef.current ||
+            liveSpeechSessionRef.current?.getTranscript().trim() ||
+            "";
+          pendingClientTranscriptRef.current = "";
           stopLiveSpeech();
 
           if (liveText) {
@@ -440,10 +455,11 @@ export function useVoicePipeline(options: UseVoicePipelineOptions = {}) {
         recordingStartedAtRef.current = Date.now();
 
         try {
-          if (isAppleMobileDevice()) {
-            recorder.start();
+          const timeslice = recorderTimesliceMs();
+          if (timeslice) {
+            recorder.start(timeslice);
           } else {
-            recorder.start(CHUNK_INTERVAL_MS);
+            recorder.start();
           }
         } catch (startError) {
           resetRecordingState("Recording failed to start.", startError);
@@ -475,7 +491,7 @@ export function useVoicePipeline(options: UseVoicePipelineOptions = {}) {
 
   const toggleRecording = useCallback(
     (preacquiredStream?: MediaStream) => {
-      if (statusRef.current === "recording") {
+      if (statusRef.current === "recording" || startingRef.current) {
         stopRecording();
       } else if (statusRef.current === "idle") {
         void startRecording(preacquiredStream);

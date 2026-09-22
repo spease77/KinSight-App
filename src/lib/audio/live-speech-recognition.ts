@@ -40,6 +40,13 @@ export function isLiveSpeechRecognitionSupported(): boolean {
   return Boolean(getSpeechRecognitionConstructor());
 }
 
+/** iOS Safari conflicts with MediaRecorder (dual capture → stop confirmation dialog). */
+export function shouldUseBrowserLiveSpeech(): boolean {
+  if (typeof navigator === "undefined") return false;
+  if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) return false;
+  return isLiveSpeechRecognitionSupported();
+}
+
 export type LiveSpeechCallbacks = {
   onInterim: (text: string) => void;
   onFinal: (text: string) => void;
@@ -131,16 +138,17 @@ export function startLiveSpeechRecognition(
   return {
     stop: () => {
       stopped = true;
+      const instance = recognition;
+      recognition = null;
       try {
-        recognition?.stop();
+        instance?.abort();
       } catch {
         try {
-          recognition?.abort();
+          instance?.stop();
         } catch {
           // Ignore teardown errors.
         }
       }
-      recognition = null;
     },
     getTranscript: () => finalParts.join(" ").trim(),
   };

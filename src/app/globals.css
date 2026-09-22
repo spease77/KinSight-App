@@ -1113,36 +1113,41 @@ b {
   touch-action: manipulation;
 }
 
-.home-voice-session {
+.home-voice-capture {
   touch-action: manipulation;
 }
 
-.home-voice-session__live {
-  text-wrap: pretty;
+/* Fixed hero footprint — button size never changes between idle/recording. */
+.home-voice-capture__button-slot {
+  display: flex;
+  min-height: calc(11rem + 2rem);
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  padding-block: 1rem;
 }
 
-.home-voice-session__result {
-  text-wrap: pretty;
-  animation: home-voice-fade-in 0.35s ease-out;
+@media (min-width: 640px) {
+  .home-voice-capture__button-slot {
+    min-height: calc(13rem + 2rem);
+  }
 }
 
-.home-voice-stop {
+.home-voice-capture__wave-slot {
+  height: 6.5rem;
+  width: 100%;
+  max-width: 20rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.home-voice-capture__wave-slot--active {
+  opacity: 1;
+}
+
+.home-voice-mic-idle--recording {
   touch-action: manipulation;
-}
-
-@keyframes home-voice-fade-in {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.home-dashboard--state-a .home-hero-mic-zone:has(.home-voice-session) {
-  transform: none;
 }
 html.keyboard-composer-active .home-dashboard--state-a .home-hero-mic-zone {
   display: none;

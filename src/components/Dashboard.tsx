@@ -152,6 +152,13 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
     onRecordingComplete: handleRecordingComplete,
   });
 
+  useEffect(() => {
+    const draft = (isRecording ? liveTranscript : transcript).trim();
+    if ((isRecording || isTranscribing) && draft) {
+      setReplyText(draft);
+    }
+  }, [isRecording, isTranscribing, liveTranscript, transcript]);
+
   const {
     registerVoiceHandlers,
     syncPipelineActivity,
