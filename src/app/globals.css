@@ -1061,7 +1061,30 @@ b {
 
 .home-dashboard--state-a .home-hero__prompt {
   flex-shrink: 0;
-  margin-top: 0.25rem;
+  max-width: 20rem;
+  padding-inline: 1rem;
+  text-align: center;
+  font-size: 0.9375rem;
+  line-height: 1.45;
+  font-weight: 500;
+  color: color-mix(in srgb, var(--text-primary) 88%, transparent);
+}
+
+.home-dashboard--state-a .home-hero__prompt--placeholder {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.home-dashboard--state-a .home-hero-mic-zone {
+  transform: none;
+}
+
+.home-dashboard--state-a .home-hero-mic-zone .mic-hero {
+  gap: 0;
+}
+
+.home-dashboard--state-a .home-hero-mic-zone .py-4 {
+  padding-top: 0.5rem;
   padding-bottom: 0.25rem;
 }
 
@@ -1088,13 +1111,13 @@ b {
   flex-shrink: 0;
 }
 
-.home-dashboard--state-a .home-hero-mic-zone {
-  /* Bias mic center toward midpoint between header and ask bar (caption sits below). */
-  transform: translateY(calc(0.55 * (1.75rem + 0.875rem)));
-}
-
 .home-dashboard--state-a .home-hero-mic-zone:has(.listening-hero-control) {
   transform: none;
+}
+
+.home-dashboard--state-a .home-hero-mic-zone:has(.listening-hero-control) .py-4 {
+  padding-top: 0;
+  padding-bottom: 0;
 }
 
 .listening-hero-control {

@@ -443,9 +443,9 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
                         showCaption={false}
                       />
                     </div>
-                    <div className="home-hero__spacer" aria-hidden="true" />
+                    <div className="home-hero__spacer home-hero__spacer--mid" aria-hidden="true" />
                     {!isRecording && (
-                      <p className="home-hero__prompt text-center text-lg font-medium text-foreground/90">
+                      <p className="home-hero__prompt">
                         {getHomeMicPrompt({
                           isBusy: isBusy || isTranscribing,
                           isRecording,
@@ -453,11 +453,12 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
                         })}
                       </p>
                     )}
-                    {!isRecording && isTranscribing && (
-                      <p className="type-meta text-center text-sm text-muted">
-                        Saving your note…
+                    {isRecording && (
+                      <p className="home-hero__prompt home-hero__prompt--placeholder" aria-hidden="true">
+                        &nbsp;
                       </p>
                     )}
+                    <div className="home-hero__spacer home-hero__spacer--lower" aria-hidden="true" />
                   </>
                 )}
 
