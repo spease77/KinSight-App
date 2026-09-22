@@ -525,15 +525,23 @@ b {
   --bottom-nav-clearance: var(--bottom-nav-height);
   --home-header-height: 5.75rem;
   --home-composer-dock-height: calc(0.75rem + 3rem + 0.75rem);
+  /* Resting Home composer height (keyboard closed). Updated from visual viewport when keyboard opens. */
+  --home-state-a-composer-pinned-bottom: calc(var(--bottom-nav-height) + 0.75rem);
+  --home-state-a-composer-rest-bottom: var(--home-state-a-composer-pinned-bottom);
   --home-conversation-composer-clearance: calc(
     var(--bottom-nav-height) + var(--home-composer-dock-height) + 0.75rem
   );
-  /* Composer sits just above the tab bar; clearance matches fixed dock in main flow. */
-  --home-state-a-composer-rest-bottom: calc(var(--bottom-nav-height) + 0.75rem);
   --home-state-a-composer-clearance: calc(
     var(--home-state-a-composer-rest-bottom) + var(--home-composer-dock-height) -
       var(--bottom-nav-height) + 0.5rem
   );
+}
+
+/* Match keyboard-open composer elevation on touch phones (see useKeyboardOpen sync). */
+@media (max-width: 768px) and (pointer: coarse) {
+  :root {
+    --home-state-a-composer-pinned-bottom: 290px;
+  }
 }
 
 .app-scroll {

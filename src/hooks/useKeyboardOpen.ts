@@ -72,6 +72,27 @@ function isHomeStateA(): boolean {
   return Boolean(document.querySelector(".home-dashboard--state-a"));
 }
 
+/** Keep keyboard-closed Home composer at the same height as when the keyboard is open. */
+function persistHomeStateAComposerPin(viewport: VisualViewport) {
+  if (!isHomeStateA()) return;
+  if (!document.documentElement.classList.contains("keyboard-composer-active")) {
+    return;
+  }
+
+  const gapFromLayoutBottom = Math.max(
+    0,
+    window.innerHeight - viewport.offsetTop - viewport.height
+  );
+
+  // Ignore tiny offsets; real iOS keyboard inset is usually 200px+.
+  if (gapFromLayoutBottom < 120) return;
+
+  document.documentElement.style.setProperty(
+    "--home-state-a-composer-pinned-bottom",
+    `${Math.round(gapFromLayoutBottom)}px`
+  );
+}
+
 /** Pin composer bottom edge to the visual viewport bottom (flush above keyboard). */
 function syncVisualViewportGeometry(viewport: VisualViewport) {
   let gapFromLayoutBottom = Math.max(
@@ -95,6 +116,8 @@ function syncVisualViewportGeometry(viewport: VisualViewport) {
     "--vv-layout-bottom-gap",
     `${gapFromLayoutBottom}px`
   );
+
+  persistHomeStateAComposerPin(viewport);
 }
 
 function scheduleVisualViewportSync(viewport: VisualViewport) {
