@@ -193,7 +193,7 @@ export function KinSightConversationPanel({
             onFocus={() => onReplyFocus?.()}
             onBlur={() => onReplyBlur?.()}
             placeholder={
-              isLoading ? "KinSight is thinking…" : "Ask about a contact..."
+              isLoading ? "KinSight is thinking…" : "Ask KinSight..."
             }
             disabled={isLoading}
             enterKeyHint="send"
@@ -218,7 +218,7 @@ export function KinSightConversationPanel({
           className="min-w-0 flex-1 px-1 py-2 text-base text-muted sm:text-sm"
           aria-hidden="true"
         >
-          Ask about a contact...
+          Ask KinSight...
         </div>
       )}
       <button

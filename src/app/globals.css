@@ -1059,20 +1059,9 @@ b {
   width: 100%;
 }
 
-.home-dashboard--state-a .home-hero__prompt {
-  flex-shrink: 0;
-  max-width: 20rem;
-  padding-inline: 1rem;
-  text-align: center;
-  font-size: 0.9375rem;
-  line-height: 1.45;
-  font-weight: 500;
-  color: color-mix(in srgb, var(--text-primary) 88%, transparent);
-}
-
-.home-dashboard--state-a .home-hero__prompt--placeholder {
-  visibility: hidden;
-  pointer-events: none;
+.home-dashboard--state-a .home-hero__spacer--lower {
+  /* Slightly more air above the ask bar now that the hero prompt is removed. */
+  flex: 1.15 1 0;
 }
 
 .home-dashboard--state-a .home-hero-mic-zone {
@@ -1084,8 +1073,8 @@ b {
 }
 
 .home-dashboard--state-a .home-hero-mic-zone .py-4 {
-  padding-top: 0.5rem;
-  padding-bottom: 0.25rem;
+  padding-top: 0.625rem;
+  padding-bottom: 0.625rem;
 }
 
 .home-dashboard__main {

@@ -6,7 +6,7 @@ import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import { Header } from "@/components/Header";
 import { PageHeader } from "@/components/PageHeader";
-import { MicrophoneButton, getHomeMicPrompt } from "@/components/MicrophoneButton";
+import { MicrophoneButton } from "@/components/MicrophoneButton";
 import { KinSightConversationPanel } from "@/components/KinSightConversationPanel";
 import { ProposedContactModal } from "@/components/ProposedContactModal";
 import { MicPermissionModal } from "@/components/MicPermissionModal";
@@ -443,21 +443,6 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
                         showCaption={false}
                       />
                     </div>
-                    <div className="home-hero__spacer home-hero__spacer--mid" aria-hidden="true" />
-                    {!isRecording && (
-                      <p className="home-hero__prompt">
-                        {getHomeMicPrompt({
-                          isBusy: isBusy || isTranscribing,
-                          isRecording,
-                          isSpeaking,
-                        })}
-                      </p>
-                    )}
-                    {isRecording && (
-                      <p className="home-hero__prompt home-hero__prompt--placeholder" aria-hidden="true">
-                        &nbsp;
-                      </p>
-                    )}
                     <div className="home-hero__spacer home-hero__spacer--lower" aria-hidden="true" />
                   </>
                 )}
