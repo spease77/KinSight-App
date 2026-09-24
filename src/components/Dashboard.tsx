@@ -31,6 +31,13 @@ import { useKinSightConversationStore } from "@/hooks/useKinSightConversationSto
 import { ConversationHistorySheet } from "@/components/conversations/ConversationHistorySheet";
 import { listConversationSummaries, getConversation } from "@/lib/conversations/storage";
 import type { OsVoiceSource } from "@/lib/voice/os-voice-deeplink";
+import {
+  createAttachmentPreviews,
+  filesToFileList,
+  revokeAttachmentPreviews,
+  validateComposerFiles,
+  type ComposerAttachmentPreview,
+} from "@/lib/composer/attachments";
 
 interface DashboardProps {
   /** Bumps when the user returns to the Home tab from another screen. */
@@ -49,6 +56,12 @@ export function Dashboard({ homeSession: _homeSession = 0 }: DashboardProps) {
   const [micAccessFailure, setMicAccessFailure] =
     useState<MicrophoneAccessFailure | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [composerAttachments, setComposerAttachments] = useState<
+    ComposerAttachmentPreview[]
+  >([]);
+  const [composerAttachError, setComposerAttachError] = useState<string | null>(
+    null
+  );
 
   const {
     hydrated: conversationsHydrated,
@@ -240,6 +253,11 @@ export function Dashboard({ homeSession: _homeSession = 0 }: DashboardProps) {
     setReplyText("");
     setMessageLogStates({});
     setMessageLogSuccessLabels({});
+    setComposerAttachments((prev) => {
+      revokeAttachmentPreviews(prev);
+      return [];
+    });
+    setComposerAttachError(null);
     setMessages([]);
     stop();
     interruptSpeech();
@@ -273,6 +291,11 @@ export function Dashboard({ homeSession: _homeSession = 0 }: DashboardProps) {
       setReplyText("");
       setMessageLogStates({});
       setMessageLogSuccessLabels({});
+      setComposerAttachments((prev) => {
+        revokeAttachmentPreviews(prev);
+        return [];
+      });
+      setComposerAttachError(null);
     },
     [
       clearTranscript,
@@ -297,6 +320,11 @@ export function Dashboard({ homeSession: _homeSession = 0 }: DashboardProps) {
         setConversationEngaged(false);
       }
       setReplyText("");
+      setComposerAttachments((prev) => {
+        revokeAttachmentPreviews(prev);
+        return [];
+      });
+      setComposerAttachError(null);
     },
     [removeConversation, setMessages]
   );
@@ -374,6 +402,10 @@ export function Dashboard({ homeSession: _homeSession = 0 }: DashboardProps) {
       stopSpeaking();
       clearTranscriptRef.current();
       setReplyText("");
+      setComposerAttachments((prev) => {
+        revokeAttachmentPreviews(prev);
+        return [];
+      });
     };
   }, []);
 
@@ -397,15 +429,67 @@ export function Dashboard({ homeSession: _homeSession = 0 }: DashboardProps) {
 
   const handleReplySubmit = useCallback(() => {
     const text = replyText.trim();
-    if (!text || isChatLoading) return;
+    const files = composerAttachments.map((item) => item.file);
+    if ((!text && files.length === 0) || isChatLoading) return;
 
     unlockSpeechSynthesis();
-    sendMessage({
-      text,
-      metadata: { entry_method: "manual" } satisfies KinSightMessageMetadata,
+    setConversationEngaged(true);
+
+    const metadata = {
+      entry_method: "manual",
+    } satisfies KinSightMessageMetadata;
+
+    if (text) {
+      processNote(text, { entryMethod: "manual" });
+    }
+
+    if (files.length > 0) {
+      const fileList = filesToFileList(files);
+      if (text) {
+        sendMessage({ text, files: fileList, metadata });
+      } else {
+        sendMessage({ files: fileList, metadata });
+      }
+    } else {
+      sendMessage({ text, metadata });
+    }
+
+    setComposerAttachments((prev) => {
+      revokeAttachmentPreviews(prev);
+      return [];
     });
+    setComposerAttachError(null);
     setReplyText("");
-  }, [replyText, isChatLoading, sendMessage]);
+  }, [
+    composerAttachments,
+    isChatLoading,
+    processNote,
+    replyText,
+    sendMessage,
+  ]);
+
+  const handleAddComposerFiles = useCallback((incoming: File[]) => {
+    setComposerAttachments((prev) => {
+      const validation = validateComposerFiles(incoming, prev.length);
+      if (!validation.ok) {
+        setComposerAttachError(validation.error);
+        return prev;
+      }
+      setComposerAttachError(null);
+      return [...prev, ...createAttachmentPreviews(validation.files)];
+    });
+  }, []);
+
+  const handleRemoveComposerAttachment = useCallback((id: string) => {
+    setComposerAttachments((prev) => {
+      const target = prev.find((item) => item.id === id);
+      if (target?.previewUrl) {
+        URL.revokeObjectURL(target.previewUrl);
+      }
+      return prev.filter((item) => item.id !== id);
+    });
+    setComposerAttachError(null);
+  }, []);
 
   const handleUpdateMessage = useCallback(
     (messageId: string, newText: string) => {
@@ -488,6 +572,15 @@ export function Dashboard({ homeSession: _homeSession = 0 }: DashboardProps) {
   const header = (
     <Header
       onOpenKinSightMenu={() => setHistoryOpen(true)}
+      {...(!hasConversationStarted
+        ? {
+            speechEnabled,
+            onToggleSpeech: toggleSpeechEnabled,
+            playbackBlocked,
+            onReplaySpeech: replayBlockedSpeech,
+            isSpeaking,
+          }
+        : {})}
     />
   );
 
@@ -530,6 +623,10 @@ export function Dashboard({ homeSession: _homeSession = 0 }: DashboardProps) {
                 onReplySubmit={handleReplySubmit}
                 chatError={chatError}
                 conversationStarted={hasConversationStarted}
+                composerAttachments={composerAttachments}
+                onAddComposerFiles={handleAddComposerFiles}
+                onRemoveComposerAttachment={handleRemoveComposerAttachment}
+                composerAttachError={composerAttachError}
                 onMicToggle={handleMicToggle}
                 onMicAccessFailure={handleMicAccessFailure}
                 micDisabled={false}
@@ -626,6 +723,10 @@ export function Dashboard({ homeSession: _homeSession = 0 }: DashboardProps) {
               onReplySubmit={handleReplySubmit}
               chatError={chatError}
               conversationStarted={hasConversationStarted}
+              composerAttachments={composerAttachments}
+              onAddComposerFiles={handleAddComposerFiles}
+              onRemoveComposerAttachment={handleRemoveComposerAttachment}
+              composerAttachError={composerAttachError}
               onMicToggle={handleMicToggle}
               onMicAccessFailure={handleMicAccessFailure}
               micDisabled={false}

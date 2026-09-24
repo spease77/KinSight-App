@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
-import { Menu, Plus, Settings, Sparkles } from "lucide-react";
+import { Menu, Plus, Settings, Sparkles, Volume2, VolumeX } from "lucide-react";
 import { DataManagementSheet } from "@/components/DataManagementSheet";
 
 const HOME_TAGLINE = "People Intelligence";
@@ -72,6 +72,12 @@ interface HeaderProps {
   onNewSession?: () => void;
   onOpenKinSightMenu?: () => void;
   headerActions?: ReactNode;
+  /** Home hero: voice reply mute + replay (keeps controls out of the bottom composer dead zone). */
+  speechEnabled?: boolean;
+  onToggleSpeech?: () => void;
+  playbackBlocked?: boolean;
+  onReplaySpeech?: () => void;
+  isSpeaking?: boolean;
 }
 
 export function Header({
@@ -80,6 +86,11 @@ export function Header({
   onNewSession,
   onOpenKinSightMenu,
   headerActions,
+  speechEnabled = true,
+  onToggleSpeech,
+  playbackBlocked = false,
+  onReplaySpeech,
+  isSpeaking = false,
 }: HeaderProps) {
   const [isDataManagementOpen, setIsDataManagementOpen] = useState(false);
   const isHome = title == null;
@@ -117,8 +128,42 @@ export function Header({
           </h1>
         )}
 
-        <div className="flex shrink-0 items-center gap-1">
+        <div className="flex shrink-0 items-center gap-0.5">
           {headerActions}
+
+          {isHome && onToggleSpeech ? (
+            <>
+              {playbackBlocked && onReplaySpeech ? (
+                <button
+                  type="button"
+                  onClick={onReplaySpeech}
+                  className="max-w-[7.5rem] truncate rounded-full border border-border-subtle px-2 py-1 text-[10px] font-medium text-foreground transition-colors hover:bg-card-hover"
+                >
+                  Hear reply
+                </button>
+              ) : null}
+              {isSpeaking ? (
+                <span
+                  className="hidden text-[10px] font-medium text-muted-foreground sm:inline"
+                  aria-live="polite"
+                >
+                  Speaking…
+                </span>
+              ) : null}
+              <button
+                type="button"
+                onClick={onToggleSpeech}
+                className="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-card-hover hover:text-foreground"
+                aria-label={speechEnabled ? "Mute voice replies" : "Enable voice replies"}
+              >
+                {speechEnabled ? (
+                  <Volume2 className="h-5 w-5" strokeWidth={2} />
+                ) : (
+                  <VolumeX className="h-5 w-5" strokeWidth={2} />
+                )}
+              </button>
+            </>
+          ) : null}
 
           {showNewSession && onNewSession ? (
             <button

@@ -1,8 +1,12 @@
 "use client";
 
-import { FormEvent, useEffect, useRef, useState } from "react";
+import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import type { UIMessage } from "ai";
-import { Mic, Plus, Send, User, Volume2, VolumeX } from "lucide-react";
+import { isFileUIPart } from "ai";
+import { FileText, Mic, Plus, Send, User, Volume2, VolumeX } from "lucide-react";
+import { ComposerAttachSheet } from "@/components/composer/ComposerAttachSheet";
+import { ComposerAttachmentPreviews } from "@/components/composer/ComposerAttachmentPreviews";
+import type { ComposerAttachmentPreview } from "@/lib/composer/attachments";
 import { getMessageText } from "@/lib/ai/message-text";
 import { stripRecordingTag } from "@/lib/agent/extract-recording-id";
 import { AssistantMessageBubble, type MessageLogStatus } from "@/components/AssistantMessageBubble";
@@ -44,6 +48,10 @@ interface KinSightConversationPanelProps {
   onReplyFocus?: () => void;
   onReplyBlur?: () => void;
   homeComposerAnchored?: boolean;
+  composerAttachments?: ComposerAttachmentPreview[];
+  onAddComposerFiles?: (files: File[]) => void;
+  onRemoveComposerAttachment?: (id: string) => void;
+  composerAttachError?: string | null;
 }
 
 export function KinSightConversationPanel({
@@ -80,10 +88,19 @@ export function KinSightConversationPanel({
   onReplyFocus,
   onReplyBlur,
   homeComposerAnchored = false,
+  composerAttachments = [],
+  onAddComposerFiles,
+  onRemoveComposerAttachment,
+  composerAttachError = null,
 }: KinSightConversationPanelProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const replyInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [isClient, setIsClient] = useState(false);
+  const [attachSheetOpen, setAttachSheetOpen] = useState(false);
+  const canAttach = Boolean(onAddComposerFiles);
 
   useEffect(() => {
     setIsClient(true);
@@ -135,6 +152,47 @@ export function KinSightConversationPanel({
     onReplySubmit();
   };
 
+  const openAttachSheet = useCallback(() => {
+    if (!canAttach || isLoading) return;
+    setAttachSheetOpen(true);
+  }, [canAttach, isLoading]);
+
+  const handleFileInputChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const list = event.target.files;
+      if (list?.length && onAddComposerFiles) {
+        onAddComposerFiles(Array.from(list));
+      }
+      event.target.value = "";
+      setAttachSheetOpen(false);
+    },
+    [onAddComposerFiles]
+  );
+
+  const showAttachButton = canAttach;
+
+  const attachPlusButton = (anchored: boolean) => (
+    <button
+      type="button"
+      onClick={openAttachSheet}
+      disabled={isLoading}
+      className={
+        anchored
+          ? "flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground disabled:opacity-50"
+          : "flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-icon transition-colors hover:bg-card-hover hover:text-foreground disabled:opacity-50"
+      }
+      aria-label="Add to message"
+      aria-haspopup="dialog"
+      aria-expanded={attachSheetOpen}
+    >
+      <Plus className={anchored ? "h-4 w-4" : "h-5 w-5"} strokeWidth={2} />
+    </button>
+  );
+
+  const canSend =
+    (replyValue.trim().length > 0 || composerAttachments.length > 0) &&
+    !isLoading;
+
   const askBarForm = (
     <form
       onSubmit={handleReplySubmit}
@@ -148,31 +206,26 @@ export function KinSightConversationPanel({
       suppressHydrationWarning
     >
       {conversationStarted && onMicToggle ? (
-        <MicrophoneButton
-          variant="compact"
-          isRecording={isRecording}
-          isBusy={isMicBusy}
-          onToggle={onMicToggle}
-          onMicAccessFailure={onMicAccessFailure}
-          disabled={micDisabled}
-          volumeLevel={volumeLevel}
-        />
+        <>
+          <MicrophoneButton
+            variant="compact"
+            isRecording={isRecording}
+            isBusy={isMicBusy}
+            onToggle={onMicToggle}
+            onMicAccessFailure={onMicAccessFailure}
+            disabled={micDisabled}
+            volumeLevel={volumeLevel}
+          />
+          {showAttachButton ? attachPlusButton(true) : null}
+        </>
+      ) : showAttachButton && homeComposerAnchored ? (
+        attachPlusButton(true)
+      ) : showAttachButton ? (
+        attachPlusButton(false)
       ) : homeComposerAnchored ? (
-        <button
-          type="button"
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground"
-          aria-label="Add to message"
-        >
-          <Plus className="h-4 w-4" strokeWidth={2} />
-        </button>
+        <span className="h-8 w-8 shrink-0" aria-hidden="true" />
       ) : (
-        <button
-          type="button"
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-icon transition-colors hover:bg-card-hover hover:text-foreground"
-          aria-label="Add to message"
-        >
-          <Plus className="h-5 w-5" strokeWidth={2} />
-        </button>
+        <span className="h-9 w-9 shrink-0" aria-hidden="true" />
       )}
       {isClient ? (
         <label
@@ -227,7 +280,7 @@ export function KinSightConversationPanel({
       )}
       <button
         type="submit"
-        disabled={!replyValue.trim() || isLoading}
+        disabled={!canSend}
         className={
           homeComposerAnchored
             ? "flex h-9 w-9 shrink-0 items-center justify-center rounded-full ui-btn-orange active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
@@ -252,8 +305,8 @@ export function KinSightConversationPanel({
           : "w-full"
       }`}
     >
-      {((conversationStarted || homeComposerAnchored) &&
-        (isSpeaking || onToggleSpeech || playbackBlocked)) && (
+      {conversationStarted &&
+        (isSpeaking || onToggleSpeech || playbackBlocked) && (
         <div className="flex items-center justify-end gap-2 px-1">
           {isSpeaking && (
             <span className="type-meta text-foreground">Speaking…</span>
@@ -296,11 +349,12 @@ export function KinSightConversationPanel({
           {messages.map((message, index) => {
             const isUser = message.role === "user";
             const text = getMessageText(message);
+            const fileParts = message.parts.filter(isFileUIPart);
             const isVoice = text.startsWith("🎤");
             const displayText = isVoice ? stripRecordingTag(text) : text;
             const isLastMessage = index === messages.length - 1;
 
-            if (!displayText) return null;
+            if (!displayText && fileParts.length === 0) return null;
 
             return (
               <div
@@ -320,8 +374,36 @@ export function KinSightConversationPanel({
                   </div>
                 )}
                 {isUser ? (
-                  <div className="max-w-[85%] rounded-xl bg-accent-orange-muted px-3.5 py-2.5 type-editorial text-sm text-foreground">
-                    {displayText}
+                  <div className="max-w-[85%] space-y-2 rounded-xl bg-accent-orange-muted px-3.5 py-2.5 type-editorial text-sm text-foreground">
+                    {fileParts.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {fileParts.map((part, partIndex) =>
+                          part.mediaType.startsWith("image/") ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              key={`${message.id}-file-${partIndex}`}
+                              src={part.url}
+                              alt={part.filename ?? "Attached image"}
+                              className="max-h-40 max-w-full rounded-lg object-cover"
+                            />
+                          ) : (
+                            <div
+                              key={`${message.id}-file-${partIndex}`}
+                              className="flex items-center gap-2 rounded-lg bg-background/40 px-2 py-1.5 text-xs"
+                            >
+                              <FileText
+                                className="h-4 w-4 shrink-0 text-icon"
+                                strokeWidth={2}
+                              />
+                              <span className="truncate">
+                                {part.filename ?? "Attached file"}
+                              </span>
+                            </div>
+                          )
+                        )}
+                      </div>
+                    )}
+                    {displayText ? <p>{displayText}</p> : null}
                   </div>
                 ) : (
                   <AssistantMessageBubble
@@ -371,10 +453,79 @@ export function KinSightConversationPanel({
         </div>
       )}
 
+      {canAttach && (
+        <>
+          <input
+            ref={galleryInputRef}
+            type="file"
+            accept="image/*"
+            multiple
+            className="sr-only"
+            tabIndex={-1}
+            aria-hidden="true"
+            onChange={handleFileInputChange}
+          />
+          <input
+            ref={cameraInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="sr-only"
+            tabIndex={-1}
+            aria-hidden="true"
+            onChange={handleFileInputChange}
+          />
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".pdf,.doc,.docx,.txt,.csv,.xlsx,.xls,.md,.json,image/*"
+            multiple
+            className="sr-only"
+            tabIndex={-1}
+            aria-hidden="true"
+            onChange={handleFileInputChange}
+          />
+          <ComposerAttachSheet
+            isOpen={attachSheetOpen}
+            onClose={() => setAttachSheetOpen(false)}
+            onUploadPhoto={() => galleryInputRef.current?.click()}
+            onTakePhoto={() => cameraInputRef.current?.click()}
+            onUploadFile={() => fileInputRef.current?.click()}
+          />
+        </>
+      )}
+
       {conversationStarted ? (
-        <div className="home-composer-dock shrink-0">{askBarForm}</div>
+        <div className="home-composer-dock shrink-0">
+          {composerAttachments.length > 0 && onRemoveComposerAttachment && (
+            <ComposerAttachmentPreviews
+              attachments={composerAttachments}
+              onRemove={onRemoveComposerAttachment}
+              compact
+            />
+          )}
+          {composerAttachError && (
+            <p className="px-1 pb-1 text-xs text-red-400" role="alert">
+              {composerAttachError}
+            </p>
+          )}
+          {askBarForm}
+        </div>
       ) : (
-        <div className="home-composer-dock shrink-0">{askBarForm}</div>
+        <div className="home-composer-dock shrink-0">
+          {composerAttachments.length > 0 && onRemoveComposerAttachment && (
+            <ComposerAttachmentPreviews
+              attachments={composerAttachments}
+              onRemove={onRemoveComposerAttachment}
+            />
+          )}
+          {composerAttachError && (
+            <p className="px-1 pb-1 text-xs text-red-400" role="alert">
+              {composerAttachError}
+            </p>
+          )}
+          {askBarForm}
+        </div>
       )}
 
       {statusLabel && !conversationStarted && (
