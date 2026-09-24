@@ -1,20 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Check, Clipboard, Loader2, Pencil } from "lucide-react";
+import { Check, Clipboard, Pencil } from "lucide-react";
 import { AssistantMessageText } from "@/components/AssistantMessageText";
-
-export type MessageLogStatus = "idle" | "saving" | "saved" | "error";
 
 interface AssistantMessageBubbleProps {
   messageId: string;
   text: string;
   onUpdateText?: (messageId: string, newText: string) => void;
   editDisabled?: boolean;
-  showLogButton?: boolean;
-  logStatus?: MessageLogStatus;
-  logSuccessMessage?: string;
-  onLogToKinSight?: (messageId: string) => void;
 }
 
 export function AssistantMessageBubble({
@@ -22,10 +16,6 @@ export function AssistantMessageBubble({
   text,
   onUpdateText,
   editDisabled = false,
-  showLogButton = false,
-  logStatus = "idle",
-  logSuccessMessage = "Saved to Contacts!",
-  onLogToKinSight,
 }: AssistantMessageBubbleProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [draft, setDraft] = useState(text);
@@ -71,9 +61,6 @@ export function AssistantMessageBubble({
     setDraft(text);
     setIsEditing(false);
   };
-
-  const showLogAction =
-    showLogButton && onLogToKinSight && logStatus !== "saved";
 
   return (
     <div className="w-full px-0.5 py-1 type-editorial text-sm text-foreground">
@@ -141,38 +128,6 @@ export function AssistantMessageBubble({
                 </button>
               )}
             </div>
-
-            {logStatus === "saved" && (
-              <div className="ml-auto flex items-center gap-1 text-accent-green">
-                <Check className="h-3.5 w-3.5" strokeWidth={2} />
-                <span className="text-[11px] font-medium">{logSuccessMessage}</span>
-              </div>
-            )}
-
-            {showLogAction && (
-              <button
-                type="button"
-                onClick={() => onLogToKinSight(messageId)}
-                disabled={logStatus === "saving"}
-                className="ml-auto flex h-7 items-center gap-1 rounded-md ui-btn-orange px-2.5 text-[11px] font-medium disabled:cursor-not-allowed disabled:opacity-60"
-                aria-label="Log intelligence to KinSight"
-              >
-                {logStatus === "saving" ? (
-                  <>
-                    <Loader2 className="h-3 w-3 animate-spin" strokeWidth={2} />
-                    Saving…
-                  </>
-                ) : (
-                  "+ Log to KinSight"
-                )}
-              </button>
-            )}
-
-            {logStatus === "error" && (
-              <span className="ml-auto text-[11px] text-red-400">
-                Could not save
-              </span>
-            )}
           </div>
         </>
       )}

@@ -23,8 +23,6 @@ import {
   type KinSightMessageMetadata,
 } from "@/lib/ai/request-context";
 import { withMessageText } from "@/lib/ai/message-text";
-import { logMessageToKinSight } from "@/lib/kinsight/log-message";
-import type { MessageLogStatus } from "@/components/AssistantMessageBubble";
 import { useVoiceExperience } from "@/contexts/VoiceExperienceContext";
 import { useKeyboardOpen } from "@/hooks/useKeyboardOpen";
 import { useKinSightConversationStore } from "@/hooks/useKinSightConversationStore";
@@ -47,12 +45,6 @@ interface DashboardProps {
 export function Dashboard({ homeSession: _homeSession = 0 }: DashboardProps) {
   const router = useRouter();
   const [replyText, setReplyText] = useState("");
-  const [messageLogStates, setMessageLogStates] = useState<
-    Record<string, MessageLogStatus>
-  >({});
-  const [messageLogSuccessLabels, setMessageLogSuccessLabels] = useState<
-    Record<string, string>
-  >({});
   const [micAccessFailure, setMicAccessFailure] =
     useState<MicrophoneAccessFailure | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
@@ -251,8 +243,6 @@ export function Dashboard({ homeSession: _homeSession = 0 }: DashboardProps) {
   const resetToStateA = useCallback(() => {
     setConversationEngaged(false);
     setReplyText("");
-    setMessageLogStates({});
-    setMessageLogSuccessLabels({});
     setComposerAttachments((prev) => {
       revokeAttachmentPreviews(prev);
       return [];
@@ -289,8 +279,6 @@ export function Dashboard({ homeSession: _homeSession = 0 }: DashboardProps) {
       setMessages(selected?.messages ?? []);
       setConversationEngaged((selected?.messages.length ?? 0) > 0);
       setReplyText("");
-      setMessageLogStates({});
-      setMessageLogSuccessLabels({});
       setComposerAttachments((prev) => {
         revokeAttachmentPreviews(prev);
         return [];
@@ -502,33 +490,6 @@ export function Dashboard({ homeSession: _homeSession = 0 }: DashboardProps) {
     [setMessages]
   );
 
-  const handleLogToKinSight = useCallback(
-    async (messageId: string) => {
-      setMessageLogStates((current) => ({ ...current, [messageId]: "saving" }));
-
-      const result = await logMessageToKinSight(messages, messageId);
-
-      if (result.ok) {
-        setMessageLogStates((current) => ({ ...current, [messageId]: "saved" }));
-        setMessageLogSuccessLabels((current) => ({
-          ...current,
-          [messageId]: result.message,
-        }));
-        router.refresh();
-        return;
-      }
-
-      setMessageLogStates((current) => ({ ...current, [messageId]: "error" }));
-      window.setTimeout(() => {
-        setMessageLogStates((current) => {
-          if (current[messageId] !== "error") return current;
-          return { ...current, [messageId]: "idle" };
-        });
-      }, 2500);
-    },
-    [messages, router]
-  );
-
   const handleMicToggle = useCallback(
     (stream?: MediaStream) => {
       unlockSpeechSynthesis();
@@ -572,15 +533,11 @@ export function Dashboard({ homeSession: _homeSession = 0 }: DashboardProps) {
   const header = (
     <Header
       onOpenKinSightMenu={() => setHistoryOpen(true)}
-      {...(!hasConversationStarted
-        ? {
-            speechEnabled,
-            onToggleSpeech: toggleSpeechEnabled,
-            playbackBlocked,
-            onReplaySpeech: replayBlockedSpeech,
-            isSpeaking,
-          }
-        : {})}
+      speechEnabled={speechEnabled}
+      onToggleSpeech={toggleSpeechEnabled}
+      playbackBlocked={playbackBlocked}
+      onReplaySpeech={replayBlockedSpeech}
+      isSpeaking={isSpeaking}
     />
   );
 
@@ -588,7 +545,7 @@ export function Dashboard({ homeSession: _homeSession = 0 }: DashboardProps) {
     <>
       {hasConversationStarted ? (
         <div className="home-dashboard home-dashboard--conversation flex flex-col">
-          <PageHeader className="home-dashboard__header shrink-0">
+          <PageHeader className="home-dashboard__header home-page-header home-conversation-header shrink-0">
             {header}
           </PageHeader>
 
@@ -611,9 +568,6 @@ export function Dashboard({ homeSession: _homeSession = 0 }: DashboardProps) {
                 messages={messages}
                 isLoading={isChatLoading}
                 onUpdateMessage={handleUpdateMessage}
-                onLogToKinSight={handleLogToKinSight}
-                messageLogStates={messageLogStates}
-                messageLogSuccessLabels={messageLogSuccessLabels}
                 speechEnabled={speechEnabled}
                 onToggleSpeech={toggleSpeechEnabled}
                 playbackBlocked={playbackBlocked}
@@ -711,9 +665,6 @@ export function Dashboard({ homeSession: _homeSession = 0 }: DashboardProps) {
               messages={messages}
               isLoading={isChatLoading}
               onUpdateMessage={handleUpdateMessage}
-              onLogToKinSight={handleLogToKinSight}
-              messageLogStates={messageLogStates}
-              messageLogSuccessLabels={messageLogSuccessLabels}
               speechEnabled={speechEnabled}
               onToggleSpeech={toggleSpeechEnabled}
               playbackBlocked={playbackBlocked}

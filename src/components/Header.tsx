@@ -128,7 +128,7 @@ export function Header({
           </h1>
         )}
 
-        <div className="flex shrink-0 items-center gap-0.5">
+        <div className="flex shrink-0 items-start gap-0.5 pt-0.5">
           {headerActions}
 
           {isHome && onToggleSpeech ? (

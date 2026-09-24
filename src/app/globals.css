@@ -1027,6 +1027,17 @@ b {
   flex: 1 1 auto;
 }
 
+.home-dashboard--conversation .home-conversation-header {
+  height: auto;
+  min-height: 44px;
+  margin-bottom: 0;
+  padding-bottom: 0.125rem;
+}
+
+.home-dashboard--conversation .home-conversation-panel {
+  min-height: 0;
+}
+
 .home-dashboard--state-a {
   min-height: 0;
   flex: 1 1 auto;
@@ -1277,7 +1288,7 @@ html.keyboard-composer-active .home-dashboard--state-a .home-hero-mic-zone {
   min-height: 0;
   margin-bottom: 0;
   padding-inline: 0;
-  padding-top: 0.25rem;
+  padding-top: 0.125rem;
   padding-bottom: var(--home-conversation-composer-clearance);
   background: transparent;
   border: none;

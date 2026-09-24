@@ -3,14 +3,13 @@
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import type { UIMessage } from "ai";
 import { isFileUIPart } from "ai";
-import { FileText, Mic, Plus, Send, User, Volume2, VolumeX } from "lucide-react";
+import { FileText, Mic, Plus, Send, User } from "lucide-react";
 import { ComposerAttachSheet } from "@/components/composer/ComposerAttachSheet";
 import { ComposerAttachmentPreviews } from "@/components/composer/ComposerAttachmentPreviews";
 import type { ComposerAttachmentPreview } from "@/lib/composer/attachments";
 import { getMessageText } from "@/lib/ai/message-text";
 import { stripRecordingTag } from "@/lib/agent/extract-recording-id";
-import { AssistantMessageBubble, type MessageLogStatus } from "@/components/AssistantMessageBubble";
-import { messageHasLoggableIntelligence } from "@/lib/ai/loggable-message";
+import { AssistantMessageBubble } from "@/components/AssistantMessageBubble";
 import { MicrophoneButton } from "@/components/MicrophoneButton";
 import type { MicrophoneAccessFailure } from "@/lib/audio/voice-support";
 
@@ -28,9 +27,6 @@ interface KinSightConversationPanelProps {
   messages: UIMessage[];
   isLoading: boolean;
   onUpdateMessage?: (messageId: string, newText: string) => void;
-  onLogToKinSight?: (messageId: string) => void;
-  messageLogStates?: Record<string, MessageLogStatus>;
-  messageLogSuccessLabels?: Record<string, string>;
   speechEnabled?: boolean;
   onToggleSpeech?: () => void;
   playbackBlocked?: boolean;
@@ -68,9 +64,6 @@ export function KinSightConversationPanel({
   messages,
   isLoading,
   onUpdateMessage,
-  onLogToKinSight,
-  messageLogStates = {},
-  messageLogSuccessLabels = {},
   speechEnabled = true,
   onToggleSpeech,
   playbackBlocked = false,
@@ -299,44 +292,12 @@ export function KinSightConversationPanel({
   return (
     <section
       aria-label="KinSight chat"
-      className={`flex min-h-0 flex-col gap-3 ${
+      className={`flex min-h-0 flex-col ${
         conversationStarted
-          ? "w-full flex-1 px-0 pt-2"
-          : "w-full"
+          ? "home-conversation-panel w-full flex-1 gap-0 px-0 pt-0"
+          : "w-full gap-3"
       }`}
     >
-      {conversationStarted &&
-        (isSpeaking || onToggleSpeech || playbackBlocked) && (
-        <div className="flex items-center justify-end gap-2 px-1">
-          {isSpeaking && (
-            <span className="type-meta text-foreground">Speaking…</span>
-          )}
-          {playbackBlocked && onReplaySpeech && (
-            <button
-              type="button"
-              onClick={onReplaySpeech}
-              className="type-meta rounded-full border border-border-subtle px-2.5 py-1 text-foreground transition-colors hover:bg-card-hover"
-            >
-              Tap to hear reply
-            </button>
-          )}
-          {onToggleSpeech && (
-            <button
-              type="button"
-              onClick={onToggleSpeech}
-              className="text-icon transition-colors hover:text-foreground"
-              aria-label={speechEnabled ? "Mute voice" : "Enable voice"}
-            >
-              {speechEnabled ? (
-                <Volume2 className="h-4 w-4 text-icon" strokeWidth={2} />
-              ) : (
-                <VolumeX className="h-4 w-4 text-icon" strokeWidth={2} />
-              )}
-            </button>
-          )}
-        </div>
-      )}
-
       {showMessageHistory && (
         <div
           ref={scrollRef}
@@ -411,12 +372,6 @@ export function KinSightConversationPanel({
                     text={displayText}
                     onUpdateText={onUpdateMessage}
                     editDisabled={isLoading && isLastMessage}
-                    showLogButton={messageHasLoggableIntelligence(displayText)}
-                    logStatus={messageLogStates[message.id] ?? "idle"}
-                    logSuccessMessage={
-                      messageLogSuccessLabels[message.id] ?? "Saved to Contacts!"
-                    }
-                    onLogToKinSight={onLogToKinSight}
                   />
                 )}
               </div>
