@@ -196,13 +196,20 @@ export function requestMicrophoneStream(): Promise<MediaStream> {
 
 /**
  * Unlock iOS audio + start mic capture in one user-gesture call stack.
+ * `getUserMedia` is invoked synchronously when this function runs (required on iOS Safari).
  */
 export function requestMicrophoneStreamFromUserGesture(): Promise<MediaStream> {
   unlockRecordingAudioFromUserGesture();
-  return requestMicrophoneStream().then((stream) => {
-    retainActiveCaptureStream(stream);
-    return stream;
-  });
+  const pending = requestMicrophoneStream();
+  pending.then(
+    (stream) => {
+      retainActiveCaptureStream(stream);
+    },
+    () => {
+      // Caller handles rejection; retain only on success.
+    }
+  );
+  return pending;
 }
 
 export function parseMicrophoneAccessError(error: unknown): MicrophoneAccessFailure {

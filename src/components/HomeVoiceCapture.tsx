@@ -108,7 +108,7 @@ export function HomeVoiceCapture({
           disabled={isBusy && !isListening}
           aria-label={showStopIcon ? "Stop recording" : "Start recording"}
           aria-pressed={isListening}
-          className="home-voice-capture__hero-button home-voice-mic-idle relative flex shrink-0 items-center justify-center rounded-full active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+          className="home-voice-capture__hero-button home-voice-mic-idle relative flex shrink-0 items-center justify-center rounded-full disabled:cursor-not-allowed disabled:opacity-40"
         >
           <span
             className={`home-voice-capture__hero-ring mic-ring pointer-events-none absolute rounded-full border ${
