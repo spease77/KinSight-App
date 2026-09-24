@@ -354,8 +354,7 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
   const activeMicFailure = micAccessFailure ?? permissionFailure;
 
   const hasConversationStarted = conversationEngaged;
-  const { composerActive } = useKeyboardOpen();
-  const hideHomeMic = !hasConversationStarted && composerActive;
+  useKeyboardOpen();
 
   useEffect(() => {
     const scrollEl = document.querySelector<HTMLElement>(".app-scroll");
@@ -439,8 +438,7 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
               className="home-hero flex min-h-0 flex-1 flex-col"
             >
               <div className="home-hero__content">
-                {!hideHomeMic && (
-                  <>
+                <>
                     <div className="home-hero__spacer" aria-hidden="true" />
                     <div className="home-hero-mic-zone relative flex w-full shrink-0 items-center justify-center">
                       <HomeVoiceCapture
@@ -461,8 +459,7 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
                       />
                     </div>
                     <div className="home-hero__spacer home-hero__spacer--lower" aria-hidden="true" />
-                  </>
-                )}
+                </>
 
                 {voiceError && (
                   <p className="max-w-md px-2 text-center text-xs text-red-400" role="alert">

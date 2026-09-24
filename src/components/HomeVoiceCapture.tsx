@@ -105,7 +105,7 @@ export function HomeVoiceCapture({
         <button
           type="button"
           onClick={handleMainButtonPress}
-          disabled={isBusy && !isListening}
+          disabled={(isTranscribing || (isBusy && !isListening)) && !isRecording}
           aria-label={showStopIcon ? "Stop recording" : "Start recording"}
           aria-pressed={isListening}
           className="home-voice-capture__hero-button home-voice-mic-idle relative flex shrink-0 items-center justify-center rounded-full disabled:cursor-not-allowed disabled:opacity-40"
@@ -128,7 +128,14 @@ export function HomeVoiceCapture({
           />
 
           <span
-            className={`relative z-10 flex h-28 w-28 items-center justify-center rounded-full transition-colors duration-200 ${
+            className={`mic-shell pointer-events-none absolute inset-0 rounded-full ${
+              isListening ? "mic-shell-recording" : ""
+            }`}
+            aria-hidden="true"
+          />
+
+          <span
+            className={`home-voice-capture__hero-inner relative z-10 flex items-center justify-center rounded-full transition-colors duration-200 ${
               isListening ? "mic-inner-recording" : "mic-inner-idle"
             }`}
           >

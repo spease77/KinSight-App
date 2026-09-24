@@ -183,6 +183,10 @@ export function useVoicePipeline(options: UseVoicePipelineOptions = {}) {
       stream.getAudioTracks().forEach((track) => {
         const onEnded = () => {
           if (statusRef.current !== "recording") return;
+          if (isIosSafariLike()) {
+            // iOS Safari often fires spurious `ended` while capture is still active.
+            return;
+          }
           resetRecordingState(
             "Microphone stopped unexpectedly.",
             new DOMException("Track ended", "AbortError")

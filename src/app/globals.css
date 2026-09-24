@@ -1131,6 +1131,12 @@ b {
 .home-voice-capture__hero-ring {
   width: 13rem;
   height: 13rem;
+  box-sizing: border-box;
+}
+
+.home-voice-capture__hero-inner {
+  width: 7.5rem;
+  height: 7.5rem;
 }
 
 .home-voice-capture__wave-slot {
@@ -1150,8 +1156,9 @@ b {
   touch-action: manipulation;
 }
 html.keyboard-composer-active .home-dashboard--state-a .home-hero-mic-zone {
-  display: none;
-  pointer-events: none;
+  /* Keep hero mic tappable when the ask bar keyboard is open. */
+  display: flex;
+  pointer-events: auto;
 }
 
 .home-ask-bar {
