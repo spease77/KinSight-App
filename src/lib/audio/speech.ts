@@ -249,6 +249,18 @@ export async function speakText(text: string): Promise<SpeakResult> {
   return playBlob(blob);
 }
 
+/** Replay audio that was blocked by autoplay (requires a user tap). */
+export async function replayPendingSpeech(): Promise<SpeakResult> {
+  if (!pendingSpeechBlob) {
+    return { ok: false, reason: "aborted" };
+  }
+  return playBlob(pendingSpeechBlob);
+}
+
+export function hasPendingSpeechPlayback(): boolean {
+  return pendingSpeechBlob !== null;
+}
+
 export function stopSpeaking(): void {
   currentAbortController?.abort();
   currentAbortController = null;

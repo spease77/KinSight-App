@@ -29,6 +29,8 @@ interface KinSightConversationPanelProps {
   messageLogSuccessLabels?: Record<string, string>;
   speechEnabled?: boolean;
   onToggleSpeech?: () => void;
+  playbackBlocked?: boolean;
+  onReplaySpeech?: () => void;
   replyValue: string;
   onReplyChange: (value: string) => void;
   onReplySubmit: () => void;
@@ -63,6 +65,8 @@ export function KinSightConversationPanel({
   messageLogSuccessLabels = {},
   speechEnabled = true,
   onToggleSpeech,
+  playbackBlocked = false,
+  onReplaySpeech,
   replyValue,
   onReplyChange,
   onReplySubmit,
@@ -248,10 +252,20 @@ export function KinSightConversationPanel({
           : "w-full"
       }`}
     >
-      {conversationStarted && (isSpeaking || onToggleSpeech) && (
+      {((conversationStarted || homeComposerAnchored) &&
+        (isSpeaking || onToggleSpeech || playbackBlocked)) && (
         <div className="flex items-center justify-end gap-2 px-1">
           {isSpeaking && (
             <span className="type-meta text-foreground">Speaking…</span>
+          )}
+          {playbackBlocked && onReplaySpeech && (
+            <button
+              type="button"
+              onClick={onReplaySpeech}
+              className="type-meta rounded-full border border-border-subtle px-2.5 py-1 text-foreground transition-colors hover:bg-card-hover"
+            >
+              Tap to hear reply
+            </button>
           )}
           {onToggleSpeech && (
             <button

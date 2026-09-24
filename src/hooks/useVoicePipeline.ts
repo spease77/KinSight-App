@@ -264,18 +264,16 @@ export function useVoicePipeline(options: UseVoicePipelineOptions = {}) {
         setLiveTranscript("");
 
         const trimmed = text.trim();
-        if (trimmed) {
-          onRecordingCompleteRef.current?.(trimmed);
-        }
-
         if (!trimmed) {
           setError("No speech detected. Try speaking louder and closer to the mic.");
           return;
         }
 
-        if (recordingId) {
-          onTranscriptReadyRef.current?.({ text: trimmed, recordingId });
-        }
+        onRecordingCompleteRef.current?.(trimmed);
+        onTranscriptReadyRef.current?.({
+          text: trimmed,
+          recordingId: recordingId || "",
+        });
       } catch (err) {
         const message = voiceFailureMessage("Transcription failed", err);
         setError(message);

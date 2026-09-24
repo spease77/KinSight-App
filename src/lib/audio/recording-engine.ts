@@ -1,6 +1,6 @@
 const IOS_CHUNK_MS = 500;
 const DESKTOP_CHUNK_MS = 250;
-const IOS_STOP_FLUSH_MS = 350;
+const IOS_STOP_FLUSH_MS = 120;
 
 export function isAppleMobileDevice(): boolean {
   return (

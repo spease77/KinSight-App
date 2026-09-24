@@ -3,6 +3,7 @@ import {
   transcribeAudioBuffer,
 } from "@/lib/audio/transcribe-buffer";
 import { saveVoiceRecording } from "@/lib/supabase/voice-recordings";
+import { after } from "next/server";
 
 export const maxDuration = 60;
 
@@ -47,26 +48,23 @@ export async function POST(req: Request) {
       ? clientTranscript
       : await transcribeAudioBuffer(buffer, mimeType);
 
-    const { recording, error } = await saveVoiceRecording({
-      buffer,
-      mimeType,
-      transcript: text,
-      durationMs: Number.isFinite(durationMs) ? durationMs : undefined,
+    after(async () => {
+      try {
+        await saveVoiceRecording({
+          buffer,
+          mimeType,
+          transcript: text,
+          durationMs: Number.isFinite(durationMs) ? durationMs : undefined,
+        });
+      } catch (saveErr) {
+        console.error("Background voice recording save failed:", saveErr);
+      }
     });
 
-    if (error || !recording) {
-      return Response.json(
-        { error: error ?? "Could not save voice note" },
-        { status: 500 }
-      );
-    }
-
     return Response.json({
-      recordingId: recording.id,
+      recordingId: "",
       text,
-      durationMs: recording.duration_ms,
-      audioUrl: recording.audioUrl,
-      storagePath: recording.storage_path,
+      durationMs: Number.isFinite(durationMs) ? durationMs : undefined,
     });
   } catch (err) {
     console.error("Recording pipeline error:", err);

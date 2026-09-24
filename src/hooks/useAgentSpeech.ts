@@ -3,13 +3,29 @@
 import { useCallback, useRef, useState } from "react";
 import type { UIMessage } from "ai";
 import { getMessageText } from "@/lib/ai/message-text";
-import { speakText, stopSpeaking } from "@/lib/audio/speech";
+import {
+  hasPendingSpeechPlayback,
+  replayPendingSpeech,
+  speakText,
+  stopSpeaking,
+  unlockSpeechSynthesis,
+  type SpeakResult,
+} from "@/lib/audio/speech";
 
 export function useAgentSpeech() {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [speechEnabled, setSpeechEnabled] = useState(true);
+  const [playbackBlocked, setPlaybackBlocked] = useState(false);
   const lastSpokenIdRef = useRef<string | null>(null);
   const speakingRef = useRef(false);
+
+  const finishSpeech = useCallback((result: SpeakResult) => {
+    speakingRef.current = false;
+    setIsSpeaking(false);
+    setPlaybackBlocked(
+      !result.ok && result.reason === "autoplay_blocked" && hasPendingSpeechPlayback()
+    );
+  }, []);
 
   const speakAssistantReply = useCallback(
     async (allMessages: UIMessage[]) => {
@@ -27,19 +43,34 @@ export function useAgentSpeech() {
       if (lastAssistant.id === lastSpokenIdRef.current) return;
       lastSpokenIdRef.current = lastAssistant.id;
 
+      unlockSpeechSynthesis();
       speakingRef.current = true;
       setIsSpeaking(true);
-      await speakText(text);
-      speakingRef.current = false;
-      setIsSpeaking(false);
+      setPlaybackBlocked(false);
+
+      const result = await speakText(text);
+      finishSpeech(result);
     },
-    [speechEnabled]
+    [finishSpeech, speechEnabled]
   );
+
+  const replayBlockedSpeech = useCallback(async () => {
+    if (!hasPendingSpeechPlayback()) return;
+
+    unlockSpeechSynthesis();
+    speakingRef.current = true;
+    setIsSpeaking(true);
+    setPlaybackBlocked(false);
+
+    const result = await replayPendingSpeech();
+    finishSpeech(result);
+  }, [finishSpeech]);
 
   const interruptSpeech = useCallback(() => {
     stopSpeaking();
     speakingRef.current = false;
     setIsSpeaking(false);
+    setPlaybackBlocked(false);
   }, []);
 
   const toggleSpeechEnabled = useCallback(() => {
@@ -52,7 +83,9 @@ export function useAgentSpeech() {
   return {
     isSpeaking,
     speechEnabled,
+    playbackBlocked,
     speakAssistantReply,
+    replayBlockedSpeech,
     interruptSpeech,
     toggleSpeechEnabled,
   };
