@@ -45,8 +45,8 @@ export function HomeVoiceCapture({
 
   const isConnecting = isStarting || isAwaitingStream;
   const isListening = isRecording || isConnecting;
-  const showStopIcon = isRecording;
-  const showWaveform = isRecording;
+  const showStopIcon = isRecording || isStarting;
+  const showWaveform = isRecording || isStarting;
 
   const statusHint = isTranscribing
     ? "Transcribing…"
@@ -63,7 +63,7 @@ export function HomeVoiceCapture({
   }, [isRecording, isStarting]);
 
   const handleStart = () => {
-    if (isBusy || isListening || isTranscribing) return;
+    if (isTranscribing || isRecording || isStarting || isAwaitingStream) return;
 
     const environment = checkMicrophoneEnvironment();
     if (!environment.ok) {
@@ -92,8 +92,11 @@ export function HomeVoiceCapture({
   };
 
   const handleMainButtonPress = () => {
-    if (isRecording || isConnecting) {
+    if (isRecording || isStarting) {
       onStop();
+      return;
+    }
+    if (isAwaitingStream) {
       return;
     }
     handleStart();
@@ -105,7 +108,7 @@ export function HomeVoiceCapture({
         <button
           type="button"
           onClick={handleMainButtonPress}
-          disabled={(isTranscribing || (isBusy && !isListening)) && !isRecording}
+          disabled={isTranscribing && !isRecording && !isStarting}
           aria-label={showStopIcon ? "Stop recording" : "Start recording"}
           aria-pressed={isListening}
           className="home-voice-capture__hero-button home-voice-mic-idle relative flex shrink-0 items-center justify-center rounded-full disabled:cursor-not-allowed disabled:opacity-40"

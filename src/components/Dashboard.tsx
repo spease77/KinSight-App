@@ -143,6 +143,7 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
     permissionFailure,
     mediaStream,
     toggleRecording,
+    stopVoiceCapture,
     beginRecording,
     clearTranscript,
     clearPermissionFailure,
@@ -154,13 +155,12 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
 
   useEffect(() => {
     if (isRecording) {
-      setReplyText(liveTranscript);
+      if (liveTranscript) setReplyText(liveTranscript);
       return;
     }
-    if (isTranscribing && transcript.trim()) {
-      setReplyText(transcript.trim());
-    }
-  }, [isRecording, isTranscribing, liveTranscript, transcript]);
+    const draft = transcript.trim();
+    if (draft) setReplyText(draft);
+  }, [isRecording, liveTranscript, transcript]);
 
   const {
     registerVoiceHandlers,
@@ -332,16 +332,16 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
       unlockSpeechSynthesis();
 
       if (isRecordingRef.current) {
-        toggleRecording();
+        stopVoiceCapture();
         return;
       }
 
       if (!stream) return;
 
       interruptSpeech();
-      toggleRecording(stream);
+      void beginRecording(stream);
     },
-    [interruptSpeech, toggleRecording]
+    [beginRecording, interruptSpeech, stopVoiceCapture]
   );
 
   const handleMicAccessFailure = useCallback(
@@ -452,9 +452,9 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
                         transcript={transcript}
                         onStart={(stream) => {
                           interruptSpeech();
-                          toggleRecording(stream);
+                          void beginRecording(stream);
                         }}
-                        onStop={() => toggleRecording()}
+                        onStop={() => stopVoiceCapture()}
                         onMicAccessFailure={handleMicAccessFailure}
                       />
                     </div>

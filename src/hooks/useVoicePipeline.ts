@@ -263,15 +263,18 @@ export function useVoicePipeline(options: UseVoicePipelineOptions = {}) {
         setTranscript(text);
         setLiveTranscript("");
 
-        if (!text.trim()) {
+        const trimmed = text.trim();
+        if (trimmed) {
+          onRecordingCompleteRef.current?.(trimmed);
+        }
+
+        if (!trimmed) {
           setError("No speech detected. Try speaking louder and closer to the mic.");
           return;
         }
 
-        onRecordingCompleteRef.current?.(text);
-
         if (recordingId) {
-          onTranscriptReadyRef.current?.({ text, recordingId });
+          onTranscriptReadyRef.current?.({ text: trimmed, recordingId });
         }
       } catch (err) {
         const message = voiceFailureMessage("Transcription failed", err);
@@ -507,12 +510,20 @@ export function useVoicePipeline(options: UseVoicePipelineOptions = {}) {
     (preacquiredStream?: MediaStream) => {
       if (statusRef.current === "recording" || startingRef.current) {
         stopRecording();
-      } else if (statusRef.current === "idle") {
+        return;
+      }
+      if (statusRef.current === "idle") {
         void startRecording(preacquiredStream);
       }
     },
     [startRecording, stopRecording]
   );
+
+  const stopVoiceCapture = useCallback(() => {
+    if (statusRef.current === "recording" || startingRef.current) {
+      stopRecording();
+    }
+  }, [stopRecording]);
 
   const clearTranscript = useCallback(() => {
     if (status === "recording") {
@@ -571,6 +582,7 @@ export function useVoicePipeline(options: UseVoicePipelineOptions = {}) {
     permissionFailure,
     mediaStream,
     toggleRecording,
+    stopVoiceCapture,
     beginRecording: startRecording,
     clearTranscript,
     clearPermissionFailure,
