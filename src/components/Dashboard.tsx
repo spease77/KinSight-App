@@ -153,9 +153,14 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
   });
 
   useEffect(() => {
-    const draft = (isRecording ? liveTranscript : transcript).trim();
-    if ((isRecording || isTranscribing) && draft) {
-      setReplyText(draft);
+    if (isRecording) {
+      const draft = liveTranscript.trim();
+      if (draft) setReplyText(draft);
+      return;
+    }
+    if (isTranscribing) {
+      const draft = transcript.trim();
+      if (draft) setReplyText(draft);
     }
   }, [isRecording, isTranscribing, liveTranscript, transcript]);
 

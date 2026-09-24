@@ -1117,20 +1117,20 @@ b {
   touch-action: manipulation;
 }
 
-/* Fixed hero footprint — button size never changes between idle/recording. */
+/* Fixed hero footprint — 208px (13rem) button; size never changes between states. */
 .home-voice-capture__button-slot {
   display: flex;
-  min-height: calc(11rem + 2rem);
+  min-height: calc(13rem + 2rem);
   width: 100%;
   align-items: center;
   justify-content: center;
   padding-block: 1rem;
 }
 
-@media (min-width: 640px) {
-  .home-voice-capture__button-slot {
-    min-height: calc(13rem + 2rem);
-  }
+.home-voice-capture__hero-button,
+.home-voice-capture__hero-ring {
+  width: 13rem;
+  height: 13rem;
 }
 
 .home-voice-capture__wave-slot {

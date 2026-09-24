@@ -63,7 +63,7 @@ export function getHomeMicPrompt({
   if (isBusy) return "Processing your note…";
   if (isRecording) return "Listening…";
   if (isSpeaking) return "Tap to interrupt";
-  return "Summarize, ask, or schedule.";
+  return "";
 }
 
 function getMicVolumePresentation(

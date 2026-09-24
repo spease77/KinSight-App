@@ -1,14 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Mic } from "lucide-react";
+import { Mic, Square } from "lucide-react";
 import { ListeningWaveform } from "@/components/ListeningWaveform";
+import { primeLiveSpeechRecognitionFromUserGesture } from "@/lib/audio/live-speech-recognition";
 import type { MicrophoneAccessFailure } from "@/lib/audio/voice-support";
 import {
   checkMicrophoneEnvironment,
   logVoiceDiagnostic,
   parseMicrophoneAccessError,
   requestMicrophoneStreamFromUserGesture,
+  unlockRecordingAudioFromUserGesture,
   voiceFailureMessage,
 } from "@/lib/audio/voice-support";
 
@@ -44,7 +46,7 @@ export function HomeVoiceCapture({
   const isConnecting = isStarting || isAwaitingStream;
   const isListening = isRecording || isConnecting;
   const showStopIcon = isRecording;
-  const showWaveform = isListening || isTranscribing;
+  const showWaveform = isRecording;
 
   const statusHint = isTranscribing
     ? "Transcribing…"
@@ -68,6 +70,9 @@ export function HomeVoiceCapture({
       onMicAccessFailure?.(environment.failure);
       return;
     }
+
+    unlockRecordingAudioFromUserGesture();
+    primeLiveSpeechRecognitionFromUserGesture();
 
     setIsAwaitingStream(true);
     void requestMicrophoneStreamFromUserGesture().then(
@@ -103,10 +108,10 @@ export function HomeVoiceCapture({
           disabled={isBusy && !isListening}
           aria-label={showStopIcon ? "Stop recording" : "Start recording"}
           aria-pressed={isListening}
-          className="home-voice-mic-idle relative flex h-44 w-44 shrink-0 items-center justify-center rounded-full active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 sm:h-52 sm:w-52"
+          className="home-voice-capture__hero-button home-voice-mic-idle relative flex shrink-0 items-center justify-center rounded-full active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
         >
           <span
-            className={`mic-ring pointer-events-none absolute h-44 w-44 rounded-full border sm:h-52 sm:w-52 ${
+            className={`home-voice-capture__hero-ring mic-ring pointer-events-none absolute rounded-full border ${
               isListening
                 ? "mic-ring-recording mic-ring-fast"
                 : "border-accent-mic/50"
@@ -114,7 +119,7 @@ export function HomeVoiceCapture({
             aria-hidden="true"
           />
           <span
-            className={`mic-ring mic-ring-delay pointer-events-none absolute h-44 w-44 rounded-full border sm:h-52 sm:w-52 ${
+            className={`home-voice-capture__hero-ring mic-ring mic-ring-delay pointer-events-none absolute rounded-full border ${
               isListening
                 ? "mic-ring-recording mic-ring-recording--soft mic-ring-fast"
                 : "border-accent-mic/35"
@@ -123,7 +128,7 @@ export function HomeVoiceCapture({
           />
 
           <span
-            className={`relative z-10 flex h-24 w-24 items-center justify-center rounded-full transition-colors duration-200 sm:h-28 sm:w-28 ${
+            className={`relative z-10 flex h-28 w-28 items-center justify-center rounded-full transition-colors duration-200 ${
               isListening ? "mic-inner-recording" : "mic-inner-idle"
             }`}
           >
@@ -134,14 +139,16 @@ export function HomeVoiceCapture({
               />
             )}
             {showStopIcon ? (
-              <span
-                className="relative z-10 h-8 w-8 rounded-[7px] bg-white sm:h-9 sm:w-9"
+              <Square
+                className="relative z-10 h-9 w-9 fill-white text-white"
+                strokeWidth={0}
                 aria-hidden="true"
               />
             ) : (
               <Mic
-                className="relative z-10 h-12 w-12 text-foreground sm:h-14 sm:w-14"
+                className="relative z-10 h-14 w-14 text-white"
                 strokeWidth={2.25}
+                aria-hidden="true"
               />
             )}
           </span>
@@ -156,10 +163,10 @@ export function HomeVoiceCapture({
       >
         {showWaveform ? (
           <ListeningWaveform
-            variant="bars"
-            volumeLevel={isRecording ? volumeLevel : 0}
+            variant="line"
+            volumeLevel={volumeLevel}
             waveformBands={waveformBands}
-            active={isRecording}
+            active
             className="w-full"
           />
         ) : null}

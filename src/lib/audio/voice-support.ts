@@ -93,6 +93,22 @@ export function checkMicrophoneEnvironment():
 }
 
 let recordingAudioContext: AudioContext | null = null;
+let activeCaptureStream: MediaStream | null = null;
+
+export function isIosSafariLike(): boolean {
+  if (typeof navigator === "undefined") return false;
+  return /iPhone|iPad|iPod/i.test(navigator.userAgent);
+}
+
+/** Keep a module-level reference so mobile Safari does not drop the capture early. */
+export function retainActiveCaptureStream(stream: MediaStream): void {
+  activeCaptureStream = stream;
+}
+
+export function releaseActiveCaptureStream(): void {
+  activeCaptureStream?.getTracks().forEach((track) => track.stop());
+  activeCaptureStream = null;
+}
 
 function getAudioContextConstructor():
   | (typeof AudioContext)
@@ -183,7 +199,10 @@ export function requestMicrophoneStream(): Promise<MediaStream> {
  */
 export function requestMicrophoneStreamFromUserGesture(): Promise<MediaStream> {
   unlockRecordingAudioFromUserGesture();
-  return requestMicrophoneStream();
+  return requestMicrophoneStream().then((stream) => {
+    retainActiveCaptureStream(stream);
+    return stream;
+  });
 }
 
 export function parseMicrophoneAccessError(error: unknown): MicrophoneAccessFailure {

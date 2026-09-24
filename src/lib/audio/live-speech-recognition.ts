@@ -47,6 +47,18 @@ export function shouldUseBrowserLiveSpeech(): boolean {
   return isLiveSpeechRecognitionSupported();
 }
 
+/** Touch SpeechRecognition in the same user gesture (desktop); iOS uses MediaRecorder only. */
+export function primeLiveSpeechRecognitionFromUserGesture(): void {
+  if (!shouldUseBrowserLiveSpeech()) return;
+  const SpeechRecognition = getSpeechRecognitionConstructor();
+  if (!SpeechRecognition) return;
+  try {
+    void new SpeechRecognition();
+  } catch {
+    // Permission or policy may block until start(); ignore.
+  }
+}
+
 export type LiveSpeechCallbacks = {
   onInterim: (text: string) => void;
   onFinal: (text: string) => void;

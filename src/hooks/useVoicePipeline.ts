@@ -8,8 +8,11 @@ import {
 import {
   checkMicrophoneEnvironment,
   checkVoiceRecordingSupport,
+  isIosSafariLike,
   parseMicrophoneAccessError,
+  releaseActiveCaptureStream,
   requestMicrophoneStream,
+  retainActiveCaptureStream,
   voiceFailureMessage,
   voiceUnsupportedMessage,
 } from "@/lib/audio/voice-support";
@@ -98,6 +101,7 @@ export function useVoicePipeline(options: UseVoicePipelineOptions = {}) {
     trackCleanupRef.current = null;
     streamRef.current?.getTracks().forEach((track) => track.stop());
     streamRef.current = null;
+    releaseActiveCaptureStream();
     setMediaStream(null);
   }, []);
 
@@ -187,6 +191,7 @@ export function useVoicePipeline(options: UseVoicePipelineOptions = {}) {
 
         const onMute = () => {
           if (statusRef.current !== "recording") return;
+          if (isIosSafariLike()) return;
           resetRecordingState(
             "Microphone was muted or interrupted.",
             new DOMException("Track muted", "AbortError")
@@ -194,10 +199,14 @@ export function useVoicePipeline(options: UseVoicePipelineOptions = {}) {
         };
 
         track.addEventListener("ended", onEnded);
-        track.addEventListener("mute", onMute);
+        if (!isIosSafariLike()) {
+          track.addEventListener("mute", onMute);
+        }
         cleanups.push(() => {
           track.removeEventListener("ended", onEnded);
-          track.removeEventListener("mute", onMute);
+          if (!isIosSafariLike()) {
+            track.removeEventListener("mute", onMute);
+          }
         });
       });
 
@@ -379,6 +388,7 @@ export function useVoicePipeline(options: UseVoicePipelineOptions = {}) {
         }
 
         streamRef.current = stream;
+        retainActiveCaptureStream(stream);
         setMediaStream(stream);
         attachStreamDiagnostics(stream);
         chunksRef.current = [];
