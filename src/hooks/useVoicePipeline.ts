@@ -526,14 +526,14 @@ export function useVoicePipeline(options: UseVoicePipelineOptions = {}) {
   }, [stopRecording]);
 
   const clearTranscript = useCallback(() => {
-    if (status === "recording") {
+    if (statusRef.current === "recording") {
       resetRecordingState();
     }
     setTranscript("");
     setLiveTranscript("");
     setError(null);
     setPermissionFailure(null);
-  }, [status, resetRecordingState]);
+  }, [resetRecordingState]);
 
   const clearPermissionFailure = useCallback(() => {
     setPermissionFailure(null);

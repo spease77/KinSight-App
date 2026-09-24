@@ -196,8 +196,14 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
     stop();
     interruptSpeech();
     stopSpeaking();
+    stopVoiceCapture();
     clearTranscript();
-  }, [clearTranscript, interruptSpeech, setMessages, stop]);
+  }, [clearTranscript, interruptSpeech, setMessages, stop, stopVoiceCapture]);
+
+  const resetToStateARef = useRef(resetToStateA);
+  resetToStateARef.current = resetToStateA;
+
+  const prevHomeSessionRef = useRef(homeSession);
 
   const submitTextCommand = useCallback(
     async (text: string, _source?: OsVoiceSource) => {
@@ -244,9 +250,12 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
   }, [messages.length, isChatLoading, isDetecting]);
 
   useEffect(() => {
-    // Fresh State A whenever the Home tab session resets (returning from another tab).
-    resetToStateA();
-  }, [homeSession, resetToStateA]);
+    if (prevHomeSessionRef.current === homeSession) {
+      return;
+    }
+    prevHomeSessionRef.current = homeSession;
+    resetToStateARef.current();
+  }, [homeSession]);
 
   useEffect(() => {
     return () => {
