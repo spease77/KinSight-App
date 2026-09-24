@@ -64,6 +64,7 @@ export function Dashboard({ homeSession: _homeSession = 0 }: DashboardProps) {
     persistMessages,
     schedulePersistMessages,
     removeConversation,
+    flushScheduledPersist,
   } = useKinSightConversationStore();
 
   const activeConversationIdRef = useRef(activeConversationId);
@@ -233,12 +234,14 @@ export function Dashboard({ homeSession: _homeSession = 0 }: DashboardProps) {
   const interruptSpeechRef = useRef(interruptSpeech);
   const clearTranscriptRef = useRef(clearTranscript);
   const isRecordingRef = useRef(isRecording);
+  const messagesRef = useRef(messages);
 
   stopRef.current = stop;
   setMessagesRef.current = setMessages;
   interruptSpeechRef.current = interruptSpeech;
   clearTranscriptRef.current = clearTranscript;
   isRecordingRef.current = isRecording;
+  messagesRef.current = messages;
 
   const resetToStateA = useCallback(() => {
     setConversationEngaged(false);
@@ -384,6 +387,13 @@ export function Dashboard({ homeSession: _homeSession = 0 }: DashboardProps) {
 
   useEffect(() => {
     return () => {
+      flushScheduledPersist();
+      if (
+        activeConversationIdRef.current &&
+        messagesRef.current.length > 0
+      ) {
+        persistMessages(activeConversationIdRef.current, messagesRef.current);
+      }
       stopRef.current();
       setMessagesRef.current([]);
       interruptSpeechRef.current();
@@ -395,7 +405,7 @@ export function Dashboard({ homeSession: _homeSession = 0 }: DashboardProps) {
         return [];
       });
     };
-  }, []);
+  }, [flushScheduledPersist, persistMessages]);
 
   const handleNotesSubmit = useCallback(
     (text: string) => {

@@ -43,7 +43,7 @@ export function BottomNav() {
   return (
     <nav
       aria-label="Main navigation"
-      className="bottom-nav fixed bottom-0 left-0 right-0 z-50 w-full border-t border-border/30 bg-background"
+      className="bottom-nav box-content fixed bottom-0 left-0 right-0 z-50 h-[50px] w-full border-t border-border bg-background pb-[env(safe-area-inset-bottom,0px)]"
     >
       <div className="bottom-nav__inner mx-auto flex h-full w-full max-w-lg items-center justify-around px-2">
         {TABS.map(({ href, label, icon: Icon, match }) => {
@@ -63,9 +63,11 @@ export function BottomNav() {
                 }`}
                 aria-hidden="true"
               >
-                <Icon className="bottom-nav__icon" strokeWidth={2} />
+                <Icon className="bottom-nav__icon h-5 w-5" strokeWidth={2} />
               </span>
-              <span className="bottom-nav__label">{label}</span>
+              <span className="bottom-nav__label mt-0.5 text-[10px] font-medium">
+                {label}
+              </span>
             </Link>
           );
         })}

@@ -9,14 +9,54 @@ import type {
 const STORE_KEY = "kinsight-conversations-v1";
 const ACTIVE_ID_KEY = "kinsight-active-conversation-id";
 
+function normalizeConversation(raw: unknown): KinSightConversation | null {
+  if (!raw || typeof raw !== "object") return null;
+  const record = raw as Record<string, unknown>;
+  if (typeof record.id !== "string" || !record.id.trim()) return null;
+
+  const messages = Array.isArray(record.messages)
+    ? (record.messages as UIMessage[])
+    : [];
+
+  const createdAt =
+    typeof record.createdAt === "string" ? record.createdAt : new Date().toISOString();
+  const updatedAt =
+    typeof record.updatedAt === "string" ? record.updatedAt : createdAt;
+
+  const title =
+    typeof record.title === "string" && record.title.trim()
+      ? record.title.trim()
+      : deriveConversationTitle(messages);
+  const preview =
+    typeof record.preview === "string" && record.preview.trim()
+      ? record.preview.trim()
+      : deriveConversationPreview(messages);
+
+  return {
+    id: record.id,
+    title,
+    preview,
+    createdAt,
+    updatedAt,
+    messages,
+  };
+}
+
 function readStore(): KinSightConversation[] {
   if (typeof window === "undefined") return [];
 
   try {
     const raw = window.localStorage.getItem(STORE_KEY);
     if (!raw) return [];
-    const parsed = JSON.parse(raw) as KinSightConversation[];
-    return Array.isArray(parsed) ? parsed : [];
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return [];
+
+    const normalized: KinSightConversation[] = [];
+    for (const item of parsed) {
+      const conversation = normalizeConversation(item);
+      if (conversation) normalized.push(conversation);
+    }
+    return normalized;
   } catch {
     return [];
   }
@@ -24,7 +64,11 @@ function readStore(): KinSightConversation[] {
 
 function writeStore(conversations: KinSightConversation[]): void {
   if (typeof window === "undefined") return;
-  window.localStorage.setItem(STORE_KEY, JSON.stringify(conversations));
+  try {
+    window.localStorage.setItem(STORE_KEY, JSON.stringify(conversations));
+  } catch (error) {
+    console.warn("KinSight could not save chat history to this device:", error);
+  }
 }
 
 export function loadActiveConversationId(): string | null {
@@ -98,8 +142,12 @@ export function upsertConversationMessages(
   id: string,
   messages: UIMessage[]
 ): KinSightConversation {
-  const now = new Date().toISOString();
   const existing = getConversation(id);
+  if (messages.length === 0 && existing && existing.messages.length > 0) {
+    return existing;
+  }
+
+  const now = new Date().toISOString();
   const title =
     messages.length > 0
       ? deriveConversationTitle(messages)
