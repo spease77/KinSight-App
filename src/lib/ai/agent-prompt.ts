@@ -1,12 +1,34 @@
 import type { AiRequestContext } from "@/lib/ai/request-context";
 import { buildContactsKnowledgeBlock } from "@/lib/ai/contact-knowledge";
 import { buildSharedModelInstructions } from "@/lib/ai/shared-model-instructions";
+import type { ConversationSummary } from "@/lib/conversations/types";
 import type { ContactDetail } from "@/types/contact";
+
+function buildConversationMemoryBlock(
+  summaries: ConversationSummary[]
+): string {
+  if (summaries.length === 0) return "";
+
+  const lines = summaries
+    .slice(0, 8)
+    .map(
+      (item, index) =>
+        `${index + 1}. "${item.title}" (${new Date(item.updatedAt).toLocaleDateString(undefined, { month: "short", day: "numeric" })}) — ${item.preview}`
+    )
+    .join("\n");
+
+  return `## Recent KinSight chats (for reference)
+The user has prior threads saved in KinSight. You can refer to them naturally when helpful ("in your earlier chat about…"). Do not invent chats that are not listed.
+
+${lines}
+`;
+}
 
 export function buildAgentSystemPrompt(
   contacts: ContactDetail[],
   dbHealth: { ok: boolean; message: string },
-  requestContext: AiRequestContext
+  requestContext: AiRequestContext,
+  recentConversations: ConversationSummary[] = []
 ): string {
   const contactKnowledge = buildContactsKnowledgeBlock(contacts);
 
@@ -21,6 +43,8 @@ You have **Agenda scheduling built in**. Use the \`create_agenda_item\` tool for
 You have an ongoing conversation with the user. They record voice notes about client relationships. Your job is to help them capture, organize, remember contact details, and grow genuine influence through thoughtful relationship building.
 
 ${buildSharedModelInstructions(requestContext)}
+
+${buildConversationMemoryBlock(recentConversations)}
 
 ## Database status
 ${dbStatus}

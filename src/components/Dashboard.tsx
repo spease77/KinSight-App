@@ -27,6 +27,9 @@ import { logMessageToKinSight } from "@/lib/kinsight/log-message";
 import type { MessageLogStatus } from "@/components/AssistantMessageBubble";
 import { useVoiceExperience } from "@/contexts/VoiceExperienceContext";
 import { useKeyboardOpen } from "@/hooks/useKeyboardOpen";
+import { useKinSightConversationStore } from "@/hooks/useKinSightConversationStore";
+import { ConversationHistorySheet } from "@/components/conversations/ConversationHistorySheet";
+import { listConversationSummaries, getConversation } from "@/lib/conversations/storage";
 import type { OsVoiceSource } from "@/lib/voice/os-voice-deeplink";
 
 interface DashboardProps {
@@ -34,7 +37,7 @@ interface DashboardProps {
   homeSession?: number;
 }
 
-export function Dashboard({ homeSession = 0 }: DashboardProps) {
+export function Dashboard({ homeSession: _homeSession = 0 }: DashboardProps) {
   const router = useRouter();
   const [replyText, setReplyText] = useState("");
   const [messageLogStates, setMessageLogStates] = useState<
@@ -45,6 +48,21 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
   >({});
   const [micAccessFailure, setMicAccessFailure] =
     useState<MicrophoneAccessFailure | null>(null);
+  const [historyOpen, setHistoryOpen] = useState(false);
+
+  const {
+    hydrated: conversationsHydrated,
+    conversations,
+    activeConversationId,
+    selectConversation,
+    startNewConversation,
+    persistMessages,
+    schedulePersistMessages,
+    removeConversation,
+  } = useKinSightConversationStore();
+
+  const activeConversationIdRef = useRef(activeConversationId);
+  activeConversationIdRef.current = activeConversationId;
 
   const transport = useMemo(
     () =>
@@ -61,6 +79,9 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
               ...body,
               messages,
               requestContext: buildRequestContext(entry_method),
+              conversationMemory: listConversationSummaries(
+                activeConversationIdRef.current
+              ),
             },
           };
         },
@@ -68,10 +89,17 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
     []
   );
 
+  const chatSessionId = conversationsHydrated
+    ? activeConversationId
+    : "kinsight-home-loading";
+
   const { messages, sendMessage, status, error: chatError, setMessages, stop } = useChat({
-    id: `kinsight-home-${homeSession}`,
+    id: chatSessionId,
     transport,
     onFinish: ({ messages: allMessages, isError }) => {
+      if (!isError && activeConversationIdRef.current) {
+        persistMessages(activeConversationIdRef.current, allMessages);
+      }
       if (!isError) {
         void speakRef.current(allMessages);
       }
@@ -193,6 +221,7 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
   });
 
   const [conversationEngaged, setConversationEngaged] = useState(false);
+  const lastLoadedConversationRef = useRef<string | null>(null);
 
   const stopRef = useRef(stop);
   const setMessagesRef = useRef(setMessages);
@@ -217,12 +246,81 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
     stopSpeaking();
     stopVoiceCapture();
     clearTranscript();
-  }, [clearTranscript, interruptSpeech, setMessages, stop, stopVoiceCapture]);
 
-  const resetToStateARef = useRef(resetToStateA);
-  resetToStateARef.current = resetToStateA;
+    const created = startNewConversation();
+    lastLoadedConversationRef.current = created.id;
+  }, [
+    clearTranscript,
+    interruptSpeech,
+    setMessages,
+    startNewConversation,
+    stop,
+    stopVoiceCapture,
+  ]);
 
-  const prevHomeSessionRef = useRef(homeSession);
+  const handleSelectConversation = useCallback(
+    (id: string) => {
+      stop();
+      interruptSpeech();
+      stopSpeaking();
+      stopVoiceCapture();
+      clearTranscript();
+
+      const selected = selectConversation(id);
+      lastLoadedConversationRef.current = id;
+      setMessages(selected?.messages ?? []);
+      setConversationEngaged((selected?.messages.length ?? 0) > 0);
+      setReplyText("");
+      setMessageLogStates({});
+      setMessageLogSuccessLabels({});
+    },
+    [
+      clearTranscript,
+      interruptSpeech,
+      selectConversation,
+      setMessages,
+      stop,
+      stopVoiceCapture,
+    ]
+  );
+
+  const handleDeleteConversation = useCallback(
+    (id: string) => {
+      const next = removeConversation(id);
+      if (next?.id) {
+        lastLoadedConversationRef.current = next.id;
+        setMessages(next.messages ?? []);
+        setConversationEngaged((next.messages?.length ?? 0) > 0);
+      } else {
+        lastLoadedConversationRef.current = null;
+        setMessages([]);
+        setConversationEngaged(false);
+      }
+      setReplyText("");
+    },
+    [removeConversation, setMessages]
+  );
+
+  useEffect(() => {
+    if (!conversationsHydrated || !activeConversationId) return;
+    if (lastLoadedConversationRef.current === activeConversationId) return;
+
+    const selected = getConversation(activeConversationId);
+    lastLoadedConversationRef.current = activeConversationId;
+    setMessages(selected?.messages ?? []);
+    setConversationEngaged((selected?.messages?.length ?? 0) > 0);
+  }, [activeConversationId, conversationsHydrated, setMessages]);
+
+  useEffect(() => {
+    if (!conversationsHydrated || !activeConversationId) return;
+    if (messages.length === 0) return;
+    schedulePersistMessages(activeConversationId, messages);
+  }, [
+    activeConversationId,
+    conversationsHydrated,
+    messages,
+    schedulePersistMessages,
+  ]);
 
   const submitTextCommand = useCallback(
     async (text: string, _source?: OsVoiceSource) => {
@@ -267,14 +365,6 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
       setConversationEngaged(true);
     }
   }, [messages.length, isChatLoading, isDetecting]);
-
-  useEffect(() => {
-    if (prevHomeSessionRef.current === homeSession) {
-      return;
-    }
-    prevHomeSessionRef.current = homeSession;
-    resetToStateARef.current();
-  }, [homeSession]);
 
   useEffect(() => {
     return () => {
@@ -399,6 +489,8 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
     <Header
       showNewSession={hasConversationStarted}
       onNewSession={resetToStateA}
+      showChatHistory
+      onOpenChatHistory={() => setHistoryOpen(true)}
     />
   );
 
@@ -569,6 +661,16 @@ export function Dashboard({ homeSession = 0 }: DashboardProps) {
           onSkip={() => void skipCurrent()}
         />
       )}
+
+      <ConversationHistorySheet
+        open={historyOpen}
+        onClose={() => setHistoryOpen(false)}
+        conversations={conversations}
+        activeConversationId={activeConversationId}
+        onSelect={handleSelectConversation}
+        onNewChat={resetToStateA}
+        onDelete={handleDeleteConversation}
+      />
     </>
   );
 }

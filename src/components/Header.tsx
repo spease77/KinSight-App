@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
-import { Plus, Settings, Sparkles } from "lucide-react";
+import { Plus, Settings, Sparkles, MessageSquare } from "lucide-react";
 import { DataManagementSheet } from "@/components/DataManagementSheet";
 
 const HOME_TAGLINE = "People Intelligence";
@@ -70,6 +70,8 @@ interface HeaderProps {
   title?: string;
   showNewSession?: boolean;
   onNewSession?: () => void;
+  showChatHistory?: boolean;
+  onOpenChatHistory?: () => void;
   headerActions?: ReactNode;
 }
 
@@ -77,6 +79,8 @@ export function Header({
   title,
   showNewSession = false,
   onNewSession,
+  showChatHistory = false,
+  onOpenChatHistory,
   headerActions,
 }: HeaderProps) {
   const [isDataManagementOpen, setIsDataManagementOpen] = useState(false);
@@ -105,6 +109,18 @@ export function Header({
 
         <div className="flex shrink-0 items-center gap-1">
           {headerActions}
+
+          {showChatHistory && onOpenChatHistory ? (
+            <button
+              type="button"
+              onClick={onOpenChatHistory}
+              className="flex h-8 items-center gap-1 rounded-full px-2 text-slate-400 transition-colors hover:bg-card-hover hover:text-foreground"
+              aria-label="Open chat history"
+            >
+              <MessageSquare className="h-4 w-4" strokeWidth={2} />
+              <span className="text-[10px] font-medium">Chats</span>
+            </button>
+          ) : null}
 
           {showNewSession && onNewSession ? (
             <button

@@ -36,9 +36,16 @@ export async function POST(req: Request) {
     const {
       messages,
       requestContext,
+      conversationMemory,
     }: {
       messages: UIMessage[];
       requestContext?: Partial<AiRequestContext>;
+      conversationMemory?: Array<{
+        id: string;
+        title: string;
+        preview: string;
+        updatedAt: string;
+      }>;
     } = await req.json();
 
     const dbHealth = await checkDatabaseHealth();
@@ -48,7 +55,12 @@ export async function POST(req: Request) {
 
     const result = streamText({
       model: anthropic(MODELS.agent),
-      system: buildAgentSystemPrompt(contacts, dbHealth, context),
+      system: buildAgentSystemPrompt(
+        contacts,
+        dbHealth,
+        context,
+        conversationMemory ?? []
+      ),
       messages: await convertToModelMessages(messages),
       tools: createAgentTools({ recordingId, requestContext: context }),
       stopWhen: stepCountIs(8),
