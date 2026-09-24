@@ -1,6 +1,10 @@
 import { formatContactDateForDisplay, isContactDateProfileField } from "@/lib/dates/contact-dates";
 import { CONTACT_TYPE_LABELS } from "@/lib/contacts/contact-type";
 import { buildNotesLogKnowledgeLines } from "@/lib/contacts/notes-log";
+import {
+  relationshipTreeExportLines,
+  relationshipTreeFromProfile,
+} from "@/lib/contacts/relationship-tree";
 import type { ContactDetail } from "@/types/contact";
 import {
   CONTACT_PROFILE_SECTIONS,
@@ -57,6 +61,17 @@ export function buildContactKnowledgeSummary(contact: ContactDetail): string {
   }
   if (contact.topics?.length) {
     lines.push(`  Topics: ${contact.topics.join(", ")}`);
+  }
+
+  const treeLines = relationshipTreeExportLines(
+    relationshipTreeFromProfile(contact.profile ?? {})
+  );
+  if (treeLines.length > 0) {
+    lines.push("  Family & connections:");
+    for (const line of treeLines.slice(2)) {
+      if (!line.trim()) continue;
+      lines.push(`    ${line.trimStart()}`);
+    }
   }
 
   let profileLines = 0;

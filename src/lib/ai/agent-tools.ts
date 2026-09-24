@@ -10,10 +10,12 @@ import {
   fetchContacts,
   updateContactFromVoice,
   updateContactName,
+  addConnectionFromProposed,
 } from "@/lib/supabase/contacts";
 import { createAgendaItem } from "@/lib/supabase/scheduled-interactions";
 import { buildAgendaSuccessMessage } from "@/lib/agenda/format-schedule-phrase";
 import { resolveContactByName } from "@/lib/contacts/resolve-contact-by-name";
+import type { ParsedProposedPerson } from "@/lib/ai/parse-multi-contact";
 
 export type AgentToolsContext = {
   recordingId?: string;
@@ -272,6 +274,73 @@ export function createAgentTools(ctx: AgentToolsContext) {
         }
 
         return { success: true, contactId: contact.id, contact };
+      },
+    }),
+
+    addContactConnection: tool({
+      description:
+        "Add a family member or professional connection under an existing contact's Family & Connections on their profile. Use when the user mentions someone's spouse, child, parent, assistant, colleague, etc. in relation to a saved contact. Confirm the anchor contact and the connection's name before calling.",
+      inputSchema: z.object({
+        contactId: z.string().uuid().describe("The anchor contact's UUID"),
+        firstName: z.string(),
+        lastName: z.string().optional(),
+        relationshipLabel: z
+          .string()
+          .describe(
+            "Relationship label such as wife, husband, son, daughter, assistant, colleague, manager, friend"
+          ),
+        notes: z.string().optional(),
+        company: z.string().optional(),
+        role: z.string().optional(),
+      }),
+      execute: async ({
+        contactId,
+        firstName,
+        lastName,
+        relationshipLabel,
+        notes,
+        company,
+        role,
+      }) => {
+        const displayName = [firstName, lastName].filter(Boolean).join(" ").trim();
+        const person: ParsedProposedPerson = {
+          displayName: displayName || firstName,
+          firstName,
+          lastName,
+          company,
+          role,
+          notes,
+          relationshipHint: relationshipLabel.trim(),
+          recordAs: "connection",
+          profile: {
+            firstName,
+            lastName: lastName ?? "",
+          },
+          sourceSnippets: {},
+        };
+
+        const transcript =
+          notes?.trim() ||
+          `Added ${relationshipLabel} ${displayName} under contact.`;
+
+        const { contact, error } = await addConnectionFromProposed(
+          contactId,
+          person,
+          transcript,
+          recordingId,
+          requestContext
+        );
+
+        if (error || !contact) {
+          return { success: false, error: error ?? "Could not add connection" };
+        }
+
+        return {
+          success: true,
+          contactId: contact.id,
+          connectionName: displayName,
+          relationshipLabel,
+        };
       },
     }),
 

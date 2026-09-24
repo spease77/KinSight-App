@@ -24,8 +24,17 @@ export function ProposedContactModal({
   onSkip,
 }: ProposedContactModalProps) {
   const isUpdate = item.kind === "update";
-  const person = isUpdate ? item.update.person : item.proposal.person;
-  const summary = isUpdate ? item.update.summary : item.proposal.summary;
+  const isConnection = item.kind === "add_connection";
+  const person = isUpdate
+    ? item.update.person
+    : isConnection
+      ? item.connection.person
+      : item.proposal.person;
+  const summary = isUpdate
+    ? item.update.summary
+    : isConnection
+      ? item.connection.summary
+      : item.proposal.summary;
   const identity = getProposedPersonIdentity(person);
   const company =
     identity.company ||
@@ -36,6 +45,8 @@ export function ProposedContactModal({
     .filter(Boolean)
     .join(" ")
     .trim() || person.displayName;
+
+  const anchorName = isConnection ? item.connection.contactName : null;
 
   return (
     <div
@@ -48,13 +59,22 @@ export function ProposedContactModal({
         <div className="flex items-start justify-between gap-3 border-b border-hotel-border px-5 py-4">
           <div>
             <p className="type-meta text-accent-orange">
-              {isUpdate ? "Update contact" : "New contact"} {index + 1} of {total}
+              {isConnection
+                ? "Family & connection"
+                : isUpdate
+                  ? "Update contact"
+                  : "New contact"}{" "}
+              {index + 1} of {total}
             </p>
             <h2
               id="proposed-contact-title"
               className="mt-1 font-sans text-xl font-normal tracking-tight text-foreground"
             >
-              {isUpdate ? "Save updates for this contact?" : `Create ${titleName}?`}
+              {isConnection
+                ? `Add ${titleName} under ${anchorName}?`
+                : isUpdate
+                  ? "Save updates for this contact?"
+                  : `Create ${titleName}?`}
             </h2>
             <p className="mt-2 font-sans text-sm text-foreground">
               <span className="text-muted">First:</span> {identity.firstName || "—"}
@@ -82,9 +102,11 @@ export function ProposedContactModal({
 
         <div className="max-h-[50vh] overflow-y-auto px-5 py-4">
           <p className="type-editorial mb-3 text-sm text-muted">
-            {isUpdate
-              ? "KinSight found details for this person in your note. Confirm to update the right contact:"
-              : "KinSight found details for this person in your note. Confirm to create the contact with these fields:"}
+            {isConnection
+              ? "KinSight found someone to add under this contact's Family & Connections. Confirm to save on their profile:"
+              : isUpdate
+                ? "KinSight found details for this person in your note. Confirm to update the right contact:"
+                : "KinSight found details for this person in your note. Confirm to create the contact with these fields:"}
           </p>
 
           {summary.length === 0 ? (
@@ -142,9 +164,11 @@ export function ProposedContactModal({
             )}
             {isSaving
               ? "Saving…"
-              : isUpdate
-                ? "Save Updates"
-                : "Create Contact"}
+              : isConnection
+                ? "Add Connection"
+                : isUpdate
+                  ? "Save Updates"
+                  : "Create Contact"}
           </button>
         </div>
       </div>

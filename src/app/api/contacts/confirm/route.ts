@@ -7,6 +7,7 @@ import {
 import {
   createContactFromProposed,
   updateContactFromProposed,
+  addConnectionFromProposed,
 } from "@/lib/supabase/contacts";
 
 const proposedPersonSchema = z.object({
@@ -22,12 +23,14 @@ const proposedPersonSchema = z.object({
   nextSteps: z.string().optional(),
   topics: z.array(z.string()).optional(),
   relationshipHint: z.string().optional(),
+  recordAs: z.enum(["contact", "connection"]).optional(),
+  connectionAnchorName: z.string().optional(),
   profile: z.record(z.string()).default({}),
   sourceSnippets: z.record(z.string()).default({}),
 });
 
 const confirmSchema = z.object({
-  action: z.enum(["create", "update"]),
+  action: z.enum(["create", "update", "add_connection"]),
   person: proposedPersonSchema,
   transcript: z.string().min(1),
   recordingId: z.string().uuid().optional(),
@@ -66,6 +69,32 @@ export async function POST(req: Request) {
       ctxInput ?? buildRequestContext(recordingId ? "voice" : "manual");
 
     const personPayload = person as ParsedProposedPerson;
+
+    if (action === "add_connection") {
+      if (!contactId) {
+        return Response.json(
+          { error: "contactId is required for connections" },
+          { status: 400 }
+        );
+      }
+
+      const { contact, error } = await addConnectionFromProposed(
+        contactId,
+        personPayload,
+        transcript,
+        recordingId,
+        requestContext
+      );
+
+      if (error || !contact) {
+        return Response.json(
+          { error: error ?? "Could not add connection" },
+          { status: 500 }
+        );
+      }
+
+      return Response.json({ contact, action: "add_connection" });
+    }
 
     if (action === "update") {
       if (!contactId) {

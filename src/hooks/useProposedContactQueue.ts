@@ -7,6 +7,7 @@ import { buildRequestContext } from "@/lib/ai/request-context";
 import type {
   DetectContactsResult,
   ExistingContactUpdate,
+  ProposedConnectionForReview,
   ProposedContactForReview,
 } from "@/lib/contacts/detect-from-note";
 
@@ -19,7 +20,8 @@ type NoteContext = {
 
 export type ContactReviewItem =
   | { kind: "create"; proposal: ProposedContactForReview }
-  | { kind: "update"; update: ExistingContactUpdate };
+  | { kind: "update"; update: ExistingContactUpdate }
+  | { kind: "add_connection"; connection: ProposedConnectionForReview };
 
 export function useProposedContactQueue() {
   const router = useRouter();
@@ -90,6 +92,12 @@ export function useProposedContactQueue() {
           ...(data.existingUpdates ?? []).map(
             (update): ContactReviewItem => ({ kind: "update", update })
           ),
+          ...(data.newConnections ?? []).map(
+            (connection): ContactReviewItem => ({
+              kind: "add_connection",
+              connection,
+            })
+          ),
         ];
 
         if (items.length === 0) {
@@ -128,14 +136,23 @@ export function useProposedContactQueue() {
               recordingId: ctx.recordingId,
               requestContext: ctx.requestContext,
             }
-          : {
-              action: "update" as const,
-              contactId: item.update.contactId,
-              person: item.update.person,
-              transcript: ctx.transcript,
-              recordingId: ctx.recordingId,
-              requestContext: ctx.requestContext,
-            };
+          : item.kind === "update"
+            ? {
+                action: "update" as const,
+                contactId: item.update.contactId,
+                person: item.update.person,
+                transcript: ctx.transcript,
+                recordingId: ctx.recordingId,
+                requestContext: ctx.requestContext,
+              }
+            : {
+                action: "add_connection" as const,
+                contactId: item.connection.contactId,
+                person: item.connection.person,
+                transcript: ctx.transcript,
+                recordingId: ctx.recordingId,
+                requestContext: ctx.requestContext,
+              };
 
       const res = await fetch("/api/contacts/confirm", {
         method: "POST",

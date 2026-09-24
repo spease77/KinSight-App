@@ -46,6 +46,7 @@ export async function POST(req: Request) {
     return Response.json({
       newContacts: [],
       existingUpdates: [],
+      newConnections: [],
       transcript: "",
       recordingId: null,
       requestContext: buildRequestContext("manual"),

@@ -59,6 +59,16 @@ import {
   readContactRelationship,
   relationshipToType,
 } from "@/lib/contacts/contact-relationship";
+import {
+  findDuplicateConnectionIndex,
+  mergeConnectionFacts,
+  personToRelationshipEntry,
+} from "@/lib/contacts/proposed-connection";
+import {
+  KINSIGHT_RELATIONSHIP_TREE_KEY,
+  parseRelationshipTree,
+  serializeRelationshipTree,
+} from "@/lib/contacts/relationship-tree";
 import { createServerSupabase, humanizeSupabaseFetchError } from "@/lib/supabase/server";
 import {
   getVoiceRecording,
@@ -1509,6 +1519,75 @@ export async function updateContactFromProposed(
 
   if (error) {
     console.error("updateContactFromProposed error:", error.message);
+    return { contact: null, error: error.message };
+  }
+
+  if (recordingId) {
+    await linkRecordingToContact(recordingId, contactId);
+  }
+
+  return { contact: rowToContact(data) };
+}
+
+export async function addConnectionFromProposed(
+  contactId: string,
+  person: ParsedProposedPerson,
+  transcript: string,
+  recordingId?: string,
+  requestContext?: AiRequestContext
+): Promise<{ contact: Contact | null; error?: string }> {
+  const existing = await getContactRowById(contactId);
+  if (!existing) {
+    return { contact: null, error: "Contact not found" };
+  }
+
+  const candidate = personToRelationshipEntry(person);
+  const displayName = `${candidate.firstName} ${candidate.lastName}`.trim();
+  if (!displayName) {
+    return { contact: null, error: "Connection name is required." };
+  }
+  if (!candidate.relationshipType) {
+    return { contact: null, error: "Relationship type is required." };
+  }
+
+  const profile = sanitizeContactProfile(existing.profile ?? {});
+  const tree = parseRelationshipTree(profile[KINSIGHT_RELATIONSHIP_TREE_KEY]);
+  const duplicateIndex = findDuplicateConnectionIndex(tree, candidate);
+  const nextTree =
+    duplicateIndex >= 0
+      ? tree.map((entry, index) =>
+          index === duplicateIndex ? mergeConnectionFacts(entry, person) : entry
+        )
+      : [candidate, ...tree];
+
+  const mergedProfile: ContactProfile = {
+    ...profile,
+    [KINSIGHT_RELATIONSHIP_TREE_KEY]: serializeRelationshipTree(nextTree),
+  };
+
+  const ctx =
+    requestContext ??
+    buildRequestContext(recordingId ? "voice" : "manual");
+  const connectionNote = person.relationshipHint?.trim()
+    ? `Connection — ${displayName} (${person.relationshipHint.trim()})`
+    : `Connection — ${displayName}`;
+  const noteContent = buildNoteLogContent(transcript, connectionNote);
+  const notePatch = withAppendedNote(
+    existing,
+    noteContent,
+    resolveRecordedAt(ctx)
+  );
+
+  const supabase = createServerSupabase();
+  const { data, error } = await updateContactRow(supabase, contactId, {
+    profile: mergedProfile,
+    notes: notePatch.notes,
+    notes_log: notePatch.notes_log,
+    updated_at: new Date().toISOString(),
+  });
+
+  if (error) {
+    console.error("addConnectionFromProposed error:", error.message);
     return { contact: null, error: error.message };
   }
 

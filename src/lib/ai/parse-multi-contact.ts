@@ -64,6 +64,8 @@ export type ParsedProposedPerson = {
   contactType?: ContactType;
   contactTypeNeedsConfirmation?: boolean;
   relationshipHint?: string;
+  recordAs?: "contact" | "connection";
+  connectionAnchorName?: string;
   profile: Partial<Record<ContactProfileFieldKey, string>>;
   sourceSnippets: Record<string, string>;
 };
@@ -129,6 +131,8 @@ function toParsedPerson(raw: ProposedPersonParse): ParsedProposedPerson {
     contactType,
     contactTypeNeedsConfirmation,
     relationshipHint: raw.relationshipHint?.trim() || undefined,
+    recordAs: raw.recordAs ?? "contact",
+    connectionAnchorName: raw.connectionAnchorName?.trim() || undefined,
     profile: sanitizeContactProfile(profile),
     sourceSnippets,
   };
@@ -156,15 +160,17 @@ You extract EVERY distinct person mentioned in a hospitality relationship note.
 RULES:
 1. Return one entry per person who is named or clearly identified.
 2. Assign facts ONLY to the person they describe — do not put Jane's traits on Pat's record.
-3. If Pat is married to Jane Pease, return TWO contacts:
-   - Pat Pease: maritalStatus, and spouseFirstName/spouseLastName pointing to Jane
-   - Jane Pease: her own firstName, lastName, maritalStatus if stated
-4. Use atomic profile keys (firstName, lastName, spouseFirstName, companyCity, etc.).
-5. Use null for fields not stated about that person.
+3. When the note is mainly ABOUT someone (e.g. updating Pat Pease) and mentions their family, colleagues, or assistants, add those people as **connections** under that anchor:
+   - Set recordAs to "connection" and connectionAnchorName to the anchor contact's name (e.g. Pat Pease).
+   - Set relationshipHint (e.g. "wife of Pat Pease", "assistant to Pat Pease").
+   - Do NOT also create them as separate top-level contacts unless they are clearly independent clients too.
+4. If Pat is married to Jane Pease and BOTH are primary subjects, Pat can be recordAs contact and Jane recordAs connection with connectionAnchorName Pat Pease (or both contacts if the user is clearly tracking both as clients).
+5. Use atomic profile keys (firstName, lastName, spouseFirstName, companyCity, etc.).
+6. Use null for fields not stated about that person.
 ${voiceSnippetRules}
-6. Resolve relative meeting dates per person into last_meeting_date (MM-DD-YYYY).
-7. Resolve birthDate and weddingAnniversary to MM-DD-YYYY in profileUpdates.
-8. ${CONTACT_TYPE_PARSE_INSTRUCTIONS} — assign contact_type per person independently.
+7. Resolve relative meeting dates per person into last_meeting_date (MM-DD-YYYY).
+8. Resolve birthDate and weddingAnniversary to MM-DD-YYYY in profileUpdates.
+9. ${CONTACT_TYPE_PARSE_INSTRUCTIONS} — assign contact_type per person independently.
 
 Valid profile field keys:
 ${PROFILE_FIELD_LIST}

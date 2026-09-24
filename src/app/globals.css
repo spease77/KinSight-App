@@ -522,7 +522,7 @@ b {
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   /* Tab row (icons + labels) sits above the home-indicator inset — Facebook-style. */
-  --bottom-nav-tab-row-height: 49px;
+  --bottom-nav-tab-row-height: 52px;
   --bottom-nav-height: calc(
     var(--bottom-nav-tab-row-height) + env(safe-area-inset-bottom, 0px)
   );
@@ -2579,6 +2579,8 @@ html.keyboard-composer-active .bottom-nav {
   height: var(--bottom-nav-tab-row-height);
   min-height: var(--bottom-nav-tab-row-height);
   box-sizing: border-box;
+  align-items: center;
+  overflow: visible;
 }
 
 .bottom-nav__tab {
@@ -2590,13 +2592,14 @@ html.keyboard-composer-active .bottom-nav {
   gap: 0.125rem;
   box-sizing: border-box;
   margin: 0;
-  padding: 0;
+  padding: 0 0 0.125rem;
+  overflow: visible;
 }
 
 .bottom-nav__icon-wrap {
   display: flex;
-  height: 1.75rem;
-  width: 1.75rem;
+  height: 1.625rem;
+  width: 1.625rem;
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
@@ -2622,13 +2625,13 @@ html.keyboard-composer-active .bottom-nav {
 
 .bottom-nav__label {
   max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  overflow: visible;
   white-space: nowrap;
   font-size: 0.625rem;
   font-weight: 500;
-  line-height: 1;
+  line-height: 1.4;
   letter-spacing: 0.025em;
+  padding-bottom: 0.125rem;
 }
 
 .bottom-nav__tab:not(.bottom-nav__tab--active) {

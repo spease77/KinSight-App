@@ -53,8 +53,8 @@ export function BottomNav() {
             <Link
               key={href}
               href={href}
-              className={`bottom-nav__tab flex min-w-0 flex-col items-center justify-center gap-0.5 py-0 ${
-                active ? "bottom-nav__tab--active" : ""
+              className={`bottom-nav__tab${
+                active ? " bottom-nav__tab--active" : ""
               }`}
             >
               <span
@@ -65,7 +65,7 @@ export function BottomNav() {
               >
                 <Icon className="bottom-nav__icon" strokeWidth={2} />
               </span>
-              <span className="bottom-nav__label text-[10px]">{label}</span>
+              <span className="bottom-nav__label">{label}</span>
             </Link>
           );
         })}

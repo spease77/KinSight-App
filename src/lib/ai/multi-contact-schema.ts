@@ -35,7 +35,19 @@ export const proposedPersonSchema = z.object({
     .string()
     .nullable()
     .describe(
-      "How this person relates to others in the note (e.g. spouse of Pat Pease)"
+      "How this person relates to others in the note (e.g. spouse of Pat Pease, son of Denisse)"
+    ),
+  recordAs: z
+    .enum(["contact", "connection"])
+    .default("contact")
+    .describe(
+      "contact = save as a top-level KinSight contact. connection = add under an existing contact's Family & Connections when connectionAnchorName is set."
+    ),
+  connectionAnchorName: z
+    .string()
+    .nullable()
+    .describe(
+      "When recordAs is connection, the existing contact this person belongs under (e.g. Pat Pease for Pat's wife Jane)."
     ),
   profileUpdates: z
     .record(z.string())
