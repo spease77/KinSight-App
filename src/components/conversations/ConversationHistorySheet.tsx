@@ -1,30 +1,13 @@
 "use client";
 
-import { MessageSquarePlus, Trash2, X } from "lucide-react";
+import { useMemo, useState } from "react";
+import {
+  Search,
+  SquarePen,
+  Trash2,
+  X,
+} from "lucide-react";
 import type { KinSightConversation } from "@/lib/conversations/types";
-
-function formatWhen(iso: string): string {
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return "";
-
-  const now = new Date();
-  const sameDay =
-    date.getFullYear() === now.getFullYear() &&
-    date.getMonth() === now.getMonth() &&
-    date.getDate() === now.getDate();
-
-  if (sameDay) {
-    return date.toLocaleTimeString(undefined, {
-      hour: "numeric",
-      minute: "2-digit",
-    });
-  }
-
-  return date.toLocaleDateString(undefined, {
-    month: "short",
-    day: "numeric",
-  });
-}
 
 type ConversationHistorySheetProps = {
   open: boolean;
@@ -45,92 +28,126 @@ export function ConversationHistorySheet({
   onNewChat,
   onDelete,
 }: ConversationHistorySheetProps) {
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filtered = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return conversations;
+    return conversations.filter(
+      (conversation) =>
+        conversation.title.toLowerCase().includes(query) ||
+        conversation.preview.toLowerCase().includes(query)
+    );
+  }, [conversations, searchQuery]);
+
   if (!open) return null;
+
+  const handleClose = () => {
+    setSearchOpen(false);
+    setSearchQuery("");
+    onClose();
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex">
       <button
         type="button"
-        className="absolute inset-0 bg-black/45"
-        aria-label="Close chat history"
-        onClick={onClose}
+        className="absolute inset-0 bg-black/50"
+        aria-label="Close menu"
+        onClick={handleClose}
       />
       <aside
-        className="relative z-10 flex h-full w-[min(100%,22rem)] flex-col border-r border-border-subtle bg-background shadow-xl"
+        className="kinsight-nav-drawer relative z-10 flex h-full w-[min(100%,20.5rem)] flex-col bg-background shadow-2xl"
         role="dialog"
-        aria-label="Chat history"
+        aria-label="KinSight menu"
       >
-        <div className="flex items-center justify-between border-b border-border-subtle px-4 py-3">
-          <div>
-            <h2 className="text-base font-semibold text-foreground">Chats</h2>
-            <p className="type-meta text-muted">Your KinSight conversations</p>
-          </div>
+        <div className="flex items-center justify-between px-4 pb-2 pt-[max(0.75rem,env(safe-area-inset-top))]">
+          <h2 className="text-xl font-semibold tracking-tight text-foreground">
+            KinSight
+          </h2>
           <button
             type="button"
-            onClick={onClose}
-            className="rounded-full p-1 text-muted-foreground transition-colors hover:bg-card-hover hover:text-foreground"
+            onClick={handleClose}
+            className="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-card-hover hover:text-foreground"
             aria-label="Close"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        <div className="border-b border-border-subtle p-3">
+        <nav className="flex flex-col gap-0.5 px-3 pb-2">
           <button
             type="button"
             onClick={() => {
               onNewChat();
-              onClose();
+              handleClose();
             }}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-accent-orange-muted px-3 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent-orange-muted/80"
+            className="flex w-full items-center gap-3 rounded-full bg-card-hover px-4 py-3 text-left text-sm font-medium text-foreground transition-colors hover:bg-card-hover/80"
           >
-            <MessageSquarePlus className="h-4 w-4" strokeWidth={2} />
+            <SquarePen className="h-5 w-5 shrink-0 text-foreground" strokeWidth={2} />
             New chat
           </button>
+
+          <button
+            type="button"
+            onClick={() => setSearchOpen((current) => !current)}
+            className="flex w-full items-center gap-3 rounded-full px-4 py-3 text-left text-sm font-medium text-foreground transition-colors hover:bg-card-hover"
+          >
+            <Search className="h-5 w-5 shrink-0 text-muted-foreground" strokeWidth={2} />
+            Search chats
+          </button>
+        </nav>
+
+        {searchOpen ? (
+          <div className="px-4 pb-3">
+            <input
+              type="search"
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              placeholder="Search your chats…"
+              autoFocus
+              className="w-full rounded-xl border border-border-subtle bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-muted focus:border-accent-mic/50 focus:outline-none"
+            />
+          </div>
+        ) : null}
+
+        <div className="px-4 pb-2">
+          <p className="text-xs font-medium text-muted">Recents</p>
         </div>
 
-        <div className="contacts-scroll min-h-0 flex-1 overflow-y-auto p-2">
-          {conversations.length === 0 ? (
-            <p className="px-2 py-6 text-center text-sm text-muted">
-              No saved chats yet. Start talking with KinSight on Home.
+        <div className="contacts-scroll min-h-0 flex-1 overflow-y-auto px-2 pb-[max(1rem,env(safe-area-inset-bottom))]">
+          {filtered.length === 0 ? (
+            <p className="px-3 py-4 text-sm text-muted">
+              {searchQuery.trim()
+                ? "No chats match your search."
+                : "No chats yet. Start a new conversation on Home."}
             </p>
           ) : (
-            <ul className="flex flex-col gap-1">
-              {conversations.map((conversation) => {
+            <ul className="flex flex-col">
+              {filtered.map((conversation) => {
                 const isActive = conversation.id === activeConversationId;
                 return (
-                  <li key={conversation.id}>
+                  <li key={conversation.id} className="group">
                     <div
-                      className={`group flex items-stretch gap-1 rounded-xl border ${
-                        isActive
-                          ? "border-accent-mic/40 bg-accent-mic/10"
-                          : "border-transparent hover:border-border-subtle hover:bg-card-hover"
+                      className={`flex items-center gap-1 rounded-xl ${
+                        isActive ? "bg-accent-mic/10" : "hover:bg-card-hover"
                       }`}
                     >
                       <button
                         type="button"
                         onClick={() => {
                           onSelect(conversation.id);
-                          onClose();
+                          handleClose();
                         }}
-                        className="min-w-0 flex-1 px-3 py-2.5 text-left"
+                        className="min-w-0 flex-1 truncate px-3 py-2.5 text-left text-sm text-foreground"
                       >
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="truncate text-sm font-medium text-foreground">
-                            {conversation.title}
-                          </span>
-                          <span className="shrink-0 text-[10px] text-muted">
-                            {formatWhen(conversation.updatedAt)}
-                          </span>
-                        </div>
-                        <p className="mt-0.5 truncate text-xs text-muted">
-                          {conversation.preview}
-                        </p>
+                        {conversation.title}
                       </button>
                       <button
                         type="button"
                         onClick={() => onDelete(conversation.id)}
-                        className="mr-1 hidden shrink-0 self-center rounded-full p-2 text-muted-foreground transition-colors hover:bg-background hover:text-red-400 group-hover:inline-flex"
+                        className="mr-1 shrink-0 rounded-full p-2 text-muted-foreground opacity-70 transition-opacity hover:text-red-400 sm:opacity-0 sm:group-hover:opacity-100"
                         aria-label={`Delete ${conversation.title}`}
                       >
                         <Trash2 className="h-4 w-4" />

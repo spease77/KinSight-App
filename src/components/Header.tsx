@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
-import { Plus, Settings, Sparkles, MessageSquare } from "lucide-react";
+import { Menu, Plus, Settings, Sparkles } from "lucide-react";
 import { DataManagementSheet } from "@/components/DataManagementSheet";
 
 const HOME_TAGLINE = "People Intelligence";
@@ -70,8 +70,7 @@ interface HeaderProps {
   title?: string;
   showNewSession?: boolean;
   onNewSession?: () => void;
-  showChatHistory?: boolean;
-  onOpenChatHistory?: () => void;
+  onOpenKinSightMenu?: () => void;
   headerActions?: ReactNode;
 }
 
@@ -79,8 +78,7 @@ export function Header({
   title,
   showNewSession = false,
   onNewSession,
-  showChatHistory = false,
-  onOpenChatHistory,
+  onOpenKinSightMenu,
   headerActions,
 }: HeaderProps) {
   const [isDataManagementOpen, setIsDataManagementOpen] = useState(false);
@@ -90,15 +88,27 @@ export function Header({
     <>
       <div className="flex h-full w-full min-w-0 items-start justify-between gap-2">
         {isHome ? (
-          <div className="flex min-w-0 flex-col">
-            <h1 className="font-sans text-2xl font-bold tracking-tight text-foreground">
-              KinSight
-            </h1>
-            <div className="flex items-center gap-1.5 pt-0.5">
-              <Sparkles className="h-3 w-3 text-primary" aria-hidden="true" />
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-primary">
-                People Intelligence
-              </span>
+          <div className="flex min-w-0 flex-1 items-start gap-2">
+            {onOpenKinSightMenu ? (
+              <button
+                type="button"
+                onClick={onOpenKinSightMenu}
+                className="-ml-1 mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-foreground transition-colors hover:bg-card-hover"
+                aria-label="Open KinSight menu"
+              >
+                <Menu className="h-6 w-6" strokeWidth={2.25} />
+              </button>
+            ) : null}
+            <div className="flex min-w-0 flex-col pt-0.5">
+              <h1 className="font-sans text-2xl font-bold leading-none tracking-tight text-foreground">
+                KinSight
+              </h1>
+              <div className="flex items-center gap-1.5 pt-1">
+                <Sparkles className="h-3 w-3 text-primary" aria-hidden="true" />
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-primary">
+                  People Intelligence
+                </span>
+              </div>
             </div>
           </div>
         ) : (
@@ -109,18 +119,6 @@ export function Header({
 
         <div className="flex shrink-0 items-center gap-1">
           {headerActions}
-
-          {showChatHistory && onOpenChatHistory ? (
-            <button
-              type="button"
-              onClick={onOpenChatHistory}
-              className="flex h-8 items-center gap-1 rounded-full px-2 text-slate-400 transition-colors hover:bg-card-hover hover:text-foreground"
-              aria-label="Open chat history"
-            >
-              <MessageSquare className="h-4 w-4" strokeWidth={2} />
-              <span className="text-[10px] font-medium">Chats</span>
-            </button>
-          ) : null}
 
           {showNewSession && onNewSession ? (
             <button

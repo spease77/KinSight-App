@@ -487,10 +487,7 @@ export function Dashboard({ homeSession: _homeSession = 0 }: DashboardProps) {
 
   const header = (
     <Header
-      showNewSession={hasConversationStarted}
-      onNewSession={resetToStateA}
-      showChatHistory
-      onOpenChatHistory={() => setHistoryOpen(true)}
+      onOpenKinSightMenu={() => setHistoryOpen(true)}
     />
   );
 

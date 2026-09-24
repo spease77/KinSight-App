@@ -1155,8 +1155,11 @@ b {
 .home-voice-mic-idle--recording {
   touch-action: manipulation;
 }
+.kinsight-nav-drawer {
+  border-right: 1px solid var(--border-subtle);
+}
+
 html.keyboard-composer-active .home-dashboard--state-a .home-hero-mic-zone {
-  /* Keep hero mic tappable when the ask bar keyboard is open. */
   display: flex;
   pointer-events: auto;
 }
