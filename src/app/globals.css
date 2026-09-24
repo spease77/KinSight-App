@@ -521,10 +521,14 @@ b {
 :root {
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
-  /* Tab row (icons + labels) sits above the home-indicator inset — Facebook-style. */
-  --bottom-nav-tab-row-height: 52px;
+  /* Tab row sits just above home indicator — not full safe-area (too high) nor flush (too low). */
+  --bottom-nav-tab-row-height: 48px;
+  --bottom-nav-indicator-padding: max(
+    7px,
+    calc(4px + env(safe-area-inset-bottom, 0px) * 0.52)
+  );
   --bottom-nav-height: calc(
-    var(--bottom-nav-tab-row-height) + env(safe-area-inset-bottom, 0px)
+    var(--bottom-nav-tab-row-height) + var(--bottom-nav-indicator-padding)
   );
   --bottom-nav-clearance: var(--bottom-nav-height);
   --home-header-height: 5.75rem;
@@ -555,19 +559,24 @@ b {
   width: 100%;
 }
 
-/* Bottom nav: tab row + safe-area inset below labels (home indicator). */
+/* Bottom nav: tab row flush above tuned home-indicator inset. */
 .bottom-nav {
   position: fixed !important;
   bottom: 0 !important;
   left: 0 !important;
   right: 0 !important;
   top: auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: flex-end !important;
   height: auto !important;
-  min-height: var(--bottom-nav-tab-row-height) !important;
+  min-height: calc(
+    var(--bottom-nav-tab-row-height) + var(--bottom-nav-indicator-padding)
+  ) !important;
   margin: 0 !important;
   box-sizing: border-box;
-  padding-top: 0.125rem !important;
-  padding-bottom: env(safe-area-inset-bottom, 0px) !important;
+  padding-top: 0 !important;
+  padding-bottom: var(--bottom-nav-indicator-padding) !important;
 }
 
 .app-scroll.home-scroll-locked {
@@ -2587,6 +2596,7 @@ html.keyboard-composer-active .bottom-nav {
 
 .bottom-nav__inner {
   width: 100%;
+  flex: 0 0 auto;
   height: var(--bottom-nav-tab-row-height);
   min-height: var(--bottom-nav-tab-row-height);
   box-sizing: border-box;
@@ -2599,11 +2609,12 @@ html.keyboard-composer-active .bottom-nav {
   min-width: 0;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 0.125rem;
+  justify-content: flex-end;
+  gap: 0.0625rem;
   box-sizing: border-box;
   margin: 0;
-  padding: 0 0 0.125rem;
+  padding: 0;
+  height: 100%;
   overflow: visible;
 }
 
@@ -2640,9 +2651,9 @@ html.keyboard-composer-active .bottom-nav {
   white-space: nowrap;
   font-size: 0.625rem;
   font-weight: 500;
-  line-height: 1.4;
+  line-height: 1.35;
   letter-spacing: 0.025em;
-  padding-bottom: 0.125rem;
+  padding-bottom: 0;
 }
 
 .bottom-nav__tab:not(.bottom-nav__tab--active) {
