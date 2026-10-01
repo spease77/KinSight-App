@@ -556,9 +556,9 @@ b {
   width: 100%;
 }
 
-/* Bottom nav: 50px row + safe-area padding (Tailwind layout in BottomNav.tsx). */
+/* Bottom nav: 50px tab row + safe-area padding (see BottomNav.tsx). */
 .bottom-nav {
-  min-height: var(--bottom-nav-height);
+  box-sizing: border-box;
 }
 
 .app-scroll.home-scroll-locked {
@@ -1000,8 +1000,7 @@ b {
   max-width: 32rem;
   bottom: 0;
   height: calc(
-    20dvh + var(--bottom-nav-height, 4.75rem) +
-      env(safe-area-inset-bottom, 0px)
+    20dvh + var(--bottom-nav-height, 4.75rem)
   );
   transform: translateX(-50%);
 }
@@ -2586,6 +2585,7 @@ html.keyboard-composer-active .bottom-nav {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 0;
   box-sizing: border-box;
   margin: 0;
   padding: 0;
