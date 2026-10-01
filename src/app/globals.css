@@ -84,6 +84,9 @@
   --contact-type-family: #ffc64d;
   --contact-type-family-muted: rgba(181, 121, 0, 0.15);
   --border-contact-family: rgba(255, 198, 77, 0.38);
+
+  --chat-message-text: #ffffff;
+  --chat-user-bubble-bg: #1a1a1e;
 }
 
 [data-theme="light"] {
@@ -156,9 +159,10 @@
   --contact-type-family: #b57900;
   --contact-type-family-muted: #fff7e6;
   --border-contact-family: #b57900;
-}
 
-@media (prefers-color-scheme: light) {
+  --chat-message-text: var(--text-primary);
+  --chat-user-bubble-bg: #e4e5e8;
+}
   [data-theme="system"] {
     color-scheme: light;
 
@@ -1283,6 +1287,39 @@ html.keyboard-composer-active .home-dashboard--state-a .home-hero-mic-zone {
   background: transparent;
   border: none;
   box-shadow: none;
+  color: var(--chat-message-text);
+}
+
+.kinsight-conversation-messages .assistant-markdown,
+.kinsight-conversation-messages .assistant-markdown :is(p, li, strong, em, h2, h3, code, a, blockquote) {
+  color: var(--chat-message-text);
+}
+
+.kinsight-conversation-messages .assistant-markdown a {
+  text-decoration-color: color-mix(in srgb, var(--chat-message-text) 45%, transparent);
+}
+
+.kinsight-conversation-messages .assistant-markdown-list :is(ul, ol)::marker {
+  color: var(--chat-message-text);
+}
+
+.kinsight-chat-user-bubble {
+  background-color: var(--chat-user-bubble-bg);
+  color: var(--chat-message-text);
+}
+
+.kinsight-chat-user-bubble__avatar {
+  background-color: var(--chat-user-bubble-bg);
+  color: var(--chat-message-text);
+}
+
+.kinsight-chat-user-bubble__file-chip {
+  background-color: color-mix(in srgb, var(--bg-main) 55%, var(--chat-user-bubble-bg));
+  color: var(--chat-message-text);
+}
+
+.kinsight-conversation-messages .type-meta {
+  color: var(--chat-message-text);
 }
 
 /* Keyboard open: bottom edge flush to keyboard (no gap). */

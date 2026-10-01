@@ -324,18 +324,18 @@ export function KinSightConversationPanel({
               >
                 {isUser && (
                   <div
-                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent-orange-muted"
+                    className="kinsight-chat-user-bubble__avatar flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
                     aria-hidden="true"
                   >
                     {isVoice ? (
-                      <Mic className="h-4 w-4 text-icon" strokeWidth={2} />
+                      <Mic className="h-4 w-4" strokeWidth={2} />
                     ) : (
-                      <User className="h-4 w-4 text-icon" strokeWidth={2} />
+                      <User className="h-4 w-4" strokeWidth={2} />
                     )}
                   </div>
                 )}
                 {isUser ? (
-                  <div className="max-w-[85%] space-y-2 rounded-xl bg-accent-orange-muted px-3.5 py-2.5 type-editorial text-sm text-foreground">
+                  <div className="kinsight-chat-user-bubble max-w-[85%] space-y-2 rounded-xl px-3.5 py-2.5 type-editorial text-sm">
                     {fileParts.length > 0 && (
                       <div className="flex flex-wrap gap-2">
                         {fileParts.map((part, partIndex) =>
@@ -350,10 +350,10 @@ export function KinSightConversationPanel({
                           ) : (
                             <div
                               key={`${message.id}-file-${partIndex}`}
-                              className="flex items-center gap-2 rounded-lg bg-background/40 px-2 py-1.5 text-xs"
+                              className="kinsight-chat-user-bubble__file-chip flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs"
                             >
                               <FileText
-                                className="h-4 w-4 shrink-0 text-icon"
+                                className="h-4 w-4 shrink-0 opacity-80"
                                 strokeWidth={2}
                               />
                               <span className="truncate">
@@ -389,7 +389,7 @@ export function KinSightConversationPanel({
           )}
 
           {conversationStarted && statusLabel && (
-            <p className="type-meta shrink-0 px-1 text-center text-foreground">
+            <p className="type-meta shrink-0 px-1 text-center">
               {statusLabel}
             </p>
           )}

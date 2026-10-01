@@ -63,7 +63,7 @@ export function AssistantMessageBubble({
   };
 
   return (
-    <div className="w-full px-0.5 py-1 type-editorial text-sm text-foreground">
+    <div className="w-full px-0.5 py-1 type-editorial text-sm text-[var(--chat-message-text)]">
       {isEditing ? (
         <div className="flex flex-col gap-2">
           <textarea
