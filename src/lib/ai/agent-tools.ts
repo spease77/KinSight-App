@@ -6,6 +6,7 @@ import type { AiRequestContext } from "@/lib/ai/request-context";
 import {
   checkDatabaseHealth,
   createContactFromVoice,
+  createContactManual,
   fetchContactById,
   fetchContacts,
   updateContactFromVoice,
@@ -253,21 +254,15 @@ export function createAgentTools(ctx: AgentToolsContext) {
         topics: z.array(z.string()).optional(),
       }),
       execute: async (fields) => {
-        const transcript = [
-          fields.notes,
-          fields.nextSteps ? `Next steps: ${fields.nextSteps}` : null,
-          fields.company ? `Company: ${fields.company}` : null,
-          fields.role ? `Role: ${fields.role}` : null,
-        ]
-          .filter(Boolean)
-          .join(". ");
-
-        const { contact, error } = await createContactFromVoice(
-          transcript || `New contact: ${fields.name}`,
-          fields.name,
-          recordingId,
-          requestContext
-        );
+        const { contact, error } = await createContactManual({
+          name: fields.name.trim(),
+          company: fields.company,
+          role: fields.role,
+          notes: fields.notes,
+          lastContact: fields.lastContact,
+          nextSteps: fields.nextSteps,
+          topics: fields.topics,
+        });
 
         if (error || !contact) {
           return { success: false, error: error ?? "Create failed" };

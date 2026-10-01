@@ -150,37 +150,15 @@ export function Dashboard({ homeSession: _homeSession = 0 }: DashboardProps) {
     [analyzeNote]
   );
 
-  const handleTranscriptReady = useCallback(
-    ({ text, recordingId }: { text: string; recordingId: string }) => {
-      const trimmed = text.trim();
-      if (!trimmed || isChatLoading) return;
-
-      unlockSpeechSynthesis();
-      setConversationEngaged(true);
-
-      const messageText = recordingId
-        ? `🎤 [recording:${recordingId}] ${trimmed}`
-        : `🎤 ${trimmed}`;
-
-      processNote(trimmed, {
-        recordingId: recordingId || undefined,
-        entryMethod: "voice",
-      });
-
-      sendMessage({
-        text: messageText,
-        metadata: { entry_method: "voice" } satisfies KinSightMessageMetadata,
-      });
-      setReplyText("");
-    },
-    [isChatLoading, processNote, sendMessage]
-  );
-
   const handleRecordingComplete = useCallback((text: string) => {
     const trimmed = text.trim();
     if (!trimmed) return;
     setReplyText(trimmed);
   }, []);
+
+  const handleTranscriptReadyRef = useRef<
+    (payload: { text: string; recordingId: string }) => void
+  >(() => {});
 
   const {
     isRecording,
@@ -202,9 +180,38 @@ export function Dashboard({ homeSession: _homeSession = 0 }: DashboardProps) {
     clearPermissionFailure,
     setTranscriptText,
   } = useVoicePipeline({
-    onTranscriptReady: handleTranscriptReady,
+    onTranscriptReady: (payload) => handleTranscriptReadyRef.current(payload),
     onRecordingComplete: handleRecordingComplete,
   });
+
+  const handleTranscriptReady = useCallback(
+    ({ text, recordingId }: { text: string; recordingId: string }) => {
+      const trimmed = text.trim();
+      if (!trimmed || isChatLoading) return;
+
+      unlockSpeechSynthesis();
+      setConversationEngaged(true);
+
+      const messageText = recordingId
+        ? `🎤 [recording:${recordingId}] ${trimmed}`
+        : `🎤 ${trimmed}`;
+
+      processNote(trimmed, {
+        recordingId: recordingId || undefined,
+        entryMethod: "voice",
+      });
+
+      sendMessage({
+        text: messageText,
+        metadata: { entry_method: "voice" } satisfies KinSightMessageMetadata,
+      });
+      clearTranscript();
+      setReplyText("");
+    },
+    [clearTranscript, isChatLoading, processNote, sendMessage]
+  );
+
+  handleTranscriptReadyRef.current = handleTranscriptReady;
 
   useEffect(() => {
     if (isRecording) {
@@ -353,8 +360,10 @@ export function Dashboard({ homeSession: _homeSession = 0 }: DashboardProps) {
         text: trimmed,
         metadata: { entry_method: "manual" } satisfies KinSightMessageMetadata,
       });
+      clearTranscript();
+      setReplyText("");
     },
-    [processNote, sendMessage]
+    [clearTranscript, processNote, sendMessage]
   );
 
   useEffect(() => {
@@ -419,8 +428,8 @@ export function Dashboard({ homeSession: _homeSession = 0 }: DashboardProps) {
         text: trimmed,
         metadata: { entry_method: "manual" } satisfies KinSightMessageMetadata,
       });
-
       clearTranscript();
+      setReplyText("");
     },
     [clearTranscript, isChatLoading, processNote, sendMessage]
   );
@@ -457,8 +466,10 @@ export function Dashboard({ homeSession: _homeSession = 0 }: DashboardProps) {
       return [];
     });
     setComposerAttachError(null);
+    clearTranscript();
     setReplyText("");
   }, [
+    clearTranscript,
     composerAttachments,
     isChatLoading,
     processNote,

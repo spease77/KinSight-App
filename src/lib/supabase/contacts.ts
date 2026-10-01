@@ -8,6 +8,7 @@ import {
 import {
   buildContactTypeProfileMeta,
   isContactType,
+  inferContactTypeHeuristic,
   resolveContactTypeFromParse,
   readContactTypeFromProfile,
   isContactTypeSchemaError,
@@ -292,6 +293,30 @@ function withoutColumn<T extends ContactWritePayload>(
   return rest as T;
 }
 
+function sanitizeContactWritePayload(
+  payload: ContactWritePayload
+): ContactWritePayload {
+  const next: ContactWritePayload = { ...payload };
+
+  if ("contact_type" in next && !isContactType(next.contact_type)) {
+    next.contact_type = null;
+  }
+
+  if (
+    "status" in next &&
+    typeof next.status === "string" &&
+    !["hot", "warm", "cold"].includes(next.status)
+  ) {
+    next.status = "warm";
+  }
+
+  return next;
+}
+
+function isCheckConstraintError(message: string): boolean {
+  return message.toLowerCase().includes("check constraint");
+}
+
 function isNotesLogSchemaError(message: string): boolean {
   const lower = message.toLowerCase();
   return lower.includes("notes_log") && isSchemaCacheColumnError(message);
@@ -339,7 +364,7 @@ async function insertContactRow(
   supabase: ReturnType<typeof createServerSupabase>,
   insert: ContactWritePayload
 ) {
-  let current = insert;
+  let current = sanitizeContactWritePayload(insert);
   let result = await supabase
     .from("contacts")
     .insert(current as never)
@@ -347,24 +372,42 @@ async function insertContactRow(
     .single();
 
   let attempts = 0;
-  while (
-    result.error &&
-    isSchemaCacheColumnError(result.error.message) &&
-    attempts < 4
-  ) {
-    const missing = extractMissingSchemaColumn(result.error.message);
-    if (!missing || !(missing in current)) break;
+  while (result.error && attempts < 4) {
+    const message = result.error.message;
 
-    console.warn(
-      `Column ${missing} not in Supabase API schema yet; retrying without it. Run NOTIFY pgrst, 'reload schema'; in SQL Editor.`
-    );
-    current = withoutColumn(current, missing);
-    result = await supabase
-      .from("contacts")
-      .insert(current as never)
-      .select()
-      .single();
-    attempts += 1;
+    if (isSchemaCacheColumnError(message)) {
+      const missing = extractMissingSchemaColumn(message);
+      if (!missing || !(missing in current)) break;
+
+      console.warn(
+        `Column ${missing} not in Supabase API schema yet; retrying without it. Run NOTIFY pgrst, 'reload schema'; in SQL Editor.`
+      );
+      current = withoutColumn(current, missing);
+      attempts += 1;
+      result = await supabase
+        .from("contacts")
+        .insert(current as never)
+        .select()
+        .single();
+      continue;
+    }
+
+    if (isCheckConstraintError(message) && "contact_type" in current) {
+      console.warn(
+        "Insert rejected contact_type check; retrying with contact_type cleared."
+      );
+      current = withoutColumn(current, "contact_type");
+      current.contact_type_needs_confirmation = true;
+      attempts += 1;
+      result = await supabase
+        .from("contacts")
+        .insert(current as never)
+        .select()
+        .single();
+      continue;
+    }
+
+    break;
   }
 
   return result;
@@ -1283,6 +1326,30 @@ export async function createContactFromVoice(
   recordingId?: string,
   requestContext?: AiRequestContext
 ): Promise<{ contact: Contact | null; error?: string }> {
+  const confirmed = confirmedName?.trim();
+  if (confirmed) {
+    const { contactType, needsConfirmation } = inferContactTypeHeuristic(
+      transcript.trim()
+    );
+    const manual = await createContactManual({
+      name: confirmed,
+      notes: transcript.trim() || undefined,
+      contactType,
+      contactTypeNeedsConfirmation: needsConfirmation,
+    });
+
+    if (manual.contact) {
+      if (recordingId) {
+        await linkRecordingToContact(recordingId, manual.contact.id);
+      }
+      return { contact: manual.contact };
+    }
+
+    if (manual.error) {
+      return { contact: null, error: manual.error };
+    }
+  }
+
   const supabase = createServerSupabase();
   const ctx =
     requestContext ??
