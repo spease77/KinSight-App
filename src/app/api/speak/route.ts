@@ -4,26 +4,47 @@ import {
   synthesizeElevenLabs,
 } from "@/lib/audio/elevenlabs-tts";
 import { MODELS, TTS_SPEED, TTS_VOICE } from "@/lib/ai/models";
+import { readEnv } from "@/lib/supabase/server";
 
 export const maxDuration = 30;
 
 const MAX_CHARS = 4096;
 
+function plainTextForTts(text: string): string {
+  return text
+    .replace(/```[\s\S]*?```/g, " ")
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+    .replace(/[#*_>`]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, MAX_CHARS);
+}
+
 async function synthesizeOpenAI(text: string): Promise<Buffer> {
-  if (!process.env.OPENAI_API_KEY) {
-    throw new Error("OPENAI_API_KEY is missing from .env.local");
+  const apiKey = readEnv("OPENAI_API_KEY");
+  if (!apiKey) {
+    throw new Error("OPENAI_API_KEY is missing");
   }
 
-  const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-  const speech = await openai.audio.speech.create({
+  const openai = new OpenAI({ apiKey });
+  const base = {
     model: MODELS.tts,
     voice: TTS_VOICE,
     input: text,
-    response_format: "mp3",
-    speed: TTS_SPEED,
-  });
+    response_format: "mp3" as const,
+  };
 
-  return Buffer.from(await speech.arrayBuffer());
+  try {
+    const speech = await openai.audio.speech.create({
+      ...base,
+      speed: TTS_SPEED,
+    });
+    return Buffer.from(await speech.arrayBuffer());
+  } catch (firstError) {
+    console.warn("OpenAI TTS with speed failed, retrying without speed:", firstError);
+    const speech = await openai.audio.speech.create(base);
+    return Buffer.from(await speech.arrayBuffer());
+  }
 }
 
 export async function POST(req: Request) {
@@ -33,21 +54,53 @@ export async function POST(req: Request) {
     return Response.json({ error: "Text is required" }, { status: 400 });
   }
 
-  const input = text.trim().slice(0, MAX_CHARS);
+  const input = plainTextForTts(text);
+  if (!input) {
+    return Response.json({ error: "Text is required" }, { status: 400 });
+  }
 
-  if (!isElevenLabsConfigured() && !process.env.OPENAI_API_KEY) {
+  const openAiKey = readEnv("OPENAI_API_KEY");
+  const elevenConfigured = isElevenLabsConfigured();
+
+  if (!elevenConfigured && !openAiKey) {
     return Response.json(
       {
         error:
-          "No TTS configured. Add ELEVENLABS_API_KEY or OPENAI_API_KEY to .env.local",
+          "No TTS configured. Add OPENAI_API_KEY or ELEVENLABS_API_KEY in Vercel environment variables.",
       },
       { status: 500 }
     );
   }
 
   let elevenLabsError: string | null = null;
+  let openAiError: string | null = null;
 
-  if (isElevenLabsConfigured()) {
+  const preferOpenAi = readEnv("TTS_PREFER_OPENAI") === "true";
+
+  async function attemptOpenAi(): Promise<Response | null> {
+    if (!openAiKey) return null;
+    try {
+      const buffer = await synthesizeOpenAI(input);
+      return new Response(new Uint8Array(buffer), {
+        headers: {
+          "Content-Type": "audio/mpeg",
+          "Cache-Control": "no-store",
+          ...(elevenLabsError ? { "X-TTS-Fallback": "openai" } : {}),
+        },
+      });
+    } catch (err) {
+      openAiError = err instanceof Error ? err.message : "OpenAI TTS failed";
+      console.error("OpenAI TTS error:", openAiError);
+      return null;
+    }
+  }
+
+  if (preferOpenAi || !elevenConfigured) {
+    const openAiResponse = await attemptOpenAi();
+    if (openAiResponse) return openAiResponse;
+  }
+
+  if (elevenConfigured) {
     try {
       const buffer = await synthesizeElevenLabs(input);
       return new Response(new Uint8Array(buffer), {
@@ -59,32 +112,19 @@ export async function POST(req: Request) {
     } catch (err) {
       elevenLabsError =
         err instanceof Error ? err.message : "ElevenLabs TTS failed";
-      console.error("ElevenLabs failed, trying OpenAI fallback:", elevenLabsError);
+      console.error("ElevenLabs TTS error:", elevenLabsError);
     }
   }
 
-  if (process.env.OPENAI_API_KEY) {
-    try {
-      const buffer = await synthesizeOpenAI(input);
-      return new Response(new Uint8Array(buffer), {
-        headers: {
-          "Content-Type": "audio/mpeg",
-          "Cache-Control": "no-store",
-          ...(elevenLabsError
-            ? { "X-TTS-Fallback": "openai" }
-            : {}),
-        },
-      });
-    } catch (err) {
-      console.error("OpenAI TTS fallback error:", err);
-    }
-  }
+  const openAiResponse = await attemptOpenAi();
+  if (openAiResponse) return openAiResponse;
 
   return Response.json(
     {
       error:
+        openAiError ??
         elevenLabsError ??
-        "Could not generate speech audio. Check your ElevenLabs voice ID and API key.",
+        "Could not generate speech audio.",
     },
     { status: 500 }
   );

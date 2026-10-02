@@ -192,7 +192,37 @@ async function playBlob(blob: Blob): Promise<SpeakResult> {
   return { ok: false, reason: "autoplay_blocked" };
 }
 
-/** Speak via /api/speak (ElevenLabs when configured, else OpenAI). No browser fallback. */
+function plainTextForSpeech(text: string): string {
+  return text
+    .replace(/```[\s\S]*?```/g, " ")
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+    .replace(/[#*_>`]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 4096);
+}
+
+async function speakWithBrowser(text: string): Promise<SpeakResult> {
+  if (typeof window === "undefined" || !window.speechSynthesis) {
+    return { ok: false, reason: "api_error" };
+  }
+
+  const plain = plainTextForSpeech(text);
+  if (!plain) return { ok: false, reason: "aborted" };
+
+  unlockSpeechSynthesis();
+
+  return new Promise((resolve) => {
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(plain);
+    utterance.rate = 0.95;
+    utterance.onend = () => resolve({ ok: true });
+    utterance.onerror = () => resolve({ ok: false, reason: "api_error" });
+    window.speechSynthesis.speak(utterance);
+  });
+}
+
+/** Speak via /api/speak (ElevenLabs when configured, else OpenAI), then browser TTS if needed. */
 export async function speakText(text: string): Promise<SpeakResult> {
   if (!text.trim() || typeof window === "undefined") {
     return { ok: false, reason: "aborted" };
@@ -208,14 +238,15 @@ export async function speakText(text: string): Promise<SpeakResult> {
     response = await fetch("/api/speak", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text }),
+      body: JSON.stringify({ text: plainTextForSpeech(text) }),
       signal: abortController.signal,
     });
   } catch (err) {
     if (err instanceof DOMException && err.name === "AbortError") {
       return { ok: false, reason: "aborted" };
     }
-    throw err;
+    console.error("TTS request failed:", err);
+    return speakWithBrowser(text);
   } finally {
     if (currentAbortController === abortController) {
       currentAbortController = null;
@@ -236,10 +267,14 @@ export async function speakText(text: string): Promise<SpeakResult> {
       // use raw body
     }
     console.error("TTS failed:", message);
-    return { ok: false, reason: "api_error" };
+    return speakWithBrowser(text);
   }
 
   const blob = await response.blob();
+  if (blob.size === 0) {
+    console.error("TTS returned empty audio");
+    return speakWithBrowser(text);
+  }
   pendingSpeechBlob = blob;
 
   if (abortController.signal.aborted) {
@@ -264,6 +299,10 @@ export function hasPendingSpeechPlayback(): boolean {
 export function stopSpeaking(): void {
   currentAbortController?.abort();
   currentAbortController = null;
+
+  if (typeof window !== "undefined") {
+    window.speechSynthesis?.cancel();
+  }
 
   if (currentPlayResolve) {
     const resolve = currentPlayResolve;
