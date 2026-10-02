@@ -2628,14 +2628,32 @@ html.scroll-chrome-hidden {
 }
 
 .page-header-chrome {
-  transition: transform 0.22s ease, opacity 0.22s ease;
+  transition:
+    transform 0.22s ease,
+    opacity 0.22s ease,
+    height 0.22s ease,
+    min-height 0.22s ease,
+    margin 0.22s ease,
+    padding 0.22s ease;
   will-change: transform;
 }
 
-html.scroll-chrome-hidden .page-header-chrome {
+/* Collapse header layout so chat/list content fills the space (not Agenda). */
+html.scroll-chrome-hidden .page-header-chrome:not(.agenda-page-header) {
   transform: translateY(calc(-100% - env(safe-area-inset-top, 0px)));
+  height: 0 !important;
+  min-height: 0 !important;
+  max-height: 0;
+  margin-bottom: 0 !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  overflow: hidden;
   opacity: 0;
   pointer-events: none;
+}
+
+html.scroll-chrome-hidden .home-dashboard--conversation .home-conversation-panel {
+  flex: 1 1 auto;
 }
 
 .bottom-nav {

@@ -1,9 +1,14 @@
 "use client";
 
 import { useEffect } from "react";
+import { usePathname } from "next/navigation";
 
 const SCROLL_DELTA_THRESHOLD = 6;
 const CHROME_HIDDEN_CLASS = "scroll-chrome-hidden";
+
+function isAgendaPath(pathname: string): boolean {
+  return pathname === "/agenda" || pathname.startsWith("/agenda/");
+}
 
 function isScrollChromeSource(element: EventTarget | null): element is HTMLElement {
   if (!(element instanceof HTMLElement)) return false;
@@ -23,7 +28,14 @@ function setChromeHidden(hidden: boolean) {
 }
 
 export function useScrollChromeVisibility() {
+  const pathname = usePathname();
+
   useEffect(() => {
+    if (isAgendaPath(pathname)) {
+      setChromeHidden(false);
+      return;
+    }
+
     const scrollPositions = new WeakMap<HTMLElement, number>();
 
     const onScroll = (event: Event) => {
@@ -56,5 +68,5 @@ export function useScrollChromeVisibility() {
       document.removeEventListener("scroll", onScroll, { capture: true });
       setChromeHidden(false);
     };
-  }, []);
+  }, [pathname]);
 }
