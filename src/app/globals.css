@@ -163,6 +163,8 @@
   --chat-message-text: var(--text-primary);
   --chat-user-bubble-bg: #e4e5e8;
 }
+
+@media (prefers-color-scheme: light) {
   [data-theme="system"] {
     color-scheme: light;
 
@@ -229,6 +231,9 @@
     --contact-type-family: #b57900;
     --contact-type-family-muted: #fff7e6;
     --border-contact-family: #b57900;
+
+    --chat-message-text: var(--text-primary);
+    --chat-user-bubble-bg: #e4e5e8;
   }
 }
 
