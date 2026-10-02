@@ -424,6 +424,8 @@ body,
 main.app-scroll {
   overscroll-behavior-y: contain !important;
   -webkit-overflow-scrolling: touch;
+  padding-bottom: var(--app-chrome-bottom);
+  transition: padding-bottom 0.22s ease;
 }
 
 .contacts-scroll,
@@ -537,13 +539,14 @@ b {
     var(--bottom-nav-tab-row-height) + var(--bottom-nav-indicator-padding)
   );
   --bottom-nav-clearance: var(--bottom-nav-height);
+  --app-chrome-bottom: var(--bottom-nav-height);
   --home-header-height: 5.75rem;
   --home-composer-dock-height: calc(0.75rem + 3rem + 0.75rem);
   /* Resting Home composer height (keyboard closed). Updated from visual viewport when keyboard opens. */
-  --home-state-a-composer-pinned-bottom: calc(var(--bottom-nav-height) + 0.75rem);
+  --home-state-a-composer-pinned-bottom: calc(var(--app-chrome-bottom) + 0.75rem);
   --home-state-a-composer-rest-bottom: var(--home-state-a-composer-pinned-bottom);
   --home-conversation-composer-clearance: calc(
-    var(--bottom-nav-height) + var(--home-composer-dock-height) + 0.75rem
+    var(--app-chrome-bottom) + var(--home-composer-dock-height) + 0.75rem
   );
   --home-state-a-composer-clearance: calc(
     var(--home-state-a-composer-rest-bottom) + var(--home-composer-dock-height) +
@@ -1262,6 +1265,7 @@ html.keyboard-composer-active .home-dashboard--state-a .home-hero-mic-zone {
   padding-bottom: 0.5rem;
   background: transparent;
   box-shadow: none;
+  transition: bottom 0.22s ease;
 }
 
 /* Home conversation + keyboard: composer pinned above nav/keyboard. */
@@ -1269,7 +1273,7 @@ html.keyboard-composer-active .home-dashboard--state-a .home-hero-mic-zone {
   position: fixed;
   right: 0;
   left: 0;
-  bottom: var(--bottom-nav-height);
+  bottom: var(--app-chrome-bottom);
   top: auto;
   z-index: 40;
   margin: 0 auto;
@@ -1280,6 +1284,7 @@ html.keyboard-composer-active .home-dashboard--state-a .home-hero-mic-zone {
   padding-bottom: 0.625rem;
   background: transparent;
   box-shadow: none;
+  transition: bottom 0.22s ease;
 }
 
 .home-dashboard--conversation .kinsight-conversation-messages {
@@ -2613,6 +2618,33 @@ html.keyboard-composer-active .home-composer-dock {
 /* Hide while keyboard is open — keep layout box to avoid jump on show/hide. */
 html.keyboard-composer-active .bottom-nav {
   visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Scroll down through content: tuck header + bottom nav; scroll up: reveal. */
+html.scroll-chrome-hidden {
+  --app-chrome-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.page-header-chrome {
+  transition: transform 0.22s ease, opacity 0.22s ease;
+  will-change: transform;
+}
+
+html.scroll-chrome-hidden .page-header-chrome {
+  transform: translateY(calc(-100% - env(safe-area-inset-top, 0px)));
+  opacity: 0;
+  pointer-events: none;
+}
+
+.bottom-nav {
+  transition: transform 0.22s ease, opacity 0.22s ease;
+  will-change: transform;
+}
+
+html.scroll-chrome-hidden .bottom-nav {
+  transform: translateY(100%);
   opacity: 0;
   pointer-events: none;
 }
