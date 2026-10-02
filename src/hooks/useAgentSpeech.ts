@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { UIMessage } from "ai";
 import { getMessageText } from "@/lib/ai/message-text";
 import {
@@ -12,19 +12,58 @@ import {
   type SpeakResult,
 } from "@/lib/audio/speech";
 
+const SPEECH_ENABLED_KEY = "kinsight-speech-enabled";
+
+function readInitialSpeechEnabled(): boolean {
+  if (typeof window === "undefined") return true;
+  return window.localStorage.getItem(SPEECH_ENABLED_KEY) !== "false";
+}
+
 export function useAgentSpeech() {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [speechEnabled, setSpeechEnabled] = useState(true);
   const [playbackBlocked, setPlaybackBlocked] = useState(false);
+  const [speechError, setSpeechError] = useState<string | null>(null);
   const lastSpokenIdRef = useRef<string | null>(null);
   const speakingRef = useRef(false);
+  const speechPrefHydratedRef = useRef(false);
+
+  useEffect(() => {
+    setSpeechEnabled(readInitialSpeechEnabled());
+    speechPrefHydratedRef.current = true;
+  }, []);
+
+  useEffect(() => {
+    if (!speechPrefHydratedRef.current || typeof window === "undefined") return;
+    window.localStorage.setItem(
+      SPEECH_ENABLED_KEY,
+      speechEnabled ? "true" : "false"
+    );
+  }, [speechEnabled]);
 
   const finishSpeech = useCallback((result: SpeakResult) => {
     speakingRef.current = false;
     setIsSpeaking(false);
-    setPlaybackBlocked(
-      !result.ok && result.reason === "autoplay_blocked" && hasPendingSpeechPlayback()
-    );
+
+    if (result.ok) {
+      setPlaybackBlocked(false);
+      setSpeechError(null);
+      return;
+    }
+
+    if (result.reason === "autoplay_blocked" && hasPendingSpeechPlayback()) {
+      setPlaybackBlocked(true);
+      setSpeechError(null);
+      return;
+    }
+
+    if (result.reason === "api_error") {
+      setSpeechError(
+        "KinSight couldn't play the voice reply. Check your connection or try again."
+      );
+    }
+
+    setPlaybackBlocked(false);
   }, []);
 
   const speakAssistantReply = useCallback(
@@ -41,14 +80,17 @@ export function useAgentSpeech() {
       if (!text) return;
 
       if (lastAssistant.id === lastSpokenIdRef.current) return;
-      lastSpokenIdRef.current = lastAssistant.id;
 
       unlockSpeechSynthesis();
       speakingRef.current = true;
       setIsSpeaking(true);
       setPlaybackBlocked(false);
+      setSpeechError(null);
 
       const result = await speakText(text);
+      if (result.ok) {
+        lastSpokenIdRef.current = lastAssistant.id;
+      }
       finishSpeech(result);
     },
     [finishSpeech, speechEnabled]
@@ -61,6 +103,7 @@ export function useAgentSpeech() {
     speakingRef.current = true;
     setIsSpeaking(true);
     setPlaybackBlocked(false);
+    setSpeechError(null);
 
     const result = await replayPendingSpeech();
     finishSpeech(result);
@@ -71,6 +114,7 @@ export function useAgentSpeech() {
     speakingRef.current = false;
     setIsSpeaking(false);
     setPlaybackBlocked(false);
+    setSpeechError(null);
   }, []);
 
   const toggleSpeechEnabled = useCallback(() => {
@@ -84,6 +128,7 @@ export function useAgentSpeech() {
     isSpeaking,
     speechEnabled,
     playbackBlocked,
+    speechError,
     speakAssistantReply,
     replayBlockedSpeech,
     interruptSpeech,

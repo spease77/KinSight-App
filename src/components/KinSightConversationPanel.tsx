@@ -3,7 +3,7 @@
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import type { UIMessage } from "ai";
 import { isFileUIPart } from "ai";
-import { FileText, Mic, Plus, Send, User } from "lucide-react";
+import { FileText, Plus, Send } from "lucide-react";
 import { ComposerAttachSheet } from "@/components/composer/ComposerAttachSheet";
 import { ComposerAttachmentPreviews } from "@/components/composer/ComposerAttachmentPreviews";
 import type { ComposerAttachmentPreview } from "@/lib/composer/attachments";
@@ -31,6 +31,7 @@ interface KinSightConversationPanelProps {
   onToggleSpeech?: () => void;
   playbackBlocked?: boolean;
   onReplaySpeech?: () => void;
+  speechError?: string | null;
   replyValue: string;
   onReplyChange: (value: string) => void;
   onReplySubmit: () => void;
@@ -68,6 +69,7 @@ export function KinSightConversationPanel({
   onToggleSpeech,
   playbackBlocked = false,
   onReplaySpeech,
+  speechError = null,
   replyValue,
   onReplyChange,
   onReplySubmit,
@@ -312,7 +314,9 @@ export function KinSightConversationPanel({
             const text = getMessageText(message);
             const fileParts = message.parts.filter(isFileUIPart);
             const isVoice = text.startsWith("🎤");
-            const displayText = isVoice ? stripRecordingTag(text) : text;
+            const displayText = isVoice
+              ? stripRecordingTag(text).replace(/^🎤\s*/, "").trim()
+              : text;
             const isLastMessage = index === messages.length - 1;
 
             if (!displayText && fileParts.length === 0) return null;
@@ -320,20 +324,8 @@ export function KinSightConversationPanel({
             return (
               <div
                 key={message.id}
-                className={isUser ? "flex flex-row-reverse gap-2.5" : "w-full"}
+                className={isUser ? "flex justify-end" : "w-full"}
               >
-                {isUser && (
-                  <div
-                    className="kinsight-chat-user-bubble__avatar flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
-                    aria-hidden="true"
-                  >
-                    {isVoice ? (
-                      <Mic className="h-4 w-4" strokeWidth={2} />
-                    ) : (
-                      <User className="h-4 w-4" strokeWidth={2} />
-                    )}
-                  </div>
-                )}
                 {isUser ? (
                   <div className="kinsight-chat-user-bubble max-w-[85%] space-y-2 rounded-xl px-3.5 py-2.5 type-editorial text-sm">
                     {fileParts.length > 0 && (
@@ -464,6 +456,20 @@ export function KinSightConversationPanel({
               {composerAttachError}
             </p>
           )}
+          {speechEnabled && playbackBlocked && onReplaySpeech ? (
+            <button
+              type="button"
+              onClick={() => onReplaySpeech()}
+              className="mb-2 w-full rounded-lg border border-border-subtle bg-card px-3 py-2 text-sm font-medium text-[var(--chat-message-text,var(--text-primary))] transition-colors hover:bg-card-hover"
+            >
+              Tap to hear KinSight&apos;s reply
+            </button>
+          ) : null}
+          {speechError ? (
+            <p className="mb-2 px-1 text-xs text-red-400" role="alert">
+              {speechError}
+            </p>
+          ) : null}
           {askBarForm}
         </div>
       ) : (
@@ -479,6 +485,20 @@ export function KinSightConversationPanel({
               {composerAttachError}
             </p>
           )}
+          {speechEnabled && playbackBlocked && onReplaySpeech ? (
+            <button
+              type="button"
+              onClick={() => onReplaySpeech()}
+              className="mb-2 w-full rounded-lg border border-border-subtle bg-card px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-card-hover"
+            >
+              Tap to hear KinSight&apos;s reply
+            </button>
+          ) : null}
+          {speechError ? (
+            <p className="mb-2 px-1 text-xs text-red-400" role="alert">
+              {speechError}
+            </p>
+          ) : null}
           {askBarForm}
         </div>
       )}

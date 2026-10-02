@@ -118,6 +118,7 @@ export function Dashboard({ homeSession: _homeSession = 0 }: DashboardProps) {
     isSpeaking,
     speechEnabled,
     playbackBlocked,
+    speechError,
     speakAssistantReply,
     replayBlockedSpeech,
     interruptSpeech,
@@ -394,14 +395,22 @@ export function Dashboard({ homeSession: _homeSession = 0 }: DashboardProps) {
     }
   }, [messages.length, isChatLoading, isDetecting]);
 
+  const flushScheduledPersistRef = useRef(flushScheduledPersist);
+  const persistMessagesRef = useRef(persistMessages);
+  flushScheduledPersistRef.current = flushScheduledPersist;
+  persistMessagesRef.current = persistMessages;
+
   useEffect(() => {
     return () => {
-      flushScheduledPersist();
+      flushScheduledPersistRef.current();
       if (
         activeConversationIdRef.current &&
         messagesRef.current.length > 0
       ) {
-        persistMessages(activeConversationIdRef.current, messagesRef.current);
+        persistMessagesRef.current(
+          activeConversationIdRef.current,
+          messagesRef.current
+        );
       }
       stopRef.current();
       setMessagesRef.current([]);
@@ -414,7 +423,7 @@ export function Dashboard({ homeSession: _homeSession = 0 }: DashboardProps) {
         return [];
       });
     };
-  }, [flushScheduledPersist, persistMessages]);
+  }, []);
 
   const handleNotesSubmit = useCallback(
     (text: string) => {
@@ -593,6 +602,7 @@ export function Dashboard({ homeSession: _homeSession = 0 }: DashboardProps) {
                 onToggleSpeech={toggleSpeechEnabled}
                 playbackBlocked={playbackBlocked}
                 onReplaySpeech={replayBlockedSpeech}
+                speechError={speechError}
                 replyValue={replyText}
                 onReplyChange={setReplyText}
                 onReplySubmit={handleReplySubmit}
@@ -690,6 +700,7 @@ export function Dashboard({ homeSession: _homeSession = 0 }: DashboardProps) {
               onToggleSpeech={toggleSpeechEnabled}
               playbackBlocked={playbackBlocked}
               onReplaySpeech={replayBlockedSpeech}
+              speechError={speechError}
               replyValue={replyText}
               onReplyChange={setReplyText}
               onReplySubmit={handleReplySubmit}
