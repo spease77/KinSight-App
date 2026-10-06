@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { Bell, Database, Download, Loader2, X } from "lucide-react";
 import { CalendarIntegrationsSection } from "@/components/settings/CalendarIntegrationsSection";
@@ -17,6 +18,7 @@ export function DataManagementSheet({
   onClose,
 }: DataManagementSheetProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [portalReady, setPortalReady] = useState(false);
   const [headerScrolled, setHeaderScrolled] = useState(false);
   const {
     settings,
@@ -32,24 +34,35 @@ export function DataManagementSheet({
   }, []);
 
   useEffect(() => {
+    setPortalReady(true);
+  }, []);
+
+  useEffect(() => {
     if (!open) return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") onClose();
     };
 
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
     window.addEventListener("keydown", handleKeyDown);
     setHeaderScrolled(false);
 
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = previousOverflow;
     };
   }, [open, onClose]);
 
-  if (!open) return null;
+  if (!open || !portalReady) return null;
 
-  return (
-    <div className="fixed inset-0 z-50 flex justify-end" role="presentation">
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[100] flex justify-end"
+      role="presentation"
+    >
       <button
         type="button"
         className="absolute inset-0 bg-black/60 backdrop-blur-[1px]"
@@ -61,7 +74,7 @@ export function DataManagementSheet({
         role="dialog"
         aria-modal="true"
         aria-labelledby="data-management-sheet-title"
-        className="data-management-sheet relative flex h-full max-h-full w-full max-w-sm flex-col overflow-hidden border-l border-border/80 bg-card shadow-2xl"
+        className="data-management-sheet relative flex h-full max-h-[100dvh] w-full max-w-sm flex-col overflow-hidden border-l border-border/80 bg-card shadow-2xl"
       >
         <div
           ref={scrollRef}
@@ -97,7 +110,9 @@ export function DataManagementSheet({
             </button>
           </header>
 
-          <div className="flex flex-col gap-5 px-5 pb-6 pt-2">
+          <div
+            className="flex flex-col gap-5 px-5 pt-2 pb-[max(1.5rem,env(safe-area-inset-bottom,0px))]"
+          >
           <ThemeAppearanceSection />
 
           <section className="flex flex-col gap-3">
@@ -160,6 +175,7 @@ export function DataManagementSheet({
           </div>
         </div>
       </aside>
-    </div>
+    </div>,
+    document.body
   );
 }
