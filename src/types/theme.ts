@@ -13,6 +13,14 @@ export const THEME_PREFERENCE_LABELS: Record<ThemePreference, string> = {
 };
 
 export const THEME_META_COLORS: Record<"light" | "dark", string> = {
-  light: "#f7f8f8",
-  dark: "#121214",
+  light: "#ffffff",
+  dark: "#000000",
 };
+
+export const THEME_COLOR_MEDIA: ReadonlyArray<{
+  media: string;
+  color: string;
+}> = [
+  { media: "(prefers-color-scheme: light)", color: THEME_META_COLORS.light },
+  { media: "(prefers-color-scheme: dark)", color: THEME_META_COLORS.dark },
+];

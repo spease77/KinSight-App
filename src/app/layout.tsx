@@ -48,8 +48,10 @@ export const viewport: Viewport = {
   userScalable: false,
   viewportFit: "cover",
   interactiveWidget: "resizes-content",
-  // Single tag; theme-init syncs from stored preference (avoids iOS PWA picking the wrong media query).
-  themeColor: "#f7f8f8",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#000000" },
+  ],
 };
 
 export const dynamic = "force-dynamic";
@@ -63,10 +65,10 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${montserrat.variable} ${inter.variable}`}
+      className={`${montserrat.variable} ${inter.variable} bg-background`}
       suppressHydrationWarning
     >
-      <body className="min-h-screen overflow-hidden bg-background text-foreground no-scrollbar antialiased">
+      <body className="flex min-h-screen flex-col overflow-hidden bg-background text-foreground no-scrollbar antialiased">
         <Script
           id="theme-init"
           strategy="beforeInteractive"
@@ -74,7 +76,10 @@ export default function RootLayout({
         />
         <ThemeProvider>
           <AppShell>
-            <div className="app-shell mx-auto flex h-[100dvh] w-full max-w-lg flex-col overflow-hidden bg-background pt-[env(safe-area-inset-top,0px)]">
+            <div
+              id="app-root"
+              className="app-shell mx-auto flex h-[100dvh] w-full max-w-lg flex-col overflow-hidden bg-background pt-[env(safe-area-inset-top,0px)]"
+            >
               <main className="app-scroll no-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain px-3">
                 {children}
               </main>

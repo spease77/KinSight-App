@@ -12,8 +12,7 @@
   }
 }
 
-/* ── Deep charcoal & platinum (dark default) ── */
-:root,
+/* ── Deep charcoal & platinum (dark theme) ── */
 [data-theme="dark"] {
   color-scheme: dark;
 
@@ -361,6 +360,9 @@
 }
 
 :root {
+  color-scheme: light;
+  /* SSR / first-paint fallback before data-theme is applied */
+  --bg-main: #f7f8f8;
   --background: var(--bg-main);
 }
 
@@ -368,6 +370,13 @@ html {
   -webkit-tap-highlight-color: transparent;
   height: -webkit-fill-available;
   min-height: 100dvh;
+}
+
+html,
+body,
+#__next,
+#app-root {
+  background-color: var(--background);
 }
 
 html,
@@ -382,7 +391,6 @@ body {
   overflow: hidden;
   overscroll-behavior: none;
   touch-action: manipulation;
-  background-color: var(--background);
 }
 
 body {

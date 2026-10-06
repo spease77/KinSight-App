@@ -14,8 +14,10 @@ export function AppShell({ children }: AppShellProps) {
   useScrollChromeVisibility();
 
   return (
-    <HomeSessionProvider>
-      <VoiceExperienceRoot>{children}</VoiceExperienceRoot>
-    </HomeSessionProvider>
+    <div className="flex min-h-0 w-full flex-1 flex-col bg-background">
+      <HomeSessionProvider>
+        <VoiceExperienceRoot>{children}</VoiceExperienceRoot>
+      </HomeSessionProvider>
+    </div>
   );
 }
