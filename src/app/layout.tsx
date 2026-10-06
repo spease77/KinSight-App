@@ -48,10 +48,8 @@ export const viewport: Viewport = {
   userScalable: false,
   viewportFit: "cover",
   interactiveWidget: "resizes-content",
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f7f8f8" },
-    { media: "(prefers-color-scheme: dark)", color: "#121214" },
-  ],
+  // Single tag; theme-init syncs from stored preference (avoids iOS PWA picking the wrong media query).
+  themeColor: "#f7f8f8",
 };
 
 export const dynamic = "force-dynamic";
