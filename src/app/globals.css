@@ -2627,6 +2627,17 @@ html.scroll-chrome-hidden {
   --app-chrome-bottom: env(safe-area-inset-bottom, 0px);
 }
 
+/* Agenda: hide bottom nav only; keep title/toolbar fixed. */
+html.scroll-nav-hidden {
+  --app-chrome-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+html.scroll-nav-hidden .bottom-nav {
+  transform: translateY(100%);
+  opacity: 0;
+  pointer-events: none;
+}
+
 .page-header-chrome {
   transition:
     transform 0.22s ease,
