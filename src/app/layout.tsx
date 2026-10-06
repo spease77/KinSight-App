@@ -35,7 +35,8 @@ export const metadata: Metadata = {
   },
   appleWebApp: {
     capable: true,
-    statusBarStyle: "black-translucent",
+    // SSR default; theme-init script sets dark ↔ light per user preference.
+    statusBarStyle: "default",
     title: "KinSight",
   },
 };
@@ -75,8 +76,8 @@ export default function RootLayout({
         />
         <ThemeProvider>
           <AppShell>
-            <div className="app-shell mx-auto flex h-[100dvh] w-full max-w-lg flex-col overflow-hidden">
-              <main className="app-scroll no-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pt-[env(safe-area-inset-top)]">
+            <div className="app-shell mx-auto flex h-[100dvh] w-full max-w-lg flex-col overflow-hidden bg-background pt-[env(safe-area-inset-top,0px)]">
+              <main className="app-scroll no-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain px-3">
                 {children}
               </main>
             </div>

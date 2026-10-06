@@ -56,6 +56,11 @@ export function resolveEffectiveTheme(
     : "light";
 }
 
+const APPLE_STATUS_BAR_STYLES: Record<"light" | "dark", string> = {
+  light: "default",
+  dark: "black-translucent",
+};
+
 export function updateThemeMetaColor(preference: ThemePreference): void {
   const effective = resolveEffectiveTheme(preference);
   const color = THEME_META_COLORS[effective];
@@ -63,6 +68,10 @@ export function updateThemeMetaColor(preference: ThemePreference): void {
   document
     .querySelector('meta[name="theme-color"]')
     ?.setAttribute("content", color);
+
+  document
+    .querySelector('meta[name="apple-mobile-web-app-status-bar-style"]')
+    ?.setAttribute("content", APPLE_STATUS_BAR_STYLES[effective]);
 }
 
 /** Inline script to prevent theme flash before React hydrates. */
@@ -80,6 +89,10 @@ export const themeInitScript = `(() => {
       : theme;
     var meta = document.querySelector('meta[name="theme-color"]');
     if (meta) meta.setAttribute("content", effective === "light" ? light : dark);
+    var statusBar = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
+    if (statusBar) {
+      statusBar.setAttribute("content", effective === "light" ? "default" : "black-translucent");
+    }
   } catch (e) {
     document.documentElement.setAttribute("data-theme", ${JSON.stringify(DEFAULT_THEME_PREFERENCE)});
   }
