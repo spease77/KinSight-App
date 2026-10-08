@@ -1,6 +1,8 @@
 import {
   DEFAULT_THEME_PREFERENCE,
   THEME_COLOR_MEDIA,
+  THEME_COOKIE_MAX_AGE_SECONDS,
+  THEME_COOKIE_KEY,
   THEME_META_COLORS,
   THEME_PREFERENCES,
   THEME_STORAGE_KEY,
@@ -28,12 +30,22 @@ export function readStoredThemePreference(): ThemePreference {
   return DEFAULT_THEME_PREFERENCE;
 }
 
+export function persistThemePreferenceCookie(preference: ThemePreference): void {
+  if (typeof document === "undefined") {
+    return;
+  }
+
+  document.cookie = `${THEME_COOKIE_KEY}=${encodeURIComponent(preference)}; path=/; max-age=${THEME_COOKIE_MAX_AGE_SECONDS}; samesite=lax`;
+}
+
 export function persistThemePreference(preference: ThemePreference): void {
   try {
     window.localStorage.setItem(THEME_STORAGE_KEY, preference);
   } catch {
     // ignore write failures
   }
+
+  persistThemePreferenceCookie(preference);
 }
 
 export function applyThemePreference(preference: ThemePreference): void {
@@ -92,6 +104,7 @@ export function syncThemeColorMeta(preference: ThemePreference): void {
   }
 
   document.documentElement.style.backgroundColor = forcedColor;
+  document.documentElement.style.colorScheme = effective;
 }
 
 function syncAppleStatusBarMeta(): void {
@@ -158,6 +171,7 @@ export const themeInitScript = `(() => {
       }
     }
     document.documentElement.style.backgroundColor = color;
+    document.documentElement.style.colorScheme = effective;
   }
 
   function syncThemeChrome() {
@@ -170,6 +184,10 @@ export const themeInitScript = `(() => {
       var effective = theme === "system"
         ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
         : theme;
+      try {
+        document.cookie = ${JSON.stringify(THEME_COOKIE_KEY)} + "=" + encodeURIComponent(theme) + "; path=/; max-age=" + ${THEME_COOKIE_MAX_AGE_SECONDS} + "; samesite=lax";
+      } catch (cookieErr) {}
+      document.documentElement.style.colorScheme = effective;
       syncThemeColor(theme, effective);
       var statusMetas = document.querySelectorAll('meta[name="apple-mobile-web-app-status-bar-style"]');
       statusMetas.forEach(function(node, index) {

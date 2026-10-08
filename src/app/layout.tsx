@@ -6,6 +6,11 @@ import { Navigation } from "@/components/Navigation";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { ToastViewport } from "@/components/ToastViewport";
 import { themeInitScript } from "@/lib/theme/theme";
+import {
+  getServerThemeChromeColor,
+  getServerThemePreference,
+  getViewportThemeColor,
+} from "@/lib/theme/theme-server";
 import "./globals.css";
 const montserrat = Montserrat({
   subsets: ["latin"],
@@ -41,31 +46,37 @@ export const metadata: Metadata = {
   },
 };
 
-export const viewport: Viewport = {
-  width: "device-width",
-  initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
-  viewportFit: "cover",
-  interactiveWidget: "resizes-content",
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#000000" },
-  ],
-};
+export async function generateViewport(): Promise<Viewport> {
+  const preference = await getServerThemePreference();
+
+  return {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 1,
+    userScalable: false,
+    viewportFit: "cover",
+    interactiveWidget: "resizes-content",
+    themeColor: getViewportThemeColor(preference),
+  };
+}
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const preference = await getServerThemePreference();
+  const chromeColor = getServerThemeChromeColor(preference);
+
   return (
     <html
       lang="en"
+      data-theme={preference}
       className={`${montserrat.variable} ${inter.variable} bg-background`}
+      style={chromeColor ? { backgroundColor: chromeColor } : undefined}
       suppressHydrationWarning
     >
       <body className="flex min-h-screen flex-col overflow-hidden bg-background text-foreground no-scrollbar antialiased">

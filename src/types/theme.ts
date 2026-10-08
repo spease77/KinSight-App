@@ -6,6 +6,11 @@ export const DEFAULT_THEME_PREFERENCE: ThemePreference = "system";
 
 export const THEME_STORAGE_KEY = "kinsight-theme-preference";
 
+/** Cookie name mirrors localStorage key for SSR theme-color / data-theme. */
+export const THEME_COOKIE_KEY = THEME_STORAGE_KEY;
+
+export const THEME_COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 365;
+
 export const THEME_PREFERENCE_LABELS: Record<ThemePreference, string> = {
   light: "Light",
   dark: "Dark",

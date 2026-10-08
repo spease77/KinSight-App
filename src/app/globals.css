@@ -92,7 +92,7 @@
   color-scheme: light;
 
   /* Surfaces — airy mineral canvas */
-  --bg-main: #f7f8f8;
+  --bg-main: #ffffff;
   --bg-card: #ffffff;
   --bg-card-hover: #f3f4f4;
   --bg-elevated: #ffffff;
@@ -167,7 +167,7 @@
   [data-theme="system"] {
     color-scheme: light;
 
-    --bg-main: #f7f8f8;
+    --bg-main: #ffffff;
     --bg-card: #ffffff;
     --bg-card-hover: #f3f4f4;
     --bg-elevated: #ffffff;
@@ -362,7 +362,7 @@
 :root {
   color-scheme: light;
   /* SSR / first-paint fallback before data-theme is applied */
-  --bg-main: #f7f8f8;
+  --bg-main: #ffffff;
   --background: var(--bg-main);
 }
 
