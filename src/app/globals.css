@@ -18,6 +18,7 @@
 
   /* Surfaces */
   --bg-main: #121214;
+  --background: var(--bg-main);
   --bg-card: #1a1b1f;
   --bg-card-hover: #222328;
   --bg-elevated: #1a1b1f;
@@ -93,6 +94,7 @@
 
   /* Surfaces — airy mineral canvas */
   --bg-main: #ffffff;
+  --background: var(--bg-main);
   --bg-card: #ffffff;
   --bg-card-hover: #f3f4f4;
   --bg-elevated: #ffffff;
@@ -168,6 +170,7 @@
     color-scheme: light;
 
     --bg-main: #ffffff;
+    --background: var(--bg-main);
     --bg-card: #ffffff;
     --bg-card-hover: #f3f4f4;
     --bg-elevated: #ffffff;
@@ -241,6 +244,7 @@
     color-scheme: dark;
 
     --bg-main: #121214;
+    --background: var(--bg-main);
     --bg-card: #1a1b1f;
     --bg-card-hover: #222328;
     --bg-elevated: #1a1b1f;
@@ -359,17 +363,27 @@
   --color-background: var(--background);
 }
 
-:root {
-  color-scheme: light;
-  /* SSR / first-paint fallback before data-theme is applied */
+/*
+  Light defaults on `html` (0,0,1) so [data-theme] token blocks can override.
+  Do not put --bg-main / color-scheme on :root — that ties [data-theme="dark"]
+  and leaves Home Screen PWAs with light text on a forced white canvas.
+*/
+html {
+  color-scheme: light dark;
   --bg-main: #ffffff;
   --background: var(--bg-main);
-}
-
-html {
+  --bg-card: #ffffff;
+  --bg-card-hover: #f3f4f4;
+  --bg-elevated: #ffffff;
+  --text-primary: #08090a;
+  --text-body: #2e3033;
+  --text-secondary: #6a6d73;
+  --text-icon: #6a6d73;
+  --border-subtle: #d4d7d6;
   -webkit-tap-highlight-color: transparent;
   height: -webkit-fill-available;
   min-height: 100dvh;
+  background-color: var(--bg-main);
 }
 
 html,

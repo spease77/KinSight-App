@@ -56,6 +56,12 @@ export async function generateViewport(): Promise<Viewport> {
     userScalable: false,
     viewportFit: "cover",
     interactiveWidget: "resizes-content",
+    colorScheme:
+      preference === "light"
+        ? "light"
+        : preference === "dark"
+          ? "dark"
+          : "light dark",
     themeColor: getViewportThemeColor(preference),
   };
 }

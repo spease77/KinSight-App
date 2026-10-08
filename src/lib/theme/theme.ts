@@ -13,7 +13,38 @@ export function isThemePreference(value: string): value is ThemePreference {
   return (THEME_PREFERENCES as readonly string[]).includes(value);
 }
 
+export function readCookieThemePreference(): ThemePreference | null {
+  if (typeof document === "undefined") {
+    return null;
+  }
+
+  const prefix = `${THEME_COOKIE_KEY}=`;
+  const pairs = document.cookie.split("; ");
+  for (const pair of pairs) {
+    if (!pair.startsWith(prefix)) {
+      continue;
+    }
+
+    try {
+      const value = decodeURIComponent(pair.slice(prefix.length));
+      if (isThemePreference(value)) {
+        return value;
+      }
+    } catch {
+      return null;
+    }
+  }
+
+  return null;
+}
+
 export function readStoredThemePreference(): ThemePreference {
+  // Cookies are shared between iOS Safari and Home Screen PWAs; localStorage is not.
+  const fromCookie = readCookieThemePreference();
+  if (fromCookie) {
+    return fromCookie;
+  }
+
   if (typeof window === "undefined") {
     return DEFAULT_THEME_PREFERENCE;
   }
@@ -177,9 +208,23 @@ export const themeInitScript = `(() => {
   function syncThemeChrome() {
     try {
       var key = ${JSON.stringify(THEME_STORAGE_KEY)};
-      var stored = localStorage.getItem(key);
+      var stored = null;
+      try { stored = localStorage.getItem(key); } catch (storageErr) {}
+      var cookieTheme = null;
+      try {
+        var prefix = key + "=";
+        var pairs = document.cookie.split("; ");
+        for (var i = 0; i < pairs.length; i++) {
+          if (pairs[i].indexOf(prefix) === 0) {
+            cookieTheme = decodeURIComponent(pairs[i].slice(prefix.length));
+            break;
+          }
+        }
+      } catch (cookieReadErr) {}
       var allowed = ${JSON.stringify([...THEME_PREFERENCES])};
-      var theme = allowed.indexOf(stored) !== -1 ? stored : ${JSON.stringify(DEFAULT_THEME_PREFERENCE)};
+      var theme = allowed.indexOf(cookieTheme) !== -1
+        ? cookieTheme
+        : (allowed.indexOf(stored) !== -1 ? stored : ${JSON.stringify(DEFAULT_THEME_PREFERENCE)});
       document.documentElement.setAttribute("data-theme", theme);
       var effective = theme === "system"
         ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
@@ -187,6 +232,7 @@ export const themeInitScript = `(() => {
       try {
         document.cookie = ${JSON.stringify(THEME_COOKIE_KEY)} + "=" + encodeURIComponent(theme) + "; path=/; max-age=" + ${THEME_COOKIE_MAX_AGE_SECONDS} + "; samesite=lax";
       } catch (cookieErr) {}
+      try { localStorage.setItem(key, theme); } catch (storageWriteErr) {}
       document.documentElement.style.colorScheme = effective;
       syncThemeColor(theme, effective);
       var statusMetas = document.querySelectorAll('meta[name="apple-mobile-web-app-status-bar-style"]');
