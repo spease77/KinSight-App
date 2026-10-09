@@ -19,7 +19,7 @@ export const THEME_PREFERENCE_LABELS: Record<ThemePreference, string> = {
 
 export const THEME_META_COLORS: Record<"light" | "dark", string> = {
   light: "#ffffff",
-  dark: "#000000",
+  dark: "#121214",
 };
 
 export const THEME_COLOR_MEDIA: ReadonlyArray<{

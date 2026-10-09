@@ -47,3 +47,9 @@ export function getServerThemeChromeColor(
 
   return undefined;
 }
+
+export function getServerAppleStatusBarStyle(
+  preference: ThemePreference
+): "default" | "black-translucent" {
+  return preference === "light" ? "default" : "black-translucent";
+}

@@ -100,7 +100,11 @@ export function resolveEffectiveTheme(
     : "light";
 }
 
-const APPLE_STATUS_BAR_STYLE = "default";
+export function appleStatusBarStyleFor(
+  effective: "light" | "dark"
+): "default" | "black-translucent" {
+  return effective === "light" ? "default" : "black-translucent";
+}
 
 export function syncThemeColorMeta(preference: ThemePreference): void {
   const effective = resolveEffectiveTheme(preference);
@@ -138,13 +142,14 @@ export function syncThemeColorMeta(preference: ThemePreference): void {
   document.documentElement.style.colorScheme = effective;
 }
 
-function syncAppleStatusBarMeta(): void {
+function syncAppleStatusBarMeta(effective: "light" | "dark"): void {
+  const style = appleStatusBarStyleFor(effective);
   const metas = document.querySelectorAll(
     'meta[name="apple-mobile-web-app-status-bar-style"]'
   );
   metas.forEach((node, index) => {
     if (index === 0) {
-      node.setAttribute("content", APPLE_STATUS_BAR_STYLE);
+      node.setAttribute("content", style);
     } else {
       node.remove();
     }
@@ -153,14 +158,15 @@ function syncAppleStatusBarMeta(): void {
   if (metas.length === 0) {
     const meta = document.createElement("meta");
     meta.setAttribute("name", "apple-mobile-web-app-status-bar-style");
-    meta.setAttribute("content", APPLE_STATUS_BAR_STYLE);
+    meta.setAttribute("content", style);
     document.head.appendChild(meta);
   }
 }
 
 export function applyThemeChrome(preference: ThemePreference): void {
+  const effective = resolveEffectiveTheme(preference);
   syncThemeColorMeta(preference);
-  syncAppleStatusBarMeta();
+  syncAppleStatusBarMeta(effective);
 }
 
 export function updateThemeMetaColor(preference: ThemePreference): void {
@@ -235,10 +241,11 @@ export const themeInitScript = `(() => {
       try { localStorage.setItem(key, theme); } catch (storageWriteErr) {}
       document.documentElement.style.colorScheme = effective;
       syncThemeColor(theme, effective);
+      var statusBarStyle = effective === "light" ? "default" : "black-translucent";
       var statusMetas = document.querySelectorAll('meta[name="apple-mobile-web-app-status-bar-style"]');
       statusMetas.forEach(function(node, index) {
         if (index === 0) {
-          node.setAttribute("content", "default");
+          node.setAttribute("content", statusBarStyle);
         } else {
           node.remove();
         }
@@ -246,7 +253,7 @@ export const themeInitScript = `(() => {
       if (statusMetas.length === 0) {
         var statusMeta = document.createElement("meta");
         statusMeta.setAttribute("name", "apple-mobile-web-app-status-bar-style");
-        statusMeta.setAttribute("content", "default");
+        statusMeta.setAttribute("content", statusBarStyle);
         document.head.appendChild(statusMeta);
       }
     } catch (e) {

@@ -7,6 +7,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { ToastViewport } from "@/components/ToastViewport";
 import { themeInitScript } from "@/lib/theme/theme";
 import {
+  getServerAppleStatusBarStyle,
   getServerThemeChromeColor,
   getServerThemePreference,
   getViewportThemeColor,
@@ -26,25 +27,28 @@ const inter = Inter({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  title: "KinSight",
-  description:
-    "Capture client conversations and build stronger sales relationships with KinSight.",
-  manifest: "/manifest.json",
-  icons: {
-    icon: "/favicon.ico",
-    shortcut: "/favicon-16x16.png",
-    apple: [
-      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
-    ],
-  },
-  appleWebApp: {
-    capable: true,
-    // SSR default; theme-init script sets dark ↔ light per user preference.
-    statusBarStyle: "default",
+export async function generateMetadata(): Promise<Metadata> {
+  const preference = await getServerThemePreference();
+
+  return {
     title: "KinSight",
-  },
-};
+    description:
+      "Capture client conversations and build stronger sales relationships with KinSight.",
+    manifest: "/manifest.json",
+    icons: {
+      icon: "/favicon.ico",
+      shortcut: "/favicon-16x16.png",
+      apple: [
+        { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+      ],
+    },
+    appleWebApp: {
+      capable: true,
+      statusBarStyle: getServerAppleStatusBarStyle(preference),
+      title: "KinSight",
+    },
+  };
+}
 
 export async function generateViewport(): Promise<Viewport> {
   const preference = await getServerThemePreference();
