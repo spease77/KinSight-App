@@ -618,6 +618,14 @@ b {
   flex-direction: column;
   overflow: hidden;
   overscroll-behavior: none;
+  -webkit-overflow-scrolling: auto;
+}
+
+/* Beat the layout `overflow-y-auto` utility so empty Home cannot rubber-band. */
+html.home-scroll-locked .app-scroll {
+  overflow: hidden;
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: auto;
 }
 
 .app-scroll.home-scroll-locked > .home-dashboard {

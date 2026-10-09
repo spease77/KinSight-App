@@ -550,15 +550,34 @@ export function Dashboard({ homeSession: _homeSession = 0 }: DashboardProps) {
   useKeyboardOpen();
 
   useEffect(() => {
+    const root = document.documentElement;
     const scrollEl = document.querySelector<HTMLElement>(".app-scroll");
     if (!scrollEl) return;
 
     scrollEl.classList.add("home-scroll-locked");
+    root.classList.add("home-scroll-locked");
+    scrollEl.scrollTop = 0;
+
+    const preventEmptyHomeScroll = (event: Event) => {
+      event.preventDefault();
+    };
+
+    if (!hasConversationStarted) {
+      scrollEl.addEventListener("touchmove", preventEmptyHomeScroll, {
+        passive: false,
+      });
+      scrollEl.addEventListener("wheel", preventEmptyHomeScroll, {
+        passive: false,
+      });
+    }
 
     return () => {
+      scrollEl.removeEventListener("touchmove", preventEmptyHomeScroll);
+      scrollEl.removeEventListener("wheel", preventEmptyHomeScroll);
+      root.classList.remove("home-scroll-locked");
       scrollEl.classList.remove("home-scroll-locked");
     };
-  }, []);
+  }, [hasConversationStarted]);
 
   const header = (
     <Header
