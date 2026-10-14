@@ -593,12 +593,12 @@ export function Dashboard({ homeSession: _homeSession = 0 }: DashboardProps) {
   return (
     <>
       {hasConversationStarted ? (
-        <div className="home-dashboard home-dashboard--conversation flex flex-col">
-          <PageHeader className="home-dashboard__header home-page-header home-conversation-header shrink-0">
+        <div className="home-dashboard home-dashboard--conversation flex h-full min-h-0 flex-col">
+          <PageHeader className="home-dashboard__header home-page-header home-conversation-header">
             {header}
           </PageHeader>
 
-          <main className="relative flex min-h-0 flex-1 flex-col">
+          <main className="relative flex h-full min-h-0 flex-1 flex-col">
             <section
               aria-label="Voice capture"
               className="relative z-10 flex min-h-0 flex-1 flex-col items-stretch"

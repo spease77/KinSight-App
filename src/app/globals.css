@@ -1073,11 +1073,18 @@ html.home-scroll-locked .app-scroll {
 }
 
 .home-dashboard--conversation {
+  position: relative;
   min-height: 0;
   flex: 1 1 auto;
+  height: 100%;
 }
 
 .home-dashboard--conversation .home-conversation-header {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: 30;
   height: auto;
   min-height: 44px;
   margin-bottom: 0;
@@ -1086,6 +1093,8 @@ html.home-scroll-locked .app-scroll {
 
 .home-dashboard--conversation .home-conversation-panel {
   min-height: 0;
+  flex: 1 1 auto;
+  height: 100%;
 }
 
 .home-dashboard--state-a {
@@ -1340,12 +1349,16 @@ html.keyboard-composer-active .home-dashboard--state-a .home-hero-mic-zone {
   min-height: 0;
   margin-bottom: 0;
   padding-inline: 0;
-  padding-top: 0.125rem;
+  padding-top: 3.25rem;
   padding-bottom: var(--home-conversation-composer-clearance);
   background: transparent;
   border: none;
   box-shadow: none;
   color: var(--chat-message-text);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  overflow-anchor: none;
+  -webkit-overflow-scrolling: touch;
 }
 
 .kinsight-conversation-messages .assistant-markdown,
@@ -2698,7 +2711,7 @@ html.scroll-nav-hidden .bottom-nav {
 }
 
 /* Collapse header layout so chat/list content fills the space (not Agenda). */
-html.scroll-chrome-hidden .page-header-chrome:not(.agenda-page-header) {
+html.scroll-chrome-hidden .page-header-chrome:not(.agenda-page-header):not(.home-conversation-header) {
   transform: translateY(calc(-100% - env(safe-area-inset-top, 0px)));
   height: 0 !important;
   min-height: 0 !important;
@@ -2709,6 +2722,16 @@ html.scroll-chrome-hidden .page-header-chrome:not(.agenda-page-header) {
   overflow: hidden;
   opacity: 0;
   pointer-events: none;
+}
+
+html.scroll-chrome-hidden .home-dashboard--conversation .home-conversation-header {
+  transform: translateY(calc(-100% - env(safe-area-inset-top, 0px)));
+  opacity: 0;
+  pointer-events: none;
+}
+
+html.scroll-chrome-hidden .home-dashboard--conversation .kinsight-conversation-messages {
+  padding-top: 0.5rem;
 }
 
 html.scroll-chrome-hidden .home-dashboard--conversation .home-conversation-panel {

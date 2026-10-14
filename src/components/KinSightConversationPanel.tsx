@@ -117,8 +117,15 @@ export function KinSightConversationPanel({
           : null;
 
   useEffect(() => {
-    scrollRef.current?.scrollTo({
-      top: scrollRef.current.scrollHeight,
+    const el = scrollRef.current;
+    if (!el) return;
+
+    const distanceFromBottom =
+      el.scrollHeight - el.scrollTop - el.clientHeight;
+    if (distanceFromBottom > 140) return;
+
+    el.scrollTo({
+      top: el.scrollHeight,
       behavior: "smooth",
     });
   }, [messages, isLoading]);
@@ -134,11 +141,9 @@ export function KinSightConversationPanel({
 
     const input = replyInputRef.current;
     input?.addEventListener("focus", scrollMessagesToEnd);
-    window.visualViewport?.addEventListener("resize", scrollMessagesToEnd);
 
     return () => {
       input?.removeEventListener("focus", scrollMessagesToEnd);
-      window.visualViewport?.removeEventListener("resize", scrollMessagesToEnd);
     };
   }, [conversationStarted]);
 

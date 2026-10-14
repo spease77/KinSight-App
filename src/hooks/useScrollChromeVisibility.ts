@@ -42,14 +42,14 @@ function clearScrollChromeClasses() {
 function handleScrollDelta(
   element: HTMLElement,
   scrollPositions: WeakMap<HTMLElement, number>,
-  agendaNavOnly: boolean
+  agendaNavOnly: boolean,
+  layoutLock: { until: number }
 ) {
   const currentTop = element.scrollTop;
   const previousTop = scrollPositions.get(element) ?? currentTop;
   scrollPositions.set(element, currentTop);
 
-  if (currentTop <= 0) {
-    applyScrollChromeHidden(false, agendaNavOnly);
+  if (performance.now() < layoutLock.until) {
     return;
   }
 
@@ -58,9 +58,12 @@ function handleScrollDelta(
 
   if (delta > 0) {
     applyScrollChromeHidden(true, agendaNavOnly);
-  } else {
-    applyScrollChromeHidden(false, agendaNavOnly);
+    layoutLock.until = performance.now() + 320;
+    return;
   }
+
+  applyScrollChromeHidden(false, agendaNavOnly);
+  layoutLock.until = performance.now() + 320;
 }
 
 export function useScrollChromeVisibility() {
@@ -69,6 +72,7 @@ export function useScrollChromeVisibility() {
   useEffect(() => {
     const agendaNavOnly = isAgendaPath(pathname);
     const scrollPositions = new WeakMap<HTMLElement, number>();
+    const layoutLock = { until: 0 };
 
     const onScroll = (event: Event) => {
       if (shouldIgnoreScrollChrome()) return;
@@ -77,16 +81,52 @@ export function useScrollChromeVisibility() {
       handleScrollDelta(
         event.target as HTMLElement,
         scrollPositions,
-        agendaNavOnly
+        agendaNavOnly,
+        layoutLock
       );
+    };
+
+    let touchStartY = 0;
+
+    const onTouchStart = (event: TouchEvent) => {
+      touchStartY = event.touches[0]?.clientY ?? 0;
+    };
+
+    const onTouchMove = (event: TouchEvent) => {
+      if (shouldIgnoreScrollChrome() || agendaNavOnly) return;
+      if (performance.now() < layoutLock.until) return;
+
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      const scroller = target.closest(".kinsight-conversation-messages");
+      if (!(scroller instanceof HTMLElement)) return;
+
+      const y = event.touches[0]?.clientY ?? 0;
+      const dy = y - touchStartY;
+      if (Math.abs(dy) < 14) return;
+
+      if (dy < 0) {
+        applyScrollChromeHidden(true, false);
+        layoutLock.until = performance.now() + 320;
+        return;
+      }
+
+      if (scroller.scrollTop <= 0) {
+        applyScrollChromeHidden(false, false);
+        layoutLock.until = performance.now() + 320;
+      }
     };
 
     clearScrollChromeClasses();
 
     document.addEventListener("scroll", onScroll, { capture: true, passive: true });
+    document.addEventListener("touchstart", onTouchStart, { capture: true, passive: true });
+    document.addEventListener("touchmove", onTouchMove, { capture: true, passive: true });
 
     return () => {
       document.removeEventListener("scroll", onScroll, { capture: true });
+      document.removeEventListener("touchstart", onTouchStart, { capture: true });
+      document.removeEventListener("touchmove", onTouchMove, { capture: true });
       clearScrollChromeClasses();
     };
   }, [pathname]);
