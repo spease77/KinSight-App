@@ -83,11 +83,12 @@ export function useAgentSpeech() {
 
       unlockSpeechSynthesis();
       speakingRef.current = true;
-      setIsSpeaking(true);
       setPlaybackBlocked(false);
       setSpeechError(null);
 
-      const result = await speakText(text);
+      const result = await speakText(text, {
+        onPlaying: () => setIsSpeaking(true),
+      });
       if (result.ok) {
         lastSpokenIdRef.current = lastAssistant.id;
       }
@@ -101,11 +102,12 @@ export function useAgentSpeech() {
 
     unlockSpeechSynthesis();
     speakingRef.current = true;
-    setIsSpeaking(true);
     setPlaybackBlocked(false);
     setSpeechError(null);
 
-    const result = await replayPendingSpeech();
+    const result = await replayPendingSpeech({
+      onPlaying: () => setIsSpeaking(true),
+    });
     finishSpeech(result);
   }, [finishSpeech]);
 

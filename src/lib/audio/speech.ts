@@ -20,6 +20,14 @@ export function isSpeechSupported(): boolean {
   return typeof window !== "undefined";
 }
 
+function isIOSLike(): boolean {
+  if (typeof navigator === "undefined") return false;
+  return (
+    /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)
+  );
+}
+
 function getAudioContext(): AudioContext | null {
   if (typeof window === "undefined") return null;
 
@@ -101,14 +109,16 @@ function cleanupAudio(): void {
 }
 
 function finishPlayback(resolve: (value: SpeakResult) => void, result: SpeakResult): void {
-  if (currentPlayResolve === resolve) {
-    currentPlayResolve = null;
-  }
+  if (currentPlayResolve !== resolve) return;
+  currentPlayResolve = null;
   cleanupAudio();
   resolve(result);
 }
 
-async function playWithWebAudio(blob: Blob): Promise<boolean> {
+async function playWithWebAudio(
+  blob: Blob,
+  onPlaying?: () => void
+): Promise<boolean> {
   const ctx = getAudioContext();
   if (!ctx) return false;
 
@@ -121,6 +131,8 @@ async function playWithWebAudio(blob: Blob): Promise<boolean> {
       return false;
     }
   }
+
+  if (ctx.state !== "running") return false;
 
   try {
     const arrayBuffer = await blob.arrayBuffer();
@@ -139,21 +151,28 @@ async function playWithWebAudio(blob: Blob): Promise<boolean> {
         resolve(true);
       };
 
-      source.start(0);
+      try {
+        source.start(0);
+        onPlaying?.();
+      } catch {
+        currentWebAudioSource = null;
+        resolve(false);
+      }
     });
   } catch {
     return false;
   }
 }
 
-async function playBlob(blob: Blob): Promise<SpeakResult> {
-  unlockSpeechSynthesis();
-
+async function playWithHtmlAudio(
+  blob: Blob,
+  onPlaying?: () => void
+): Promise<SpeakResult> {
   currentObjectUrl = URL.createObjectURL(blob);
   currentAudio = new Audio(currentObjectUrl);
   configureMobileAudio(currentAudio);
 
-  const elementResult = await new Promise<SpeakResult>((resolve) => {
+  return new Promise((resolve) => {
     if (!currentAudio) {
       resolve({ ok: false, reason: "aborted" });
       return;
@@ -161,6 +180,10 @@ async function playBlob(blob: Blob): Promise<SpeakResult> {
 
     const audio = currentAudio;
     currentPlayResolve = resolve;
+
+    audio.onplaying = () => {
+      onPlaying?.();
+    };
 
     audio.onended = () => {
       finishPlayback(resolve, { ok: true });
@@ -174,7 +197,24 @@ async function playBlob(blob: Blob): Promise<SpeakResult> {
       finishPlayback(resolve, { ok: false, reason: "autoplay_blocked" });
     });
   });
+}
 
+async function playBlob(
+  blob: Blob,
+  onPlaying?: () => void
+): Promise<SpeakResult> {
+  unlockSpeechSynthesis();
+
+  const preferWebAudio = isIOSLike();
+  if (preferWebAudio) {
+    const webAudioOk = await playWithWebAudio(blob, onPlaying);
+    if (webAudioOk) {
+      pendingSpeechBlob = null;
+      return { ok: true };
+    }
+  }
+
+  const elementResult = await playWithHtmlAudio(blob, onPlaying);
   if (elementResult.ok) {
     pendingSpeechBlob = null;
     return elementResult;
@@ -182,10 +222,12 @@ async function playBlob(blob: Blob): Promise<SpeakResult> {
 
   cleanupAudio();
 
-  const webAudioOk = await playWithWebAudio(blob);
-  if (webAudioOk) {
-    pendingSpeechBlob = null;
-    return { ok: true };
+  if (!preferWebAudio) {
+    const webAudioOk = await playWithWebAudio(blob, onPlaying);
+    if (webAudioOk) {
+      pendingSpeechBlob = null;
+      return { ok: true };
+    }
   }
 
   pendingSpeechBlob = blob;
@@ -202,7 +244,10 @@ function plainTextForSpeech(text: string): string {
     .slice(0, 4096);
 }
 
-async function speakWithBrowser(text: string): Promise<SpeakResult> {
+async function speakWithBrowser(
+  text: string,
+  onPlaying?: () => void
+): Promise<SpeakResult> {
   if (typeof window === "undefined" || !window.speechSynthesis) {
     return { ok: false, reason: "api_error" };
   }
@@ -216,14 +261,40 @@ async function speakWithBrowser(text: string): Promise<SpeakResult> {
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(plain);
     utterance.rate = 0.95;
-    utterance.onend = () => resolve({ ok: true });
-    utterance.onerror = () => resolve({ ok: false, reason: "api_error" });
+    let started = false;
+
+    const timeout = window.setTimeout(() => {
+      if (started) return;
+      window.speechSynthesis.cancel();
+      resolve({ ok: false, reason: "autoplay_blocked" });
+    }, 1200);
+
+    utterance.onstart = () => {
+      started = true;
+      window.clearTimeout(timeout);
+      onPlaying?.();
+    };
+    utterance.onend = () => {
+      window.clearTimeout(timeout);
+      resolve({ ok: true });
+    };
+    utterance.onerror = () => {
+      window.clearTimeout(timeout);
+      resolve({ ok: false, reason: "api_error" });
+    };
     window.speechSynthesis.speak(utterance);
   });
 }
 
+type SpeakOptions = {
+  onPlaying?: () => void;
+};
+
 /** Speak via /api/speak (ElevenLabs when configured, else OpenAI), then browser TTS if needed. */
-export async function speakText(text: string): Promise<SpeakResult> {
+export async function speakText(
+  text: string,
+  options?: SpeakOptions
+): Promise<SpeakResult> {
   if (!text.trim() || typeof window === "undefined") {
     return { ok: false, reason: "aborted" };
   }
@@ -246,7 +317,7 @@ export async function speakText(text: string): Promise<SpeakResult> {
       return { ok: false, reason: "aborted" };
     }
     console.error("TTS request failed:", err);
-    return speakWithBrowser(text);
+    return speakWithBrowser(text, options?.onPlaying);
   } finally {
     if (currentAbortController === abortController) {
       currentAbortController = null;
@@ -267,13 +338,13 @@ export async function speakText(text: string): Promise<SpeakResult> {
       // use raw body
     }
     console.error("TTS failed:", message);
-    return speakWithBrowser(text);
+    return speakWithBrowser(text, options?.onPlaying);
   }
 
   const blob = await response.blob();
   if (blob.size === 0) {
     console.error("TTS returned empty audio");
-    return speakWithBrowser(text);
+    return speakWithBrowser(text, options?.onPlaying);
   }
   pendingSpeechBlob = blob;
 
@@ -281,15 +352,26 @@ export async function speakText(text: string): Promise<SpeakResult> {
     return { ok: false, reason: "aborted" };
   }
 
-  return playBlob(blob);
+  const played = await playBlob(blob, options?.onPlaying);
+  if (played.ok || played.reason === "autoplay_blocked") {
+    return played;
+  }
+
+  if (isIOSLike()) {
+    return played;
+  }
+
+  return speakWithBrowser(text, options?.onPlaying);
 }
 
 /** Replay audio that was blocked by autoplay (requires a user tap). */
-export async function replayPendingSpeech(): Promise<SpeakResult> {
+export async function replayPendingSpeech(
+  options?: SpeakOptions
+): Promise<SpeakResult> {
   if (!pendingSpeechBlob) {
     return { ok: false, reason: "aborted" };
   }
-  return playBlob(pendingSpeechBlob);
+  return playBlob(pendingSpeechBlob, options?.onPlaying);
 }
 
 export function hasPendingSpeechPlayback(): boolean {
