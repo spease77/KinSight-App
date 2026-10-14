@@ -1,6 +1,7 @@
 "use client";
 
 import { Mic } from "lucide-react";
+import { createPortal } from "react-dom";
 import type { VoiceOverlayPhase, VoiceSessionSource } from "@/contexts/VoiceExperienceContext";
 
 interface VoiceOverlayProps {
@@ -33,9 +34,9 @@ export function VoiceOverlay({
 
   const micActive = isRecording || phase === "listening";
 
-  return (
+  const overlay = (
     <div
-      className="voice-overlay fixed inset-0 z-[120] flex items-center justify-center bg-black/40 p-6 backdrop-blur-xl"
+      className="voice-overlay"
       role="dialog"
       aria-modal="true"
       aria-label="KinSight voice session"
@@ -44,7 +45,7 @@ export function VoiceOverlay({
       }}
     >
       <div
-        className="voice-overlay-panel relative flex w-full max-w-sm flex-col items-center gap-5 overflow-hidden rounded-3xl border border-white/20 bg-white/10 px-6 py-8 text-center shadow-[0_8px_32px_rgba(0,0,0,0.35)] backdrop-blur-2xl dark:border-white/10 dark:bg-black/30"
+        className="voice-overlay-panel relative flex w-full max-w-sm flex-col items-center gap-5 overflow-hidden rounded-3xl border border-white/15 px-6 py-7 text-center shadow-[0_8px_32px_rgba(0,0,0,0.35)]"
         onClick={(event) => event.stopPropagation()}
       >
         <div
@@ -85,4 +86,7 @@ export function VoiceOverlay({
       </div>
     </div>
   );
+
+  if (typeof document === "undefined") return overlay;
+  return createPortal(overlay, document.body);
 }

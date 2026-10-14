@@ -4384,6 +4384,26 @@ html.scroll-chrome-hidden .bottom-nav {
   }
 }
 
+.voice-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: calc(env(safe-area-inset-top, 0px) + 0.75rem) 1rem
+    env(safe-area-inset-bottom, 0px);
+  background-color: color-mix(in srgb, var(--bg-main) 92%, black);
+}
+
+.voice-overlay-panel {
+  background-color: color-mix(in srgb, var(--bg-card) 92%, transparent);
+}
+
 .voice-overlay-ring {
   opacity: 0.35;
   transform: scale(0.92);
