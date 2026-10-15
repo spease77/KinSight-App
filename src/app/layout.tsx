@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
-import { Inter, Montserrat } from "next/font/google";
+import localFont from "next/font/local";
 import { AppShell } from "@/components/AppShell";
 import { Navigation } from "@/components/Navigation";
 import { ThemeProvider } from "@/components/ThemeProvider";
@@ -13,18 +13,19 @@ import {
   getViewportThemeColor,
 } from "@/lib/theme/theme-server";
 import "./globals.css";
-const montserrat = Montserrat({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
+
+const montserrat = localFont({
+  src: "./fonts/Montserrat-latin-wght-normal.woff2",
   variable: "--font-montserrat",
   display: "swap",
+  weight: "400 800",
 });
 
-const inter = Inter({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
+const inter = localFont({
+  src: "./fonts/Inter-latin-wght-normal.woff2",
   variable: "--font-inter",
   display: "swap",
+  weight: "400 600",
 });
 
 export async function generateMetadata(): Promise<Metadata> {
