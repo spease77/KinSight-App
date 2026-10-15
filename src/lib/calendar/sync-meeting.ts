@@ -4,8 +4,11 @@ import {
   buildCalendarAttendeesFromEmails,
   type CalendarAttendee,
 } from "@/lib/calendar/calendar-attendees";
+import { getCalendarConnection } from "@/lib/calendar/connections";
+import { upsertGoogleCalendarEvent } from "@/lib/calendar/google-events";
 
 export type CalendarSyncPayload = {
+  userId?: string;
   interactionId: string;
   contactName: string;
   title: string;
@@ -27,8 +30,8 @@ export type CalendarSyncResult = {
 };
 
 /**
- * Placeholder for Microsoft Graph + Google Calendar background inserts.
- * Wire OAuth tokens and provider SDK calls here when integrations go live.
+ * Pushes a KinSight meeting to the signed-in user's connected calendars.
+ * Google Calendar is free (OAuth + Calendar API). Outlook stays a no-op until connected.
  */
 export async function syncMeetingToExternalCalendars(
   payload: CalendarSyncPayload
@@ -44,9 +47,19 @@ export async function syncMeetingToExternalCalendars(
       : buildCalendarAttendees(payload.contactEmail, payload.contactName));
   const syncPayload = { ...payload, attendees };
 
-  if (process.env.GOOGLE_CALENDAR_SYNC_ENABLED === "true") {
-    providers.push("google");
-    await pushToGoogleCalendar(syncPayload);
+  if (!payload.userId) {
+    console.info(
+      "[calendar-sync] Skipping Google Calendar — no signed-in user for this meeting.",
+      payload.interactionId
+    );
+  } else {
+    const google = await getCalendarConnection(payload.userId, "google");
+    if (google.connection) {
+      const pushed = await pushToGoogleCalendar(syncPayload, payload.userId);
+      if (pushed) providers.push("google");
+    } else if (google.setupRequired) {
+      console.warn("[calendar-sync]", google.error);
+    }
   }
 
   if (process.env.OUTLOOK_CALENDAR_SYNC_ENABLED === "true") {
@@ -56,7 +69,7 @@ export async function syncMeetingToExternalCalendars(
 
   if (providers.length === 0) {
     console.info(
-      "[calendar-sync] No external providers enabled — meeting saved as KinSight-only.",
+      "[calendar-sync] No connected calendars — meeting saved as KinSight-only.",
       payload.interactionId
     );
   }
@@ -69,25 +82,35 @@ export async function syncMeetingToExternalCalendars(
 }
 
 async function pushToGoogleCalendar(
-  payload: CalendarSyncPayload & { attendees: CalendarAttendee[] }
-): Promise<void> {
-  // Google Calendar API — events.insert
-  // attendees + sendUpdates: "all" triggers native invite emails (Accept/Decline).
-  console.info("[calendar-sync] Google Calendar placeholder", {
+  payload: CalendarSyncPayload & { attendees: CalendarAttendee[] },
+  userId: string
+): Promise<boolean> {
+  const result = await upsertGoogleCalendarEvent({
+    userId,
     interactionId: payload.interactionId,
-    summary: payload.title,
-    start: payload.scheduledAt,
-    end: payload.scheduledEndAt,
-    attendees: payload.attendees.map((attendee) => ({ email: attendee.email })),
-    sendUpdates: payload.attendees.length > 0 ? "all" : "none",
+    title: payload.title,
+    scheduledAt: payload.scheduledAt,
+    scheduledEndAt: payload.scheduledEndAt,
+    notes: payload.notes,
+    attendees: payload.attendees,
   });
+
+  if (result.error || !result.eventId) {
+    console.error("[calendar-sync] Google Calendar push failed:", result.error);
+    return false;
+  }
+
+  console.info("[calendar-sync] Google Calendar event saved", {
+    interactionId: payload.interactionId,
+    eventId: result.eventId,
+    attendees: payload.attendees.map((attendee) => attendee.email),
+  });
+  return true;
 }
 
 async function pushToOutlookCalendar(
   payload: CalendarSyncPayload & { attendees: CalendarAttendee[] }
 ): Promise<void> {
-  // Microsoft Graph API — POST /me/events
-  // attendees[] triggers native Outlook invitation emails.
   console.info("[calendar-sync] Outlook Calendar placeholder", {
     interactionId: payload.interactionId,
     subject: payload.title,

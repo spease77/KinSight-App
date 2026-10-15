@@ -3,6 +3,7 @@
 import { Suspense } from "react";
 import { VoiceExperienceProvider, useVoiceExperience } from "@/contexts/VoiceExperienceContext";
 import { VoiceOverlay } from "@/components/voice/VoiceOverlay";
+import { CalendarOAuthReturn } from "@/components/calendar/CalendarOAuthReturn";
 import { useOsVoiceLaunch } from "@/hooks/useOsVoiceLaunch";
 
 function VoiceExperienceRuntime() {
@@ -16,13 +17,16 @@ function VoiceExperienceRuntime() {
   useOsVoiceLaunch();
 
   return (
-    <VoiceOverlay
-      phase={overlayPhase}
-      sessionSource={sessionSource}
-      isRecording={pipelineActivity.isRecording}
-      isTranscribing={pipelineActivity.isTranscribing}
-      onDismiss={closeVoiceOverlay}
-    />
+    <>
+      <CalendarOAuthReturn />
+      <VoiceOverlay
+        phase={overlayPhase}
+        sessionSource={sessionSource}
+        isRecording={pipelineActivity.isRecording}
+        isTranscribing={pipelineActivity.isTranscribing}
+        onDismiss={closeVoiceOverlay}
+      />
+    </>
   );
 }
 

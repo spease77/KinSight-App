@@ -172,6 +172,41 @@ export interface Database {
           notes?: string | null;
         };
       };
+      calendar_connections: {
+        Row: {
+          user_id: string;
+          provider: string;
+          account_email: string | null;
+          access_token: string;
+          refresh_token: string | null;
+          token_expires_at: string | null;
+          scope: string | null;
+          connected_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          provider: string;
+          account_email?: string | null;
+          access_token: string;
+          refresh_token?: string | null;
+          token_expires_at?: string | null;
+          scope?: string | null;
+          connected_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          user_id?: string;
+          provider?: string;
+          account_email?: string | null;
+          access_token?: string;
+          refresh_token?: string | null;
+          token_expires_at?: string | null;
+          scope?: string | null;
+          connected_at?: string;
+          updated_at?: string;
+        };
+      };
       scheduled_interactions: {
         Row: {
           id: string;

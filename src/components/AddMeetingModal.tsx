@@ -580,7 +580,7 @@ export function AddMeetingModal({
                   : `KinSight will sync this event and send calendar invites to ${selectedEmails.length} selected emails.`
                 : manualEmail.trim()
                   ? "KinSight will sync this event and send a calendar invite with Accept/Decline to the contact email."
-                  : "KinSight will sync this event to Google or Outlook in the background."}
+                  : "KinSight will sync this event to your connected Google Calendar."}
             </p>
           ) : (
             <p className="px-1 text-xs leading-relaxed text-muted">

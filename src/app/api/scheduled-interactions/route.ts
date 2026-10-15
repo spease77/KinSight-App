@@ -9,6 +9,7 @@ import {
   buildCalendarAttendeesFromEmails,
   normalizeContactEmail,
 } from "@/lib/calendar/calendar-attendees";
+import { resolveCalendarUserId } from "@/lib/calendar/session";
 import { AGENDA_MEETING_TYPES } from "@/types/agenda-meeting";
 
 const optionalEmailSchema = z
@@ -131,7 +132,9 @@ export async function POST(req: Request) {
     }
 
     if (pushToExternalCalendar) {
+      const userId = await resolveCalendarUserId(req);
       void syncMeetingToExternalCalendars({
+        userId: userId ?? undefined,
         interactionId: interaction.id,
         contactName: interaction.contactName,
         title: interaction.title,
