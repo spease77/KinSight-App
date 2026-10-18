@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import type { Viewport } from "next";
 import {
+  APPLE_STATUS_BAR_STYLE,
   DEFAULT_THEME_PREFERENCE,
   THEME_COLOR_MEDIA,
   THEME_META_COLORS,
@@ -49,7 +50,7 @@ export function getServerThemeChromeColor(
 }
 
 export function getServerAppleStatusBarStyle(
-  preference: ThemePreference
-): "default" | "black-translucent" {
-  return preference === "light" ? "default" : "black-translucent";
+  _preference?: ThemePreference
+): typeof APPLE_STATUS_BAR_STYLE {
+  return APPLE_STATUS_BAR_STYLE;
 }

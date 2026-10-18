@@ -595,7 +595,7 @@ b {
   position: relative;
 }
 
-/* Paint safe-area inset to match app background (avoids black iOS status gutter in light mode). */
+/* Fill the iOS status-bar region (black-translucent) with the active theme. */
 .app-shell::before {
   content: "";
   position: fixed;
@@ -605,7 +605,8 @@ b {
   height: env(safe-area-inset-top, 0px);
   background-color: var(--background);
   pointer-events: none;
-  z-index: 60;
+  z-index: 40;
+  transition: background-color 0.2s ease;
 }
 
 /* Bottom nav: 50px tab row + safe-area padding (see BottomNav.tsx). */

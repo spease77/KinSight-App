@@ -3,6 +3,7 @@ import {
   THEME_COLOR_MEDIA,
   THEME_COOKIE_MAX_AGE_SECONDS,
   THEME_COOKIE_KEY,
+  APPLE_STATUS_BAR_STYLE,
   THEME_META_COLORS,
   THEME_PREFERENCES,
   THEME_STORAGE_KEY,
@@ -101,9 +102,9 @@ export function resolveEffectiveTheme(
 }
 
 export function appleStatusBarStyleFor(
-  effective: "light" | "dark"
-): "default" | "black-translucent" {
-  return effective === "light" ? "default" : "black-translucent";
+  _effective?: "light" | "dark"
+): typeof APPLE_STATUS_BAR_STYLE {
+  return APPLE_STATUS_BAR_STYLE;
 }
 
 export function syncThemeColorMeta(preference: ThemePreference): void {
@@ -140,10 +141,13 @@ export function syncThemeColorMeta(preference: ThemePreference): void {
 
   document.documentElement.style.backgroundColor = forcedColor;
   document.documentElement.style.colorScheme = effective;
+  if (document.body) {
+    document.body.style.backgroundColor = forcedColor;
+  }
 }
 
-function syncAppleStatusBarMeta(effective: "light" | "dark"): void {
-  const style = appleStatusBarStyleFor(effective);
+function syncAppleStatusBarMeta(_effective?: "light" | "dark"): void {
+  const style = appleStatusBarStyleFor();
   const metas = document.querySelectorAll(
     'meta[name="apple-mobile-web-app-status-bar-style"]'
   );
@@ -209,6 +213,9 @@ export const themeInitScript = `(() => {
     }
     document.documentElement.style.backgroundColor = color;
     document.documentElement.style.colorScheme = effective;
+    if (document.body) {
+      document.body.style.backgroundColor = color;
+    }
   }
 
   function syncThemeChrome() {
@@ -241,7 +248,7 @@ export const themeInitScript = `(() => {
       try { localStorage.setItem(key, theme); } catch (storageWriteErr) {}
       document.documentElement.style.colorScheme = effective;
       syncThemeColor(theme, effective);
-      var statusBarStyle = effective === "light" ? "default" : "black-translucent";
+      var statusBarStyle = ${JSON.stringify(APPLE_STATUS_BAR_STYLE)};
       var statusMetas = document.querySelectorAll('meta[name="apple-mobile-web-app-status-bar-style"]');
       statusMetas.forEach(function(node, index) {
         if (index === 0) {

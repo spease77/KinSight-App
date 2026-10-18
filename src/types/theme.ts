@@ -22,6 +22,14 @@ export const THEME_META_COLORS: Record<"light" | "dark", string> = {
   dark: "#121214",
 };
 
+/**
+ * iOS Home Screen PWAs freeze apple-mobile-web-app-status-bar-style at launch.
+ * `default` paints an opaque light system bar that cannot change when the user
+ * switches to dark. Always use black-translucent so the page background fills
+ * the status-bar region and can follow the theme.
+ */
+export const APPLE_STATUS_BAR_STYLE = "black-translucent" as const;
+
 export const THEME_COLOR_MEDIA: ReadonlyArray<{
   media: string;
   color: string;

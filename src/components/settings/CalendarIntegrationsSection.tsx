@@ -9,6 +9,8 @@ import type { CalendarStatusResponse } from "@/types/calendar-connection";
 function emptyStatus(): CalendarStatusResponse {
   return {
     signedIn: false,
+    googleRedirectUri:
+      "https://kin-sight-app.vercel.app/api/calendar/google/callback",
     google: {
       provider: "google",
       configured: false,
@@ -35,6 +37,8 @@ export function CalendarIntegrationsSection() {
       const data = await readApiJson<CalendarStatusResponse>(res);
       setStatus({
         signedIn: Boolean(data.signedIn),
+        googleRedirectUri:
+          data.googleRedirectUri || emptyStatus().googleRedirectUri,
         google: data.google ?? emptyStatus().google,
         outlook: data.outlook ?? emptyStatus().outlook,
       });
@@ -128,12 +132,9 @@ export function CalendarIntegrationsSection() {
                   SQL editor, then refresh.
                 </p>
               ) : !google.configured ? (
-                <p className="mt-3 text-xs leading-relaxed text-muted">
-                  Add free <code>GOOGLE_CALENDAR_CLIENT_ID</code> and{" "}
-                  <code>GOOGLE_CALENDAR_CLIENT_SECRET</code> from Google Cloud
-                  (enable Calendar API, add redirect{" "}
-                  <code>/api/calendar/google/callback</code>), then redeploy.
-                </p>
+                <GoogleCalendarSetupSteps
+                  redirectUri={status.googleRedirectUri}
+                />
               ) : !status.signedIn && !google.connected ? (
                 <div className="mt-3 flex flex-col gap-2">
                   <p className="text-xs leading-relaxed text-muted">
@@ -208,5 +209,51 @@ export function CalendarIntegrationsSection() {
         </div>
       </div>
     </section>
+  );
+}
+
+function GoogleCalendarSetupSteps({ redirectUri }: { redirectUri: string }) {
+  return (
+    <div className="mt-3 space-y-2 text-xs leading-relaxed text-muted">
+      <p>
+        Connect is one free Google Cloud step away. Google does not let an app
+        use your Gmail calendar until you create an OAuth client (no password
+        is stored).
+      </p>
+      <ol className="list-decimal space-y-1.5 pl-4">
+        <li>
+          Open{" "}
+          <a
+            href="https://console.cloud.google.com/apis/library/calendar-json.googleapis.com"
+            target="_blank"
+            rel="noreferrer"
+            className="text-foreground underline underline-offset-2"
+          >
+            Google Cloud Console
+          </a>
+          , create a project, and enable <strong>Google Calendar API</strong>.
+        </li>
+        <li>
+          OAuth consent screen: External, Testing. Add your Gmail as a test
+          user.
+        </li>
+        <li>
+          Credentials → Create OAuth client → Web application. Redirect URI:
+          <code className="mt-1 block break-all rounded-md bg-card/80 px-2 py-1 text-[11px] text-foreground">
+            {redirectUri}
+          </code>
+        </li>
+        <li>
+          In Vercel → Settings → Environment Variables, add{" "}
+          <code>GOOGLE_CALENDAR_CLIENT_ID</code> and{" "}
+          <code>GOOGLE_CALENDAR_CLIENT_SECRET</code>, then Redeploy.
+        </li>
+        <li>
+          Run <code>019_calendar_connections.sql</code> in the Supabase SQL
+          editor if you have not already.
+        </li>
+      </ol>
+      <p>After that, this card will show Connect Google Calendar.</p>
+    </div>
   );
 }

@@ -90,7 +90,10 @@ export default async function RootLayout({
       style={chromeColor ? { backgroundColor: chromeColor } : undefined}
       suppressHydrationWarning
     >
-      <body className="flex min-h-screen flex-col overflow-hidden bg-background text-foreground no-scrollbar antialiased">
+      <body
+        className="flex min-h-screen flex-col overflow-hidden bg-background text-foreground no-scrollbar antialiased"
+        style={chromeColor ? { backgroundColor: chromeColor } : undefined}
+      >
         <Script
           id="theme-init"
           strategy="beforeInteractive"
