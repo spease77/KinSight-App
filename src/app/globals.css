@@ -549,6 +549,7 @@ b {
 }
 
 :root {
+  --app-sat: 0px;
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   /* Compact tab row (Facebook-style 50px) + home-indicator inset. */
@@ -592,39 +593,25 @@ b {
   position: relative;
 }
 
-/* Fill the iOS status-bar region with the active theme (hex set in React). */
-.theme-status-fill {
+/* Paint only the inset we actually apply — never a 59px minimum (that stacks
+   on iOS’s native bar and recreates the tall empty header). */
+.theme-status-fill,
+.app-shell::before {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  z-index: 200;
+  height: var(--app-sat, 0px);
   pointer-events: none;
-  height: env(safe-area-inset-top, 0px);
 }
 
-@media all and (display-mode: standalone) {
-  .theme-status-fill {
-    height: max(env(safe-area-inset-top, 0px), 59px);
-  }
+.theme-status-fill {
+  z-index: 200;
 }
 
 .app-shell::before {
-  content: "";
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: env(safe-area-inset-top, 0px);
   background-color: var(--background);
-  pointer-events: none;
   z-index: 40;
-}
-
-@media all and (display-mode: standalone) {
-  .app-shell::before {
-    height: max(env(safe-area-inset-top, 0px), 59px);
-  }
 }
 
 /* Bottom nav: 50px tab row + safe-area padding (see BottomNav.tsx). */

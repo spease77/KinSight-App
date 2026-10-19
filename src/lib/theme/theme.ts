@@ -9,6 +9,7 @@ import {
   THEME_STORAGE_KEY,
   type ThemePreference,
 } from "@/types/theme";
+import { syncIosStatusInset } from "@/lib/theme/ios-status-inset";
 
 export function isThemePreference(value: string): value is ThemePreference {
   return (THEME_PREFERENCES as readonly string[]).includes(value);
@@ -182,6 +183,7 @@ export function applyThemeChrome(preference: ThemePreference): void {
   const effective = resolveEffectiveTheme(preference);
   syncThemeColorMeta(preference);
   syncAppleStatusBarMeta(effective);
+  syncIosStatusInset();
 }
 
 export function updateThemeMetaColor(preference: ThemePreference): void {
@@ -262,6 +264,20 @@ export const themeInitScript = `(() => {
       try { localStorage.setItem(key, theme); } catch (storageWriteErr) {}
       document.documentElement.style.colorScheme = effective;
       syncThemeColor(theme, effective);
+      try {
+        var satProbe = document.createElement("div");
+        satProbe.style.cssText = "position:fixed;top:0;left:0;width:0;padding-top:env(safe-area-inset-top,0px);visibility:hidden;pointer-events:none";
+        document.documentElement.appendChild(satProbe);
+        var satInset = satProbe.offsetHeight;
+        satProbe.remove();
+        var standalone = window.matchMedia("(display-mode: standalone)").matches || window.matchMedia("(display-mode: fullscreen)").matches || (window.navigator.standalone === true);
+        var lost = window.screen.height - window.innerHeight;
+        var applySat = standalone ? lost < satInset + 24 : satInset > 0;
+        document.documentElement.style.setProperty("--app-sat", (applySat ? satInset : 0) + "px");
+        document.documentElement.classList.toggle("ios-status-overlay", applySat && satInset > 0);
+      } catch (satErr) {
+        document.documentElement.style.setProperty("--app-sat", "0px");
+      }
       var statusBarStyle = ${JSON.stringify(APPLE_STATUS_BAR_STYLE)};
       var statusMetas = document.querySelectorAll('meta[name="apple-mobile-web-app-status-bar-style"]');
       statusMetas.forEach(function(node, index) {
