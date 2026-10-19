@@ -7,11 +7,11 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { ToastViewport } from "@/components/ToastViewport";
 import { themeInitScript } from "@/lib/theme/theme";
 import {
-  getServerAppleStatusBarStyle,
   getServerThemeChromeColor,
   getServerThemePreference,
   getViewportThemeColor,
 } from "@/lib/theme/theme-server";
+import { APPLE_STATUS_BAR_STYLE } from "@/types/theme";
 import "./globals.css";
 
 const montserrat = localFont({
@@ -45,8 +45,11 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     appleWebApp: {
       capable: true,
-      statusBarStyle: getServerAppleStatusBarStyle(preference),
+      statusBarStyle: APPLE_STATUS_BAR_STYLE,
       title: "KinSight",
+    },
+    other: {
+      "apple-mobile-web-app-status-bar-style": APPLE_STATUS_BAR_STYLE,
     },
   };
 }

@@ -139,10 +139,21 @@ export function syncThemeColorMeta(preference: ThemePreference): void {
     }
   }
 
-  document.documentElement.style.backgroundColor = forcedColor;
-  document.documentElement.style.colorScheme = effective;
+  paintDocumentTheme(forcedColor, effective);
+}
+
+export function paintDocumentTheme(
+  color: string,
+  effective: "light" | "dark"
+): void {
+  const root = document.documentElement;
+  root.style.backgroundColor = color;
+  root.style.colorScheme = effective;
+  root.style.setProperty("--bg-main", color);
+  root.style.setProperty("--background", color);
   if (document.body) {
-    document.body.style.backgroundColor = forcedColor;
+    document.body.style.backgroundColor = color;
+    document.body.style.colorScheme = effective;
   }
 }
 
@@ -213,8 +224,11 @@ export const themeInitScript = `(() => {
     }
     document.documentElement.style.backgroundColor = color;
     document.documentElement.style.colorScheme = effective;
+    document.documentElement.style.setProperty("--bg-main", color);
+    document.documentElement.style.setProperty("--background", color);
     if (document.body) {
       document.body.style.backgroundColor = color;
+      document.body.style.colorScheme = effective;
     }
   }
 
