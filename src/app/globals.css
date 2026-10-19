@@ -443,8 +443,7 @@ body,
 main.app-scroll {
   overscroll-behavior-y: contain !important;
   -webkit-overflow-scrolling: touch;
-  padding-bottom: var(--app-chrome-bottom);
-  transition: padding-bottom 0.22s ease;
+  padding-bottom: 52px;
 }
 
 .contacts-scroll,
@@ -551,12 +550,10 @@ b {
 :root {
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
-  /* Compact tab row (Facebook-style 50px) + home-indicator inset. */
+  /* Compact 50px tab row. Do not add safe-area padding on the nav. */
   --bottom-nav-tab-row-height: 50px;
-  --bottom-nav-indicator-padding: env(safe-area-inset-bottom, 0px);
-  --bottom-nav-height: calc(
-    var(--bottom-nav-tab-row-height) + var(--bottom-nav-indicator-padding)
-  );
+  --bottom-nav-indicator-padding: 0px;
+  --bottom-nav-height: 50px;
   --bottom-nav-clearance: var(--bottom-nav-height);
   --app-chrome-bottom: var(--bottom-nav-height);
   --home-header-height: 5.75rem;
@@ -611,7 +608,6 @@ b {
   z-index: 40;
 }
 
-/* Bottom nav: 50px tab row + safe-area padding (see BottomNav.tsx). */
 .bottom-nav {
   box-sizing: border-box;
 }
