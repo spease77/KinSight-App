@@ -610,6 +610,10 @@ b {
 
 .bottom-nav {
   box-sizing: border-box;
+  height: 50px;
+  margin: 0;
+  padding: 0;
+  padding-bottom: 0 !important;
 }
 
 .app-scroll.home-scroll-locked {
@@ -2754,6 +2758,7 @@ html.scroll-chrome-hidden .bottom-nav {
 
 .bottom-nav__tab {
   display: flex;
+  height: 100%;
   min-width: 0;
   flex-direction: column;
   align-items: center;
