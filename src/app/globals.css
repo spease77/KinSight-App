@@ -549,7 +549,6 @@ b {
 }
 
 :root {
-  --app-sat: 0px;
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   /* Compact tab row (Facebook-style 50px) + home-indicator inset. */
@@ -595,7 +594,21 @@ b {
 
 .theme-status-fill,
 .app-shell::before {
-  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: env(safe-area-inset-top, 0px);
+  pointer-events: none;
+}
+
+.theme-status-fill {
+  z-index: 200;
+}
+
+.app-shell::before {
+  background-color: var(--background);
+  z-index: 40;
 }
 
 /* Bottom nav: 50px tab row + safe-area padding (see BottomNav.tsx). */

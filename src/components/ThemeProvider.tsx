@@ -15,7 +15,6 @@ import {
   readStoredThemePreference,
   resolveEffectiveTheme,
 } from "@/lib/theme/theme";
-import { syncIosStatusInset } from "@/lib/theme/ios-status-inset";
 import {
   DEFAULT_THEME_PREFERENCE,
   THEME_META_COLORS,
@@ -49,21 +48,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     persistThemePreference(preference);
     setEffectiveTheme(resolveEffectiveTheme(preference));
   }, [preference, ready]);
-
-  useEffect(() => {
-    if (!ready) return;
-
-    const syncInset = () => syncIosStatusInset();
-    syncInset();
-    window.addEventListener("orientationchange", syncInset);
-    window.addEventListener("resize", syncInset);
-    window.visualViewport?.addEventListener("resize", syncInset);
-    return () => {
-      window.removeEventListener("orientationchange", syncInset);
-      window.removeEventListener("resize", syncInset);
-      window.visualViewport?.removeEventListener("resize", syncInset);
-    };
-  }, [ready]);
 
   useEffect(() => {
     if (!ready || preference !== "system") return;

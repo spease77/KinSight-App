@@ -9,7 +9,6 @@ import {
   THEME_STORAGE_KEY,
   type ThemePreference,
 } from "@/types/theme";
-import { syncIosStatusInset } from "@/lib/theme/ios-status-inset";
 
 export function isThemePreference(value: string): value is ThemePreference {
   return (THEME_PREFERENCES as readonly string[]).includes(value);
@@ -183,7 +182,6 @@ export function applyThemeChrome(preference: ThemePreference): void {
   const effective = resolveEffectiveTheme(preference);
   syncThemeColorMeta(preference);
   syncAppleStatusBarMeta(effective);
-  syncIosStatusInset();
 }
 
 export function updateThemeMetaColor(preference: ThemePreference): void {
@@ -264,8 +262,6 @@ export const themeInitScript = `(() => {
       try { localStorage.setItem(key, theme); } catch (storageWriteErr) {}
       document.documentElement.style.colorScheme = effective;
       syncThemeColor(theme, effective);
-      document.documentElement.style.setProperty("--app-sat", "0px");
-      document.documentElement.classList.remove("ios-status-overlay");
       var statusBarStyle = ${JSON.stringify(APPLE_STATUS_BAR_STYLE)};
       var statusMetas = document.querySelectorAll('meta[name="apple-mobile-web-app-status-bar-style"]');
       statusMetas.forEach(function(node, index) {
