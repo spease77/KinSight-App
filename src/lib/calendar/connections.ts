@@ -1,4 +1,7 @@
-import { createServerSupabase, humanizeSupabaseFetchError } from "@/lib/supabase/server";
+import {
+  createServiceRoleSupabase,
+  humanizeSupabaseFetchError,
+} from "@/lib/supabase/server";
 import {
   fetchGoogleAccountEmail,
   refreshGoogleAccessToken,
@@ -40,7 +43,7 @@ export async function getCalendarConnection(
   setupRequired?: boolean;
 }> {
   try {
-    const supabase = createServerSupabase();
+    const supabase = createServiceRoleSupabase();
     const { data, error } = await supabase
       .from("calendar_connections")
       .select(CONNECTION_SELECT)
@@ -90,7 +93,7 @@ export async function upsertCalendarConnection(input: {
       return { error: existing.error, setupRequired: true };
     }
 
-    const supabase = createServerSupabase();
+    const supabase = createServiceRoleSupabase();
     const now = new Date().toISOString();
     const { error } = await supabase.from("calendar_connections").upsert(
       {
@@ -136,7 +139,7 @@ export async function deleteCalendarConnection(
   provider: CalendarProvider
 ): Promise<{ error?: string; setupRequired?: boolean }> {
   try {
-    const supabase = createServerSupabase();
+    const supabase = createServiceRoleSupabase();
     const { error } = await supabase
       .from("calendar_connections")
       .delete()

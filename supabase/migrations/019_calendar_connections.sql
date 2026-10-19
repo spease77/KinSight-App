@@ -57,10 +57,10 @@ drop policy if exists "calendar_connections_update" on public.calendar_connectio
 drop policy if exists "calendar_connections_delete" on public.calendar_connections;
 drop policy if exists "calendar_connections_service_role" on public.calendar_connections;
 
--- Tokens stay server-side (service role). Browser clients cannot read them.
-create policy "calendar_connections_service_role"
+-- Server routes use the secret key, which is not always the JWT role
+-- `service_role`. Match other KinSight tables so Connect can persist tokens.
+create policy "calendar_connections_server"
   on public.calendar_connections for all
-  to service_role
   using (true)
   with check (true);
 
