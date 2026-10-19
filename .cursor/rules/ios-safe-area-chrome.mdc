@@ -14,7 +14,7 @@ band under the clock) or too little (title hidden behind the clock).
 ## Locked layout
 
 - **Top (once):** `padding-top: env(safe-area-inset-top, 0px)` on `#app-root.app-shell` in `src/app/layout.tsx`.
-- **Bottom nav:** one global `BottomNav` in `src/app/layout.tsx`. It is `fixed bottom-0 h-[50px]` with **no** `pb-[env(safe-area-inset-bottom)]` (that lifts the icons). Page scroll uses `pb-[52px]` on `main.app-scroll`.
+- **Bottom nav:** locked in `.cursor/rules/bottom-navigation.mdc`. Do not restyle `BottomNav` from page or theme work.
 - Status-bar **paint** (`.theme-status-fill`, `.app-shell::before`) may use the same `env(safe-area-inset-top, 0px)` height. They are `position: fixed` and must not add a second layout gap.
 
 ## Never

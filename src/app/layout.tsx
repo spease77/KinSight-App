@@ -94,7 +94,7 @@ export default async function RootLayout({
       suppressHydrationWarning
     >
       <body
-        className="flex min-h-screen flex-col overflow-hidden bg-background text-foreground no-scrollbar antialiased"
+        className="flex min-h-[100dvh] flex-col overflow-x-hidden bg-background text-foreground no-scrollbar antialiased"
         style={chromeColor ? { backgroundColor: chromeColor } : undefined}
       >
         <Script
@@ -109,15 +109,15 @@ export default async function RootLayout({
               id="app-root"
               className="app-shell mx-auto flex h-[100dvh] w-full max-w-lg flex-col overflow-hidden bg-background pt-[env(safe-area-inset-top,0px)]"
             >
-              <main className="app-scroll no-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pb-[52px]">
+              <main className="app-scroll no-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pb-[60px]">
                 {children}
               </main>
             </div>
-            {/* Single global tab bar. Do not render BottomNav in pages. */}
-            <Navigation />
           </AppShell>
           <ToastViewport />
         </ThemeProvider>
+        {/* Direct body child. Do not wrap in flex/main/page shells. */}
+        <Navigation />
       </body>
     </html>
   );
