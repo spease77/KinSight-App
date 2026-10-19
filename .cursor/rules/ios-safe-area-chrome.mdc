@@ -1,0 +1,34 @@
+---
+description: Never break iOS Home Screen top/bottom safe-area chrome when changing theme, headers, or layout.
+alwaysApply: true
+---
+
+# iOS PWA safe-area chrome (do not regress)
+
+KinSight is an iOS Home Screen PWA with `viewport-fit: cover` and
+`apple-mobile-web-app-status-bar-style: black-translucent`. The webview
+draws **under** the clock. The native bar does **not** also offset the
+webview. Getting this wrong is why headers jump: too much inset (empty
+band under the clock) or too little (title hidden behind the clock).
+
+## Locked layout
+
+- **Top (once):** `padding-top: env(safe-area-inset-top, 0px)` on `#app-root.app-shell` in `src/app/layout.tsx`.
+- **Bottom (once):** `padding-bottom: env(safe-area-inset-bottom, 0px)` on the bottom nav only.
+- Status-bar **paint** (`.theme-status-fill`, `.app-shell::before`) may use the same `env(safe-area-inset-top, 0px)` height. They are `position: fixed` and must not add a second layout gap.
+
+## Never
+
+- A 59px (or any) **minimum** on top inset (`max(env(...), 59px)`).
+- JS that sets `--app-sat` / padding-top to `0px` to “fix” a tall header.
+- Extra `env(safe-area-inset-top)` on `PageHeader`, page roots, or Home **in addition** to app-shell.
+- Switching status-bar-style to `default` and keeping app-shell top padding (double bar).
+- Removing app-shell top padding while leaving `black-translucent` (title under the clock).
+- Using theme toggles as an excuse to change these insets.
+
+## If a screenshot looks wrong
+
+- Empty band under the clock → something **stacked** a second top inset. Remove the extra one; do not delete the app-shell inset.
+- Title/search in the status bar → app-shell top inset is missing. Restore it. Do not invent a heuristic.
+
+Theme work only changes **colors** (`theme-color`, html/body background, fill color). It does not change inset math.

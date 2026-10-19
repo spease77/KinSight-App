@@ -104,6 +104,7 @@ export default async function RootLayout({
         />
         <ThemeProvider>
           <AppShell>
+            {/* Single iOS top inset: env(safe-area-inset-top) once. Do not stack or remove. */}
             <div
               id="app-root"
               className="app-shell mx-auto flex h-[100dvh] w-full max-w-lg flex-col overflow-hidden bg-background pt-[env(safe-area-inset-top,0px)]"
