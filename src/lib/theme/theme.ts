@@ -193,6 +193,9 @@ export const themeInitScript = `(() => {
   var light = ${JSON.stringify(THEME_META_COLORS.light)};
   var dark = ${JSON.stringify(THEME_META_COLORS.dark)};
   var mediaPairs = ${JSON.stringify([...THEME_COLOR_MEDIA])};
+  if (window.navigator.standalone) {
+    document.documentElement.classList.add("pwa-standalone");
+  }
 
   function syncThemeColor(theme, effective) {
     var color = effective === "light" ? light : dark;

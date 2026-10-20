@@ -7,13 +7,12 @@ alwaysApply: true
 
 Locked files: `src/components/BottomNav.tsx`, rendered once as a **direct child of `<body>`** in `src/app/layout.tsx`. Do not add a second nav in pages. Do not wrap it in `<main>`, flex shells, or page layouts.
 
-- DO NOT add `pb-[env(safe-area-inset-bottom)]`, `pb-safe`, `mb-safe`, or extra `pb-*` on the `<nav>` or its children except the inner wrapper's `pb-1`. iOS already insets fixed bottom edges; extra safe-area padding double-insets and lifts the bar.
-- The outer `<nav>` stays `fixed bottom-0 left-0 right-0 z-50 h-[50px] w-full bg-background border-t border-border/30 transform-none`.
-- Inner wrapper MUST remain `flex h-full w-full items-center justify-around px-2 pb-1`.
+- Do NOT `position: fixed` on `html`/`body`. That makes the nav a descendant of an already-inset box and lifts it in the Home Screen PWA (Safari still looks fine).
+- The outer `<nav>` stays `fixed bottom-0 left-0 right-0 z-50 w-full bg-background border-t border-border/30 transform-none`. Height is CSS-only: 50px in Safari, `calc(50px + env(safe-area-inset-bottom))` in standalone.
+- Inner icon row MUST remain `flex h-[50px] w-full shrink-0 items-center justify-around px-2` (never `h-full` once the standalone bar is taller).
+- Do NOT add `pb-[env(safe-area-inset-bottom)]` on the icon row. In standalone, only the **nav height** grows: `calc(50px + env(safe-area-inset-bottom))` so the background fills the home indicator and icons stay in the top 50px.
 - Do NOT `transform` or hide the nav on scroll or route change.
-- Do NOT modify or recalculate this component when editing page-level layouts.
 
-iOS Home Screen PWA: keep `html, body { position: fixed; inset: 0; height: 100%; overflow: hidden; display: block }`. Do not use `min-height: 100dvh` or make `body` a flex column.
-`main.app-scroll` is **always** `overflow: hidden` with `pb-[60px]`. Pages scroll inside `PageBody`.
-Every route uses `PageShell` (`flex h-full overflow-hidden`). Do not add a second `pt-[env(safe-area-inset-top)]` on pages.
+`main.app-scroll` is **always** `overflow: hidden` with `pb-[60px]` (standalone adds `env(safe-area-inset-bottom)` to that clearance).
+Every route uses `PageShell`. Do not add a second `pt-[env(safe-area-inset-top)]` on pages.
 `PageHeader` is not sticky.

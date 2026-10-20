@@ -393,9 +393,9 @@ body,
 
 html,
 body {
-  /* Standalone PWA freeze. 100dvh tracks visualViewport and jumps the tab bar. */
-  position: fixed;
-  inset: 0;
+  /* Do not position:fixed html/body — that becomes the nav containing block
+     and iOS standalone already insets it, which lifts the tab bar. */
+  position: relative;
   width: 100%;
   height: 100%;
   margin: 0;
@@ -450,7 +450,25 @@ main.app-scroll {
   overflow: hidden !important;
   overscroll-behavior: none !important;
   -webkit-overflow-scrolling: auto;
-  padding-bottom: 60px;
+  padding-bottom: 60px !important;
+}
+
+html.pwa-standalone {
+  --bottom-nav-height: calc(50px + env(safe-area-inset-bottom, 0px));
+}
+
+html.pwa-standalone main.app-scroll {
+  padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px)) !important;
+}
+
+@media (display-mode: standalone) {
+  :root {
+    --bottom-nav-height: calc(50px + env(safe-area-inset-bottom, 0px));
+  }
+
+  main.app-scroll {
+    padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px)) !important;
+  }
 }
 
 .contacts-scroll,
@@ -557,7 +575,7 @@ b {
 :root {
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
-  /* 50px tab bar. No safe-area padding on the nav — iOS already insets fixed bottom. */
+  /* 50px tab row. Standalone grows --bottom-nav-height into the home indicator. */
   --bottom-nav-tab-row-height: 50px;
   --bottom-nav-indicator-padding: 0px;
   --bottom-nav-height: 50px;
@@ -618,12 +636,27 @@ b {
 
 .bottom-nav {
   box-sizing: border-box;
-  height: 50px;
+  display: flex;
+  height: 50px !important;
+  flex-direction: column;
+  justify-content: flex-start;
   margin: 0;
   padding: 0;
   padding-bottom: 0 !important;
   transform: none !important;
   will-change: auto;
+}
+
+/* Home Screen only: grow the BAR BACKGROUND into the home indicator.
+   Do not put env() padding on the icon row — that double-insets and lifts icons. */
+html.pwa-standalone .bottom-nav {
+  height: calc(50px + env(safe-area-inset-bottom, 0px)) !important;
+}
+
+@media (display-mode: standalone) {
+  .bottom-nav {
+    height: calc(50px + env(safe-area-inset-bottom, 0px)) !important;
+  }
 }
 
 .app-scroll.home-scroll-locked {
@@ -1098,6 +1131,10 @@ html.home-scroll-locked .app-scroll {
   min-height: 44px;
   margin-bottom: 0;
   padding-bottom: 0.125rem;
+  background-color: var(--background);
+  opacity: 1;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 
 .home-dashboard--conversation .home-conversation-panel {
@@ -2702,6 +2739,8 @@ html.scroll-nav-hidden {
 }
 
 .page-header-chrome {
+  position: relative;
+  z-index: 10;
   background-color: var(--background);
   opacity: 1;
   -webkit-backdrop-filter: none;
