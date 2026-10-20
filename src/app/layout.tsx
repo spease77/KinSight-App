@@ -109,7 +109,7 @@ export default async function RootLayout({
               id="app-root"
               className="app-shell mx-auto flex h-[100dvh] w-full max-w-lg flex-col overflow-hidden bg-background pt-[env(safe-area-inset-top,0px)]"
             >
-              <main className="app-scroll no-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pb-[80px]">
+              <main className="app-scroll no-scrollbar flex min-h-0 flex-1 flex-col overflow-hidden overscroll-none px-3">
                 {children}
               </main>
             </div>

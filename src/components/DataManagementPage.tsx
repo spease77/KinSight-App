@@ -10,6 +10,8 @@ import {
 import type { Contact } from "@/types/contact";
 import type { ExportDataPayload } from "@/types/export-data";
 import { Header } from "@/components/Header";
+import { PageBody } from "@/components/PageBody";
+import { PageHeader } from "@/components/PageHeader";
 import { ContactAvatar } from "@/components/ContactAvatar";
 import { filterContacts } from "@/lib/contacts/filter-contacts";
 import { formatContactDisplayName } from "@/lib/contacts/sort-contacts";
@@ -144,8 +146,10 @@ export function DataManagementPage() {
 
   return (
     <>
-      <Header title="Data Management" />
-      <main className="flex flex-col gap-5 px-5 pb-6 pt-4">
+      <PageHeader>
+        <Header title="Data Management" />
+      </PageHeader>
+      <PageBody className="flex flex-col gap-5 px-5 pb-6 pt-4">
         <section className="ui-card flex flex-col gap-4 p-4">
           <div className="flex items-center justify-between gap-3">
             <div>
@@ -290,7 +294,7 @@ export function DataManagementPage() {
         {exportStatus && (
           <p className="text-center text-sm text-muted">{exportStatus}</p>
         )}
-      </main>
+      </PageBody>
     </>
   );
 }

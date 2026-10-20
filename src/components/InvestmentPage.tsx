@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Clock } from "lucide-react";
 import type { Contact } from "@/types/contact";
 import { Header } from "@/components/Header";
+import { PageBody } from "@/components/PageBody";
 import { PageHeader } from "@/components/PageHeader";
 import { InvestmentContactList } from "@/components/investment/InvestmentContactList";
 import { TimeInvestmentMilestoneCard } from "@/components/investment/TimeInvestmentMilestoneCard";
@@ -79,7 +80,7 @@ export function InvestmentPage() {
       <PageHeader>
         <Header title="Time Log" headerActions={headerActions} />
       </PageHeader>
-      <main className="flex flex-col gap-3 px-0">
+      <PageBody className="flex flex-col gap-3 px-0">
         <div ref={rapportGoalRef} className="flex flex-col">
           <TimeInvestmentMilestoneCard
             selectedContact={selectedContact}
@@ -100,7 +101,7 @@ export function InvestmentPage() {
             refreshToken={refreshToken}
           />
         )}
-      </main>
+      </PageBody>
 
       <LogTimeModal
         open={isLogTimeOpen}

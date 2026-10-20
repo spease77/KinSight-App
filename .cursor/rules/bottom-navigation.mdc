@@ -13,5 +13,6 @@ Locked files: `src/components/BottomNav.tsx`, rendered once as a **direct child 
 - Do NOT `transform` or hide the nav on scroll or route change. That is what makes the bar jump.
 - Do NOT modify or recalculate this component when editing page-level layouts.
 
-Page scroll clearance stays on `main.app-scroll` as `pb-[80px]`. That is not nav padding; do not move it onto the `<nav>`.
-Every route uses `PageShell` (`min-h-full w-full bg-background`). Do not add a second `pt-[env(safe-area-inset-top)]` on pages — that inset lives once on `#app-root`.
+`main.app-scroll` is **always** `overflow: hidden` (same as Home). Pages scroll inside `PageBody` (`pb-[80px]`). Do not toggle overflow on `.app-scroll` — that is what bounced the tab bar.
+Every route uses `PageShell` (`flex h-full overflow-hidden`). Do not add a second `pt-[env(safe-area-inset-top)]` on pages — that inset lives once on `#app-root`.
+`PageHeader` is not sticky. It sits above `PageBody` so iOS cannot fade titles.

@@ -265,7 +265,7 @@ export function AgendaPage() {
 
   return (
     <>
-      <div className="agenda-page flex flex-col">
+      <div className="agenda-page flex h-full min-h-0 flex-col overflow-hidden">
         <PageHeader
           className={
             headerScrolled ? "agenda-page-header agenda-page-header--scrolled" : "agenda-page-header"

@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
 
-/** Identical outer shell for every route so iOS does not recalc the viewport on tab changes. */
+/** Same overflow-hidden column as Home on every route so the tab bar cannot jump. */
 export const PAGE_SHELL_CLASS =
-  "page-shell min-h-full w-full bg-background";
+  "page-shell flex h-full min-h-0 w-full flex-col overflow-hidden bg-background";
 
 export function PageShell({
   children,

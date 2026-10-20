@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Check, Loader2, Send } from "lucide-react";
 import { Header } from "@/components/Header";
+import { PageBody } from "@/components/PageBody";
 import { PageHeader } from "@/components/PageHeader";
 import { useFeedbackScrollLock } from "@/hooks/useFeedbackScrollLock";
 
@@ -71,11 +72,11 @@ export function FeedbackPage() {
   };
 
   return (
-    <div className="feedback-page flex flex-col">
+    <div className="feedback-page flex h-full min-h-0 flex-col">
       <PageHeader>
         <Header title="Feedback" />
       </PageHeader>
-      <main className="feedback-page__body flex flex-col gap-6 px-0">
+      <PageBody className="feedback-page__body flex flex-col gap-6 px-0">
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           <label className="flex flex-col">
             <textarea
@@ -117,7 +118,7 @@ export function FeedbackPage() {
             </button>
           </div>
         </form>
-      </main>
+      </PageBody>
     </div>
   );
 }

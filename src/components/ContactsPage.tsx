@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Header } from "@/components/Header";
+import { PageBody } from "@/components/PageBody";
 import { PageHeader } from "@/components/PageHeader";
 import { ContactList } from "@/components/ContactList";
 import { DatabaseSetupNotice } from "@/components/DatabaseSetupNotice";
@@ -66,7 +67,7 @@ export function ContactsPage() {
       <PageHeader>
         <Header title="Contacts" headerActions={headerActions} />
       </PageHeader>
-      <main className="flex flex-col gap-4 px-0">
+      <PageBody className="flex flex-col gap-4 px-0">
         {statusMessage && (
           <p className="ui-card ui-alert-error px-4 py-3 text-sm" role="alert">
             {statusMessage}
@@ -99,7 +100,7 @@ export function ContactsPage() {
             searchable
           />
         )}
-      </main>
+      </PageBody>
     </>
   );
 }
