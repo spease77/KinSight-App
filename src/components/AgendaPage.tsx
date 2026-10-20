@@ -239,7 +239,7 @@ export function AgendaPage() {
         className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-colors ${
           isSearchOpen || isSearchActive
             ? "bg-card-hover text-foreground"
-            : "text-slate-400 hover:bg-card-hover hover:text-foreground"
+            : "text-foreground opacity-100 hover:bg-card-hover"
         }`}
         aria-label={isSearchOpen ? "Close agenda search" : "Search agenda"}
         aria-pressed={isSearchOpen}
@@ -249,7 +249,7 @@ export function AgendaPage() {
       <button
         type="button"
         onClick={() => setIsAddMeetingOpen(true)}
-        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-card-hover hover:text-foreground"
+        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-foreground opacity-100 transition-colors hover:bg-card-hover"
         aria-label="Add meeting"
       >
         <Plus className="h-5 w-5" strokeWidth={2} />

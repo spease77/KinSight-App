@@ -1,4 +1,5 @@
 import { ContactDetailPage } from "@/components/ContactDetailPage";
+import { PageShell } from "@/components/PageShell";
 
 export default async function ContactRoute({
   params,
@@ -6,5 +7,9 @@ export default async function ContactRoute({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  return <ContactDetailPage id={id} />;
+  return (
+    <PageShell>
+      <ContactDetailPage id={id} />
+    </PageShell>
+  );
 }

@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { EditContactPage } from "@/components/EditContactPage";
+import { PageShell } from "@/components/PageShell";
 
 export default async function EditContactRoute({
   params,
@@ -9,14 +10,16 @@ export default async function EditContactRoute({
   const { id } = await params;
 
   return (
-    <Suspense
-      fallback={
-        <p className="type-meta px-5 py-8 text-center" aria-live="polite">
-          Loading contact…
-        </p>
-      }
-    >
-      <EditContactPage id={id} />
-    </Suspense>
+    <PageShell>
+      <Suspense
+        fallback={
+          <p className="type-meta px-5 py-8 text-center" aria-live="polite">
+            Loading contact…
+          </p>
+        }
+      >
+        <EditContactPage id={id} />
+      </Suspense>
+    </PageShell>
   );
 }

@@ -1,5 +1,10 @@
 import { DataManagementPage } from "@/components/DataManagementPage";
+import { PageShell } from "@/components/PageShell";
 
 export default function Page() {
-  return <DataManagementPage />;
+  return (
+    <PageShell>
+      <DataManagementPage />
+    </PageShell>
+  );
 }

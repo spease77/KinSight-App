@@ -7,9 +7,11 @@ alwaysApply: true
 
 Locked files: `src/components/BottomNav.tsx`, rendered once as a **direct child of `<body>`** in `src/app/layout.tsx`. Do not add a second nav in pages. Do not wrap it in `<main>`, flex shells, or page layouts.
 
-- The outer `<nav>` stays `fixed bottom-0 left-0 right-0 z-50 h-[64px] w-full bg-background border-t border-border/30`.
+- The outer `<nav>` stays `fixed bottom-0 left-0 right-0 z-50 h-[64px] w-full bg-background border-t border-border/30 transform-none`.
 - Do NOT add `pb-[env(safe-area-inset-bottom)]`, `pb-safe`, or `mb-safe` on the nav. Home-indicator clearance is a fixed inner `pb-3` only.
-- Inner wrapper MUST remain `flex h-full w-full items-center justify-around px-2 pb-3` so icons and labels sit above the home indicator.
+- Inner wrapper MUST remain `flex h-full w-full items-center justify-around px-2 pb-3`.
+- Do NOT `transform` or hide the nav on scroll or route change. That is what makes the bar jump.
 - Do NOT modify or recalculate this component when editing page-level layouts.
 
-Page scroll clearance stays on `main.app-scroll` as `pb-[72px]`. That is not nav padding; do not move it onto the `<nav>`.
+Page scroll clearance stays on `main.app-scroll` as `pb-[80px]`. That is not nav padding; do not move it onto the `<nav>`.
+Every route uses `PageShell` (`min-h-full w-full bg-background`). Do not add a second `pt-[env(safe-area-inset-top)]` on pages — that inset lives once on `#app-root`.

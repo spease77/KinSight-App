@@ -1,5 +1,10 @@
 import { InvestmentPage } from "@/components/InvestmentPage";
+import { PageShell } from "@/components/PageShell";
 
 export default function InvestmentRoute() {
-  return <InvestmentPage />;
+  return (
+    <PageShell>
+      <InvestmentPage />
+    </PageShell>
+  );
 }

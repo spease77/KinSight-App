@@ -1,9 +1,10 @@
 import { HomeDashboard } from "@/components/HomeDashboard";
+import { PageShell } from "@/components/PageShell";
 
 export default function HomePage() {
   return (
-    <div className="flex h-full flex-col px-0 pt-0">
+    <PageShell className="flex h-full flex-col">
       <HomeDashboard />
-    </div>
+    </PageShell>
   );
 }

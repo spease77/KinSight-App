@@ -64,7 +64,7 @@ export function AgendaSearchBar({
               value={query}
               onChange={(event) => onQueryChange(event.target.value)}
               placeholder="Search contacts, notes, or meetings"
-              className="ui-input w-full border-border-green/40 bg-elevated/80 py-2.5 pl-10 pr-10 text-sm backdrop-blur-md"
+              className="ui-input w-full border-border-green/40 bg-elevated py-2.5 pl-10 pr-10 text-sm"
               autoComplete="off"
               enterKeyHint="search"
             />

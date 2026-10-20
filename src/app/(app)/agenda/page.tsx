@@ -1,5 +1,10 @@
 import { AgendaPage } from "@/components/AgendaPage";
+import { PageShell } from "@/components/PageShell";
 
 export default function AgendaRoute() {
-  return <AgendaPage />;
+  return (
+    <PageShell>
+      <AgendaPage />
+    </PageShell>
+  );
 }

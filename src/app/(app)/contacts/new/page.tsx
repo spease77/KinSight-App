@@ -1,5 +1,10 @@
 import { AddContactView } from "@/components/AddContactView";
+import { PageShell } from "@/components/PageShell";
 
 export default function NewContactPage() {
-  return <AddContactView />;
+  return (
+    <PageShell>
+      <AddContactView />
+    </PageShell>
+  );
 }

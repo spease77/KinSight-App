@@ -446,7 +446,7 @@ body,
 main.app-scroll {
   overscroll-behavior-y: contain !important;
   -webkit-overflow-scrolling: touch;
-  padding-bottom: 72px;
+  padding-bottom: 80px;
 }
 
 .contacts-scroll,
@@ -616,6 +616,8 @@ b {
   height: 64px;
   margin: 0;
   padding: 0;
+  transform: none !important;
+  will-change: auto;
 }
 
 .app-scroll.home-scroll-locked {
@@ -2684,20 +2686,13 @@ html.keyboard-composer-active .bottom-nav {
   pointer-events: none;
 }
 
-/* Scroll down through content: tuck header + bottom nav; scroll up: reveal. */
+/* Scroll down through content: tuck page headers; the bottom nav stays pinned. */
 html.scroll-chrome-hidden {
-  --app-chrome-bottom: env(safe-area-inset-bottom, 0px);
+  --app-chrome-bottom: var(--bottom-nav-height);
 }
 
-/* Agenda: hide bottom nav only; keep title/toolbar fixed. */
 html.scroll-nav-hidden {
-  --app-chrome-bottom: env(safe-area-inset-bottom, 0px);
-}
-
-html.scroll-nav-hidden .bottom-nav {
-  transform: translateY(100%);
-  opacity: 0;
-  pointer-events: none;
+  --app-chrome-bottom: var(--bottom-nav-height);
 }
 
 .page-header-chrome {
@@ -2705,13 +2700,8 @@ html.scroll-nav-hidden .bottom-nav {
   opacity: 1;
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
-  transition:
-    transform 0.22s ease,
-    height 0.22s ease,
-    min-height 0.22s ease,
-    margin 0.22s ease,
-    padding 0.22s ease;
-  will-change: transform;
+  mask-image: none;
+  -webkit-mask-image: none;
 }
 
 /* Collapse header layout so chat/list content fills the space (not Agenda). */
@@ -2743,14 +2733,7 @@ html.scroll-chrome-hidden .home-dashboard--conversation .home-conversation-panel
 }
 
 .bottom-nav {
-  transition: transform 0.22s ease, opacity 0.22s ease;
-  will-change: transform;
-}
-
-html.scroll-chrome-hidden .bottom-nav {
-  transform: translateY(100%);
-  opacity: 0;
-  pointer-events: none;
+  transform: none !important;
 }
 
 .bottom-nav__inner {

@@ -111,7 +111,7 @@ export function Header({
                   <Menu className="h-6 w-6" strokeWidth={2.25} />
                 </button>
               ) : null}
-              <h1 className="min-w-0 font-sans text-2xl font-bold leading-none tracking-tight text-foreground">
+              <h1 className="min-w-0 font-sans text-2xl font-bold leading-none tracking-tight text-foreground opacity-100">
                 KinSight
               </h1>
             </div>
@@ -123,7 +123,7 @@ export function Header({
             </div>
           </div>
         ) : (
-          <h1 className="min-w-0 truncate font-sans text-2xl font-bold tracking-tight text-foreground">
+          <h1 className="min-w-0 truncate font-sans text-2xl font-bold tracking-tight text-foreground opacity-100">
             {title}
           </h1>
         )}
@@ -153,7 +153,7 @@ export function Header({
               <button
                 type="button"
                 onClick={onToggleSpeech}
-                className="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-card-hover hover:text-foreground"
+                className="flex h-9 w-9 items-center justify-center rounded-full text-foreground opacity-100 transition-colors hover:bg-card-hover"
                 aria-label={speechEnabled ? "Mute voice replies" : "Enable voice replies"}
               >
                 {speechEnabled ? (
@@ -181,7 +181,7 @@ export function Header({
             <button
               type="button"
               onClick={() => setIsDataManagementOpen(true)}
-              className="p-1 text-muted-foreground transition-colors hover:text-foreground"
+              className="p-1 text-foreground opacity-100 transition-colors hover:text-foreground"
               aria-label="Open data management settings"
             >
               <Settings className="h-5 w-5" strokeWidth={2} />
