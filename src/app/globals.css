@@ -446,7 +446,7 @@ body,
 main.app-scroll {
   overscroll-behavior-y: contain !important;
   -webkit-overflow-scrolling: touch;
-  padding-bottom: 60px;
+  padding-bottom: 72px;
 }
 
 .contacts-scroll,
@@ -553,10 +553,10 @@ b {
 :root {
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
-  /* Compact 50px tab row. Do not add safe-area padding on the nav. */
-  --bottom-nav-tab-row-height: 50px;
-  --bottom-nav-indicator-padding: 0px;
-  --bottom-nav-height: 50px;
+  /* 64px tab bar: 52px icon row + 12px home-indicator clearance. */
+  --bottom-nav-tab-row-height: 52px;
+  --bottom-nav-indicator-padding: 12px;
+  --bottom-nav-height: 64px;
   --bottom-nav-clearance: var(--bottom-nav-height);
   --app-chrome-bottom: var(--bottom-nav-height);
   --home-header-height: 5.75rem;
@@ -613,10 +613,9 @@ b {
 
 .bottom-nav {
   box-sizing: border-box;
-  height: 50px;
+  height: 64px;
   margin: 0;
   padding: 0;
-  padding-bottom: 0 !important;
 }
 
 .app-scroll.home-scroll-locked {
@@ -784,17 +783,13 @@ html.home-scroll-locked .app-scroll {
 
 .agenda-page-header {
   flex-shrink: 0;
-  transition:
-    background-color 0.2s ease,
-    box-shadow 0.2s ease,
-    backdrop-filter 0.2s ease;
+  background-color: var(--background);
+  opacity: 1;
 }
 
 .agenda-page-header--scrolled {
-  background-color: color-mix(in srgb, var(--bg-main) 82%, transparent);
+  background-color: var(--background);
   box-shadow: 0 1px 0 var(--border-subtle);
-  -webkit-backdrop-filter: blur(12px);
-  backdrop-filter: blur(12px);
 }
 
 .agenda-month-day-cell {
@@ -2706,9 +2701,12 @@ html.scroll-nav-hidden .bottom-nav {
 }
 
 .page-header-chrome {
+  background-color: var(--background);
+  opacity: 1;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
   transition:
     transform 0.22s ease,
-    opacity 0.22s ease,
     height 0.22s ease,
     min-height 0.22s ease,
     margin 0.22s ease,

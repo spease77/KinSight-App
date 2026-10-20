@@ -7,9 +7,9 @@ alwaysApply: true
 
 Locked files: `src/components/BottomNav.tsx`, rendered once as a **direct child of `<body>`** in `src/app/layout.tsx`. Do not add a second nav in pages. Do not wrap it in `<main>`, flex shells, or page layouts.
 
-- DO NOT add dynamic safe-area bottom padding or margins (`pb-[env(safe-area-inset-bottom)]`, `pb-safe`, `mb-safe`, or extra `pb-*` utilities) to the bottom `<nav>` container or its child elements.
-- The bottom navigation bar container MUST remain `fixed bottom-0 left-0 right-0 z-50 h-[50px] w-full bg-background border-t border-border/30`.
-- Inner content wrapper MUST utilize `flex h-full w-full items-center justify-around px-2` to keep icons anchored flush at the lowest margin without floating upward.
-- Do NOT modify or recalculate this bottom navigation bar component when editing page-level layouts or components.
+- The outer `<nav>` stays `fixed bottom-0 left-0 right-0 z-50 h-[64px] w-full bg-background border-t border-border/30`.
+- Do NOT add `pb-[env(safe-area-inset-bottom)]`, `pb-safe`, or `mb-safe` on the nav. Home-indicator clearance is a fixed inner `pb-3` only.
+- Inner wrapper MUST remain `flex h-full w-full items-center justify-around px-2 pb-3` so icons and labels sit above the home indicator.
+- Do NOT modify or recalculate this component when editing page-level layouts.
 
-Page scroll clearance stays on `main.app-scroll` as `pb-[60px]`. That is not nav padding; do not move it onto the `<nav>`.
+Page scroll clearance stays on `main.app-scroll` as `pb-[72px]`. That is not nav padding; do not move it onto the `<nav>`.
