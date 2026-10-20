@@ -13,6 +13,7 @@ band under the clock) or too little (title hidden behind the clock).
 
 ## Locked layout
 
+- **Viewport freeze (PWA):** `html, body { position: fixed; inset: 0; height: 100%; overflow: hidden }`. Safari tabs can look fine with `100dvh`; the Home Screen app cannot.
 - **Top (once):** `padding-top: env(safe-area-inset-top, 0px)` on `#app-root.app-shell` in `src/app/layout.tsx`.
 - **Bottom nav:** locked in `.cursor/rules/bottom-navigation.mdc`. Do not restyle `BottomNav` from page or theme work.
 - Status-bar **paint** (`.theme-status-fill`, `.app-shell::before`) may use the same `env(safe-area-inset-top, 0px)` height. They are `position: fixed` and must not add a second layout gap.

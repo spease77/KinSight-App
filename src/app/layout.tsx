@@ -94,7 +94,7 @@ export default async function RootLayout({
       suppressHydrationWarning
     >
       <body
-        className="flex min-h-[100dvh] flex-col overflow-x-hidden bg-background text-foreground no-scrollbar antialiased"
+        className="overflow-hidden bg-background text-foreground no-scrollbar antialiased"
         style={chromeColor ? { backgroundColor: chromeColor } : undefined}
       >
         <Script
@@ -107,7 +107,7 @@ export default async function RootLayout({
             {/* Single iOS top inset: env(safe-area-inset-top) once. Do not stack or remove. */}
             <div
               id="app-root"
-              className="app-shell mx-auto flex h-[100dvh] w-full max-w-lg flex-col overflow-hidden bg-background pt-[env(safe-area-inset-top,0px)]"
+              className="app-shell mx-auto flex h-full w-full max-w-lg flex-col overflow-hidden bg-background pt-[env(safe-area-inset-top,0px)]"
             >
               <main className="app-scroll no-scrollbar flex min-h-0 flex-1 flex-col overflow-hidden overscroll-none px-3">
                 {children}
