@@ -10,7 +10,7 @@ export function PageBody({
 }) {
   return (
     <div
-      className={`page-body no-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain pb-[80px] ${className}`.trim()}
+      className={`page-body no-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain ${className}`.trim()}
     >
       {children}
     </div>

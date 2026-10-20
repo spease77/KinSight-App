@@ -7,13 +7,13 @@ alwaysApply: true
 
 Locked files: `src/components/BottomNav.tsx`, rendered once as a **direct child of `<body>`** in `src/app/layout.tsx`. Do not add a second nav in pages. Do not wrap it in `<main>`, flex shells, or page layouts.
 
-- The outer `<nav>` stays `fixed bottom-0 left-0 right-0 z-50 h-[64px] w-full bg-background border-t border-border/30 transform-none`.
-- Do NOT add `pb-[env(safe-area-inset-bottom)]`, `pb-safe`, or `mb-safe` on the nav. Home-indicator clearance is a fixed inner `pb-3` only.
-- Inner wrapper MUST remain `flex h-full w-full items-center justify-around px-2 pb-3`.
-- Do NOT `transform` or hide the nav on scroll or route change. That is what makes the bar jump.
+- DO NOT add `pb-[env(safe-area-inset-bottom)]`, `pb-safe`, `mb-safe`, or extra `pb-*` on the `<nav>` or its children except the inner wrapper's `pb-1`. iOS already insets fixed bottom edges; extra safe-area padding double-insets and lifts the bar.
+- The outer `<nav>` stays `fixed bottom-0 left-0 right-0 z-50 h-[50px] w-full bg-background border-t border-border/30 transform-none`.
+- Inner wrapper MUST remain `flex h-full w-full items-center justify-around px-2 pb-1`.
+- Do NOT `transform` or hide the nav on scroll or route change.
 - Do NOT modify or recalculate this component when editing page-level layouts.
 
-iOS Home Screen PWA (not Safari tabs): keep `html, body { position: fixed; inset: 0; height: 100%; overflow: hidden; display: block }`. Do not use `min-height: 100dvh` or make `body` a flex column — both jump `position: fixed` nav in standalone WebKit.
-`main.app-scroll` is **always** `overflow: hidden`. Pages scroll inside `PageBody` (`pb-[80px]`).
-Every route uses `PageShell` (`flex h-full overflow-hidden`). Do not add a second `pt-[env(safe-area-inset-top)]` on pages — that inset lives once on `#app-root`.
-`PageHeader` is not sticky. It sits above `PageBody` so iOS cannot fade titles.
+iOS Home Screen PWA: keep `html, body { position: fixed; inset: 0; height: 100%; overflow: hidden; display: block }`. Do not use `min-height: 100dvh` or make `body` a flex column.
+`main.app-scroll` is **always** `overflow: hidden` with `pb-[60px]`. Pages scroll inside `PageBody`.
+Every route uses `PageShell` (`flex h-full overflow-hidden`). Do not add a second `pt-[env(safe-area-inset-top)]` on pages.
+`PageHeader` is not sticky.
