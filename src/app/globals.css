@@ -507,7 +507,7 @@ b {
 /* ── Typography ── */
 .type-page-title {
   font-family: var(--font-sans), system-ui, sans-serif;
-  font-weight: 400;
+  font-weight: 800;
   letter-spacing: -0.025em;
   color: var(--text-primary);
 }
@@ -645,6 +645,13 @@ b {
   padding-bottom: 0 !important;
   transform: none !important;
   will-change: auto;
+}
+
+/* Icon row stays 50px even if Tailwind uses h-full. Standalone extra height is
+   empty background below this row, not padding that lifts the icons. */
+.bottom-nav > :first-child {
+  height: 50px !important;
+  flex-shrink: 0;
 }
 
 /* Home Screen only: grow the BAR BACKGROUND into the home indicator.
@@ -2741,14 +2748,24 @@ html.scroll-nav-hidden {
 .page-header-chrome {
   position: relative;
   z-index: 10;
+  width: 100%;
   background-color: var(--background);
   opacity: 1;
-  -webkit-backdrop-filter: none;
-  backdrop-filter: none;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
   mask-image: none;
   -webkit-mask-image: none;
   isolation: auto;
   mix-blend-mode: normal;
+}
+
+.page-header-chrome h1 {
+  font-weight: 800;
+  color: var(--text-primary);
+  opacity: 1;
+  -webkit-text-fill-color: var(--text-primary);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 
 html.scroll-chrome-hidden .page-header-chrome,

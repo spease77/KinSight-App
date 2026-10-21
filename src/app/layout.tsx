@@ -49,6 +49,8 @@ export async function generateMetadata(): Promise<Metadata> {
       title: "KinSight",
     },
     other: {
+      "apple-mobile-web-app-capable": "yes",
+      "mobile-web-app-capable": "yes",
       "apple-mobile-web-app-status-bar-style": APPLE_STATUS_BAR_STYLE,
     },
   };

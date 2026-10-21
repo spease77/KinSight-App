@@ -82,17 +82,17 @@ export function DataManagementSheet({
           className="data-management-sheet__scroll no-scrollbar flex min-h-0 flex-1 flex-col overflow-y-auto [-webkit-overflow-scrolling:touch]"
         >
           <header
-            className={`data-management-sheet__header sticky top-0 z-20 flex shrink-0 items-start justify-between gap-3 px-5 pb-5 pt-[max(1.25rem,env(safe-area-inset-top,0px))] transition-[background-color,backdrop-filter,border-color,box-shadow] duration-200 ${
+            className={`data-management-sheet__header sticky top-0 z-20 flex shrink-0 items-start justify-between gap-3 bg-card px-5 pb-5 pt-[max(1.25rem,env(safe-area-inset-top,0px))] opacity-100 ${
               headerScrolled
-                ? "border-b border-border/60 bg-card/80 shadow-sm backdrop-blur-md"
-                : "border-b border-transparent bg-card"
+                ? "border-b border-border/60 shadow-sm"
+                : "border-b border-transparent"
             }`}
           >
             <div className="min-w-0 pr-2">
               <p className="type-meta">Settings</p>
               <h2
                 id="data-management-sheet-title"
-                className="mt-1 font-sans text-xl font-normal tracking-tight text-foreground"
+                className="mt-1 font-sans text-xl font-extrabold tracking-tight text-foreground"
               >
                 Data Management
               </h2>

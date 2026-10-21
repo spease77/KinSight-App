@@ -111,7 +111,7 @@ export function Header({
                   <Menu className="h-6 w-6" strokeWidth={2.25} />
                 </button>
               ) : null}
-              <h1 className="min-w-0 font-sans text-2xl font-bold leading-none tracking-tight text-foreground opacity-100">
+              <h1 className="min-w-0 font-sans text-2xl font-extrabold leading-none tracking-tight text-foreground opacity-100">
                 KinSight
               </h1>
             </div>
@@ -123,7 +123,7 @@ export function Header({
             </div>
           </div>
         ) : (
-          <h1 className="min-w-0 truncate font-sans text-2xl font-bold tracking-tight text-foreground opacity-100">
+          <h1 className="min-w-0 truncate font-sans text-2xl font-extrabold tracking-tight text-foreground opacity-100">
             {title}
           </h1>
         )}

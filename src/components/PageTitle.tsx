@@ -14,7 +14,7 @@ export function PageTitle({ icon: Icon, children, className }: PageTitleProps) {
         strokeWidth={2.25}
         aria-hidden="true"
       />
-      <h1 className="type-page-title font-sans text-2xl font-bold tracking-tight text-foreground">
+      <h1 className="type-page-title font-sans text-2xl font-extrabold tracking-tight text-foreground">
         {children}
       </h1>
     </div>
