@@ -8,8 +8,8 @@ alwaysApply: true
 Locked files: `src/components/BottomNav.tsx` and `src/components/bottom-nav.module.css`, rendered once as a **direct child of `<body>`** in `src/app/layout.tsx`. Do not add a second nav in pages.
 
 - Do NOT `position: fixed` on `html`. Do NOT make `body` a flex column or `overflow-y: auto`.
-- Geometry in `bottom-nav.module.css`: `bottom: 0`, `height: calc(52px + env(safe-area-inset-bottom, 0px))`, `padding-bottom: env(safe-area-inset-bottom, 0px)`, `box-sizing: border-box`, inner row `52px`. Do not add Tailwind `pb-*` / `mb-*` / `pb-safe` on the nav.
+- Geometry in `bottom-nav.module.css`: `bottom: 0`, `height: calc(45px + env(safe-area-inset-bottom, 0px))`, `padding-bottom: env(safe-area-inset-bottom, 0px)`, `box-sizing: border-box`, inner row `45px`. Do not add Tailwind `pb-*` / `mb-*` / `pb-safe` on the nav.
 - Do NOT hide the nav on route change.
 
-Every route uses `PageShell` with `w-full min-h-full pb-[calc(60px+env(safe-area-inset-bottom))] pt-[env(safe-area-inset-top)] bg-background`.
+Every route uses `PageShell` with `w-full min-h-full pb-[calc(53px+env(safe-area-inset-bottom))] pt-[env(safe-area-inset-top)] bg-background`.
 `PageHeader` is not sticky.
