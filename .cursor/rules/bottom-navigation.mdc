@@ -7,12 +7,12 @@ alwaysApply: true
 
 Locked files: `src/components/BottomNav.tsx`, rendered once as a **direct child of `<body>`** in `src/app/layout.tsx`. Do not add a second nav in pages. Do not wrap it in `<main>`, flex shells, or page layouts.
 
-- Do NOT `position: fixed` on `html`/`body`. That makes the nav a descendant of an already-inset box and lifts it in the Home Screen PWA.
-- The outer `<nav>` stays `fixed bottom-0 left-0 right-0 z-50 h-[50px] w-full bg-background border-t border-border/30 transform-none`.
-- Inner wrapper stays `flex h-[50px] w-full shrink-0 items-center justify-around px-2 pb-1`.
-- Do NOT add `pb-[env(safe-area-inset-bottom)]` on the icon row. `BottomNav` measures the gap below the 50px row and extends only the bar background downward (negative `bottom` + extra height). Icons stay in the top 50px.
+- Do NOT `position: fixed` on `html`. Do NOT make `body` a flex column.
+- The outer `<nav>` stays `fixed bottom-0 left-0 right-0 z-50 h-[52px] w-full bg-background border-t border-border/30`.
+- Inner wrapper stays `flex h-[52px] w-full items-center justify-around px-2 pb-0`.
+- Do NOT add `pb-[env(safe-area-inset-bottom)]`, `pb-safe`, `mb-safe`, extra nav height, or negative `bottom` on the nav or its inner wrappers.
 - Do NOT `transform` or hide the nav on scroll or route change.
 
-`main.app-scroll` is **always** `overflow: hidden` with `pb-[60px]`. Top inset lives once on `main` as `pt-[env(safe-area-inset-top)]`.
-Every route uses `PageShell`. Do not add a second `pt-[env(safe-area-inset-top)]` on pages.
+Every route uses `PageShell` with `w-full min-h-full pb-[70px] pt-[env(safe-area-inset-top)] bg-background`.
+Do not add a second `pt-[env(safe-area-inset-top)]` on pages.
 `PageHeader` is not sticky.

@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
 
-/** Same overflow-hidden column as Home on every route so the tab bar cannot jump. */
+/** Identical outer wrapper on every route so iOS WebKit does not relayout the tab bar. */
 export const PAGE_SHELL_CLASS =
-  "page-shell flex h-full min-h-0 w-full flex-col overflow-hidden bg-background";
+  "page-shell w-full min-h-full pb-[70px] pt-[env(safe-area-inset-top)] bg-background";
 
 export function PageShell({
   children,

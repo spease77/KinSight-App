@@ -98,7 +98,7 @@ export default async function RootLayout({
       suppressHydrationWarning
     >
       <body
-        className="overflow-hidden bg-background text-foreground no-scrollbar antialiased"
+        className="bg-background text-foreground no-scrollbar antialiased"
         style={chromeColor ? { backgroundColor: chromeColor } : undefined}
       >
         <Script
@@ -108,12 +108,12 @@ export default async function RootLayout({
         />
         <ThemeProvider>
           <AppShell>
-            {/* Single iOS top inset: env(safe-area-inset-top) once. Do not stack or remove. */}
+            {/* Top inset lives on PageShell only. Nav is a direct body child. */}
             <div
               id="app-root"
-              className="app-shell mx-auto flex h-full w-full max-w-lg flex-col overflow-hidden bg-background"
+              className="app-shell mx-auto min-h-full w-full max-w-lg bg-background"
             >
-              <main className="app-scroll no-scrollbar flex min-h-0 flex-1 flex-col overflow-hidden overscroll-none px-3 pb-[60px] pt-[env(safe-area-inset-top,0px)]">
+              <main className="app-scroll no-scrollbar min-h-full w-full bg-background px-3">
                 {children}
               </main>
             </div>
