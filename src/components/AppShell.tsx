@@ -14,7 +14,10 @@ export function AppShell({ children }: AppShellProps) {
   useScrollChromeVisibility();
 
   return (
-    <div className="fixed inset-0 z-0 flex flex-col overflow-hidden bg-background">
+    <div
+      id="app-frame"
+      className="fixed inset-0 z-0 flex flex-col overflow-hidden bg-background"
+    >
       <HomeSessionProvider>
         <VoiceExperienceRoot>{children}</VoiceExperienceRoot>
       </HomeSessionProvider>

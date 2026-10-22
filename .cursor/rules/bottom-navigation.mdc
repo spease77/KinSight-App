@@ -9,8 +9,8 @@ Locked files: `src/components/BottomNav.tsx`, rendered once as a **direct child 
 
 - Do NOT `position: fixed` on `html`/`body`. That makes the nav a descendant of an already-inset box and lifts it in the Home Screen PWA.
 - The outer `<nav>` stays `fixed bottom-0 left-0 right-0 z-50 h-[50px] w-full bg-background border-t border-border/30 transform-none`.
-- Inner wrapper stays `flex h-full w-full items-center justify-around px-2 pb-1`.
-- COMPLETELY REMOVE `pb-[env(safe-area-inset-bottom)]`, `pb-safe`, `mb-safe`, extra nav height, negative `bottom`, and `calc(50px + env(safe-area-inset-bottom))`. iOS already insets `position: fixed; bottom: 0`. Extra env() math lifts the icons.
+- Inner wrapper stays `flex h-[50px] w-full shrink-0 items-center justify-around px-2 pb-1`.
+- Do NOT add `pb-[env(safe-area-inset-bottom)]` on the icon row. `BottomNav` measures the gap below the 50px row and extends only the bar background downward (negative `bottom` + extra height). Icons stay in the top 50px.
 - Do NOT `transform` or hide the nav on scroll or route change.
 
 `main.app-scroll` is **always** `overflow: hidden` with `pb-[60px]`. Top inset lives once on `main` as `pt-[env(safe-area-inset-top)]`.

@@ -622,12 +622,19 @@ b {
 
 .bottom-nav {
   box-sizing: border-box;
-  height: 50px !important;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
   margin: 0;
   padding: 0;
   padding-bottom: 0 !important;
   transform: none !important;
   will-change: auto;
+}
+
+.bottom-nav > :first-child {
+  height: 50px !important;
+  flex-shrink: 0;
 }
 
 .app-scroll.home-scroll-locked {

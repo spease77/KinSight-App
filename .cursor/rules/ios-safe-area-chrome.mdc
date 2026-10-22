@@ -14,7 +14,7 @@ band under the clock) or too little (title hidden behind the clock).
 ## Locked layout
 
 - **Viewport:** `html, body { position: relative; height: 100%; overflow: hidden }`. Do **not** `position: fixed` html/body — that becomes the tab bar’s containing block and lifts it in standalone. `AppShell` is `fixed inset-0`; the nav is a viewport-fixed body child.
-- **Top (once):** `padding-top: env(safe-area-inset-top, 0px)` on `main.app-scroll` in `src/app/layout.tsx`. Do not also put it on `#app-root`.
+- **Top (once):** `padding-top: env(safe-area-inset-top, 0px)` on `main.app-scroll`. `.page-header-chrome` may pull up with matching negative margin so its solid background paints through the status bar. Do not add a second layout gap.
 - **Bottom nav:** locked in `.cursor/rules/bottom-navigation.mdc`. Do not restyle `BottomNav` from page or theme work.
 - Status-bar **paint** (`.theme-status-fill`, `.app-shell::before`) may use the same `env(safe-area-inset-top, 0px)` height. They are `position: fixed` and must not add a second layout gap.
 

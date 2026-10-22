@@ -8,9 +8,11 @@ interface PageHeaderProps {
 export function PageHeader({ children, className = "" }: PageHeaderProps) {
   return (
     <header
-      className={`page-header-chrome mb-2 flex h-[44px] w-full shrink-0 items-center justify-between bg-background px-1 opacity-100 ${className}`.trim()}
+      className={`page-header-chrome -mt-[env(safe-area-inset-top,0px)] w-full shrink-0 bg-background pt-[env(safe-area-inset-top,0px)] opacity-100 ${className}`.trim()}
     >
-      {children}
+      <div className="mb-2 flex min-h-[44px] w-full items-center justify-between px-1">
+        {children}
+      </div>
     </header>
   );
 }
