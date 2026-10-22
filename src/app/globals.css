@@ -401,8 +401,7 @@ html {
 body {
   height: 100%;
   width: 100%;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
+  overflow: hidden;
   background-color: var(--background);
   color: var(--foreground, var(--text-primary));
   margin: 0;
@@ -416,7 +415,8 @@ body {
 #__next,
 #root,
 #app-root {
-  min-height: 100%;
+  height: 100%;
+  min-height: 0;
 }
 
 /* Hide scrollbars globally while preserving scroll (touch, wheel, trackpad). */
@@ -434,9 +434,6 @@ body,
   background: transparent;
 }
 
-* {
-  -webkit-overflow-scrolling: touch;
-}
 
 .overflow-y-auto:not(.app-scroll),
 .overflow-y-scroll:not(.app-scroll) {
@@ -445,8 +442,12 @@ body,
 }
 
 main.app-scroll {
-  min-height: 100%;
-  overflow: visible;
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .contacts-scroll,
@@ -578,13 +579,17 @@ b {
 }
 
 .app-scroll {
-  min-height: 100%;
+  min-height: 0;
 }
 
 .app-shell {
-  position: relative;
-  min-height: 100%;
+  display: flex;
+  height: 100%;
+  min-height: 0;
+  flex-direction: column;
   width: 100%;
+  position: relative;
+  overflow: hidden;
 }
 
 .theme-status-fill,

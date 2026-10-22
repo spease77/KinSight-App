@@ -111,9 +111,9 @@ export default async function RootLayout({
             {/* Top inset lives on PageShell only. Nav is a direct body child. */}
             <div
               id="app-root"
-              className="app-shell mx-auto min-h-full w-full max-w-lg bg-background"
+              className="app-shell mx-auto flex h-full w-full max-w-lg flex-col overflow-hidden bg-background"
             >
-              <main className="app-scroll no-scrollbar min-h-full w-full bg-background px-3">
+              <main className="app-scroll no-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain px-3">
                 {children}
               </main>
             </div>

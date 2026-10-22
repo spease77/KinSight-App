@@ -13,7 +13,7 @@ band under the clock) or too little (title hidden behind the clock).
 
 ## Locked layout
 
-- **Viewport:** `html { height: 100%; overflow: hidden }`. `body { height: 100%; overflow-y: auto; position: relative }`. Do **not** `position: fixed` html/body and do **not** make `body` a flex column. The nav is a viewport-fixed body child.
+- **Viewport:** `html, body { height: 100%; overflow: hidden }`. `body` is `position: relative` and **not** a flex column. Do **not** `overflow-y: auto` on `body` — that breaks iOS `position: fixed` on the tab bar. Page content scrolls in `main.app-scroll`. The nav is a viewport-fixed body child.
 - **Top (once):** `pt-[env(safe-area-inset-top)]` on `PageShell` only. Do not also put it on `#app-root`, `main`, or `PageHeader`.
 - **Bottom nav:** locked in `.cursor/rules/bottom-navigation.mdc`. Do not restyle `BottomNav` from page or theme work.
 - Status-bar **paint** (`.theme-status-fill`, `.app-shell::before`) may use the same `env(safe-area-inset-top, 0px)` height. They are `position: fixed` and must not add a second layout gap.
