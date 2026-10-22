@@ -559,9 +559,9 @@ b {
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   /* Native tab bar: 50px icons + home-indicator fill. */
-  --bottom-nav-tab-row-height: 50px;
+  --bottom-nav-tab-row-height: 52px;
   --bottom-nav-indicator-padding: env(safe-area-inset-bottom, 0px);
-  --bottom-nav-height: calc(50px + env(safe-area-inset-bottom, 0px));
+  --bottom-nav-height: calc(52px + env(safe-area-inset-bottom, 0px));
   --bottom-nav-clearance: var(--bottom-nav-height);
   --app-chrome-bottom: var(--bottom-nav-height);
   --home-header-height: 5.75rem;

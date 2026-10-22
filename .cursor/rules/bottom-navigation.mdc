@@ -8,9 +8,8 @@ alwaysApply: true
 Locked files: `src/components/BottomNav.tsx` and `src/components/bottom-nav.module.css`, rendered once as a **direct child of `<body>`** in `src/app/layout.tsx`. Do not add a second nav in pages.
 
 - Do NOT `position: fixed` on `html`. Do NOT make `body` a flex column or `overflow-y: auto`.
-- iOS Home Screen already parks `bottom: 0` on the safe edge. Do NOT use `height: calc(50px + env(safe-area-inset-bottom))` with `bottom: 0` or `padding-bottom: env(safe-area-inset-bottom)` — that grows the bar **up** and leaves an empty band under the icons.
-- Correct standalone geometry in `bottom-nav.module.css`: `bottom: calc(-1 * env(safe-area-inset-bottom))`, `height: calc(50px + env(safe-area-inset-bottom))`, inner row `50px` at the top, `padding-bottom: 0`.
+- Geometry in `bottom-nav.module.css`: `bottom: 0`, `height: calc(52px + env(safe-area-inset-bottom, 0px))`, `padding-bottom: env(safe-area-inset-bottom, 0px)`, `box-sizing: border-box`, inner row `52px`. Do not add Tailwind `pb-*` / `mb-*` / `pb-safe` on the nav.
 - Do NOT hide the nav on route change.
 
-Every route uses `PageShell` with `w-full min-h-full pb-[70px] pt-[env(safe-area-inset-top)] bg-background`.
+Every route uses `PageShell` with `w-full min-h-full pb-[calc(60px+env(safe-area-inset-bottom))] pt-[env(safe-area-inset-top)] bg-background`.
 `PageHeader` is not sticky.
