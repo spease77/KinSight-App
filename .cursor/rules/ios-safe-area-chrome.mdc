@@ -14,7 +14,7 @@ band under the clock) or too little (title hidden behind the clock).
 ## Locked layout
 
 - **Viewport:** `html, body { position: relative; height: 100%; overflow: hidden }`. Do **not** `position: fixed` html/body — that becomes the tab bar’s containing block and lifts it in standalone. `AppShell` is `fixed inset-0`; the nav is a viewport-fixed body child.
-- **Top (once):** `padding-top: env(safe-area-inset-top, 0px)` on `#app-root.app-shell` in `src/app/layout.tsx`.
+- **Top (once):** `padding-top: env(safe-area-inset-top, 0px)` on `main.app-scroll` in `src/app/layout.tsx`. Do not also put it on `#app-root`.
 - **Bottom nav:** locked in `.cursor/rules/bottom-navigation.mdc`. Do not restyle `BottomNav` from page or theme work.
 - Status-bar **paint** (`.theme-status-fill`, `.app-shell::before`) may use the same `env(safe-area-inset-top, 0px)` height. They are `position: fixed` and must not add a second layout gap.
 
@@ -22,7 +22,7 @@ band under the clock) or too little (title hidden behind the clock).
 
 - A 59px (or any) **minimum** on top inset (`max(env(...), 59px)`).
 - JS that sets `--app-sat` / padding-top to `0px` to “fix” a tall header.
-- Extra `env(safe-area-inset-top)` on `PageHeader`, page roots, or Home **in addition** to app-shell.
+- Extra `env(safe-area-inset-top)` on `PageHeader`, page roots, or Home **in addition** to `main.app-scroll`.
 - Switching status-bar-style to `default` and keeping app-shell top padding (double bar).
 - Removing app-shell top padding while leaving `black-translucent` (title under the clock).
 - Using theme toggles as an excuse to change these insets.

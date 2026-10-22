@@ -11,6 +11,7 @@ import {
   getServerThemePreference,
   getViewportThemeColor,
 } from "@/lib/theme/theme-server";
+import { KINSIGHT_PWA_VERSION } from "@/lib/pwa-version";
 import { APPLE_STATUS_BAR_STYLE } from "@/types/theme";
 import "./globals.css";
 
@@ -35,7 +36,7 @@ export async function generateMetadata(): Promise<Metadata> {
     title: "KinSight",
     description:
       "Capture client conversations and build stronger sales relationships with KinSight.",
-    manifest: "/manifest.json",
+    manifest: `/manifest.json?v=${KINSIGHT_PWA_VERSION}`,
     icons: {
       icon: "/favicon.ico",
       shortcut: "/favicon-16x16.png",
@@ -91,6 +92,7 @@ export default async function RootLayout({
     <html
       lang="en"
       data-theme={preference}
+      data-kinsight-build={KINSIGHT_PWA_VERSION}
       className={`${montserrat.variable} ${inter.variable} bg-background`}
       style={chromeColor ? { backgroundColor: chromeColor } : undefined}
       suppressHydrationWarning
@@ -109,9 +111,9 @@ export default async function RootLayout({
             {/* Single iOS top inset: env(safe-area-inset-top) once. Do not stack or remove. */}
             <div
               id="app-root"
-              className="app-shell mx-auto flex h-full w-full max-w-lg flex-col overflow-hidden bg-background pt-[env(safe-area-inset-top,0px)]"
+              className="app-shell mx-auto flex h-full w-full max-w-lg flex-col overflow-hidden bg-background"
             >
-              <main className="app-scroll no-scrollbar flex min-h-0 flex-1 flex-col overflow-hidden overscroll-none px-3 pb-[60px]">
+              <main className="app-scroll no-scrollbar flex min-h-0 flex-1 flex-col overflow-hidden overscroll-none px-3 pb-[60px] pt-[env(safe-area-inset-top,0px)]">
                 {children}
               </main>
             </div>

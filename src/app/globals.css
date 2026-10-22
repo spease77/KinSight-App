@@ -398,11 +398,15 @@ body {
   position: relative;
   width: 100%;
   height: 100%;
+  min-height: 100dvh;
+  min-height: -webkit-fill-available;
   margin: 0;
   padding: 0;
   overflow: hidden;
   overscroll-behavior: none;
   touch-action: manipulation;
+  background-color: var(--background);
+  color: var(--text-primary);
 }
 
 #__next,
@@ -557,7 +561,7 @@ b {
 :root {
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
-  /* 50px tab bar. iOS already insets fixed bottom; do not add env() height. */
+  /* 50px tab bar. No env() padding or extra height on the nav. */
   --bottom-nav-tab-row-height: 50px;
   --bottom-nav-indicator-padding: 0px;
   --bottom-nav-height: 50px;
@@ -618,40 +622,12 @@ b {
 
 .bottom-nav {
   box-sizing: border-box;
-  display: flex;
-  bottom: 0;
   height: 50px !important;
-  flex-direction: column;
-  justify-content: flex-start;
   margin: 0;
   padding: 0;
   padding-bottom: 0 !important;
   transform: none !important;
   will-change: auto;
-}
-
-.bottom-nav > :first-child {
-  height: 50px !important;
-  flex-shrink: 0;
-}
-
-/*
-  Home Screen: iOS parks fixed bottom:0 on the safe edge, which leaves an empty
-  band over the home indicator. Pull the bar down by that inset and add the same
-  amount of height so the BACKGROUND fills the gap. Icons stay in the top 50px.
-  Do not use height: calc(50px + env()) with bottom:0 — that grows the bar up
-  and lifts every tab.
-*/
-html.pwa-standalone .bottom-nav {
-  bottom: calc(-1 * env(safe-area-inset-bottom, 0px)) !important;
-  height: calc(50px + env(safe-area-inset-bottom, 0px)) !important;
-}
-
-@media (display-mode: standalone) {
-  .bottom-nav {
-    bottom: calc(-1 * env(safe-area-inset-bottom, 0px)) !important;
-    height: calc(50px + env(safe-area-inset-bottom, 0px)) !important;
-  }
 }
 
 .app-scroll.home-scroll-locked {

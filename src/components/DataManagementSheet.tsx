@@ -82,7 +82,7 @@ export function DataManagementSheet({
           className="data-management-sheet__scroll no-scrollbar flex min-h-0 flex-1 flex-col overflow-y-auto [-webkit-overflow-scrolling:touch]"
         >
           <header
-            className={`data-management-sheet__header sticky top-0 z-20 flex shrink-0 items-start justify-between gap-3 bg-card px-5 pb-5 pt-[max(1.25rem,env(safe-area-inset-top,0px))] opacity-100 ${
+            className={`data-management-sheet__header sticky top-0 z-20 flex w-full shrink-0 items-start justify-between gap-3 bg-background px-5 pb-5 pt-[max(1.25rem,env(safe-area-inset-top,0px))] opacity-100 ${
               headerScrolled
                 ? "border-b border-border/60 shadow-sm"
                 : "border-b border-transparent"
