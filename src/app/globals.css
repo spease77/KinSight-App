@@ -453,24 +453,6 @@ main.app-scroll {
   padding-bottom: 60px !important;
 }
 
-html.pwa-standalone {
-  --bottom-nav-height: calc(50px + env(safe-area-inset-bottom, 0px));
-}
-
-html.pwa-standalone main.app-scroll {
-  padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px)) !important;
-}
-
-@media (display-mode: standalone) {
-  :root {
-    --bottom-nav-height: calc(50px + env(safe-area-inset-bottom, 0px));
-  }
-
-  main.app-scroll {
-    padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px)) !important;
-  }
-}
-
 .contacts-scroll,
 .contact-quick-add-drawer__body,
 .label-picker-sheet__body,
@@ -575,7 +557,7 @@ b {
 :root {
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
-  /* 50px tab row. Standalone grows --bottom-nav-height into the home indicator. */
+  /* 50px tab bar. iOS already insets fixed bottom; do not add env() height. */
   --bottom-nav-tab-row-height: 50px;
   --bottom-nav-indicator-padding: 0px;
   --bottom-nav-height: 50px;
@@ -647,23 +629,9 @@ b {
   will-change: auto;
 }
 
-/* Icon row stays 50px even if Tailwind uses h-full. Standalone extra height is
-   empty background below this row, not padding that lifts the icons. */
 .bottom-nav > :first-child {
   height: 50px !important;
   flex-shrink: 0;
-}
-
-/* Home Screen only: grow the BAR BACKGROUND into the home indicator.
-   Do not put env() padding on the icon row — that double-insets and lifts icons. */
-html.pwa-standalone .bottom-nav {
-  height: calc(50px + env(safe-area-inset-bottom, 0px)) !important;
-}
-
-@media (display-mode: standalone) {
-  .bottom-nav {
-    height: calc(50px + env(safe-area-inset-bottom, 0px)) !important;
-  }
 }
 
 .app-scroll.home-scroll-locked {

@@ -8,11 +8,11 @@ alwaysApply: true
 Locked files: `src/components/BottomNav.tsx`, rendered once as a **direct child of `<body>`** in `src/app/layout.tsx`. Do not add a second nav in pages. Do not wrap it in `<main>`, flex shells, or page layouts.
 
 - Do NOT `position: fixed` on `html`/`body`. That makes the nav a descendant of an already-inset box and lifts it in the Home Screen PWA (Safari still looks fine).
-- The outer `<nav>` stays `fixed bottom-0 left-0 right-0 z-50 h-[50px] w-full bg-background border-t border-border/30 transform-none`. Height is CSS-only: 50px in Safari, `calc(50px + env(safe-area-inset-bottom))` in standalone.
-- Inner wrapper may be `flex h-full w-full items-center justify-around px-2 pb-1`. CSS pins that row to 50px so standalone extra height cannot stretch icons into the home indicator.
-- Do NOT add `pb-[env(safe-area-inset-bottom)]` on the icon row. In standalone, only the **nav height** grows: `calc(50px + env(safe-area-inset-bottom))` so the background fills the home indicator and icons stay in the top 50px.
+- The outer `<nav>` stays `fixed bottom-0 left-0 right-0 z-50 h-[50px] w-full bg-background border-t border-border/30 transform-none`.
+- Inner wrapper stays `flex h-full w-full items-center justify-around px-2 pb-1`.
+- Do NOT add `pb-[env(safe-area-inset-bottom)]`, `pb-safe`, extra nav height, or `calc(50px + env(safe-area-inset-bottom))`. iOS already insets `position: fixed; bottom: 0` above the home indicator. Extra env() height double-insets and leaves an empty band under the icons.
 - Do NOT `transform` or hide the nav on scroll or route change.
 
-`main.app-scroll` is **always** `overflow: hidden` with `pb-[60px]` (standalone adds `env(safe-area-inset-bottom)` to that clearance).
+`main.app-scroll` is **always** `overflow: hidden` with `pb-[60px]`.
 Every route uses `PageShell`. Do not add a second `pt-[env(safe-area-inset-top)]` on pages.
 `PageHeader` is not sticky.
