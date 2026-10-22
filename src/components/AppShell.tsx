@@ -16,7 +16,7 @@ export function AppShell({ children }: AppShellProps) {
   return (
     <div
       id="app-frame"
-      className="absolute inset-0 z-0 overflow-hidden bg-background"
+      className="absolute inset-0 z-0 overflow-hidden bg-background [transform:none] [filter:none] [contain:none]"
     >
       <HomeSessionProvider>
         <VoiceExperienceRoot>{children}</VoiceExperienceRoot>

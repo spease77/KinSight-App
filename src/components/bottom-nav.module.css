@@ -4,13 +4,16 @@
   left: 0 !important;
   right: 0 !important;
   height: 50px !important;
-  z-index: 9999 !important;
+  z-index: 2147483647 !important;
+  background-color: var(--background) !important;
+  border-top: 1px solid var(--border, var(--border-subtle)) !important;
+  transform: none !important;
+  perspective: none !important;
+  filter: none !important;
+  contain: none !important;
   margin: 0 !important;
   padding: 0 !important;
   padding-bottom: 0 !important;
-  background-color: var(--background) !important;
-  border-top: 1px solid rgba(128, 128, 128, 0.2) !important;
-  transform: none !important;
 }
 
 .navInner {
@@ -21,4 +24,5 @@
   justify-content: space-around !important;
   padding: 0 8px !important;
   padding-bottom: 0 !important;
+  transform: none !important;
 }
