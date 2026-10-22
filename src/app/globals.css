@@ -560,7 +560,7 @@ b {
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   /* Native tab bar: 50px icons + home-indicator fill. */
   --bottom-nav-tab-row-height: 52px;
-  --bottom-nav-indicator-padding: env(safe-area-inset-bottom, 0px);
+  --bottom-nav-indicator-padding: 0px;
   --bottom-nav-height: 52px;
   --bottom-nav-clearance: var(--bottom-nav-height);
   --app-chrome-bottom: var(--bottom-nav-height);

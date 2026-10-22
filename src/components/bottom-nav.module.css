@@ -1,29 +1,32 @@
 .fixedNav {
   box-sizing: border-box !important;
   position: fixed !important;
-  bottom: 0 !important;
   left: 0 !important;
   right: 0 !important;
+  bottom: 0 !important;
+  top: auto !important;
   height: 52px !important;
   z-index: 9999 !important;
   margin: 0 !important;
-  margin-bottom: 0px !important;
   padding: 0 !important;
-  padding-bottom: 0px !important;
   overflow: visible !important;
   background-color: var(--background) !important;
   border-top: 1px solid var(--border) !important;
-  transform: translate3d(0, 0, 0) !important;
+  transform: none !important;
+  filter: none !important;
+  contain: none !important;
+  perspective: none !important;
+  will-change: auto !important;
 }
 
 .navInner {
-  box-sizing: content-box !important;
+  box-sizing: border-box !important;
   display: flex !important;
   height: 52px !important;
   width: 100% !important;
+  flex-shrink: 0 !important;
   align-items: center !important;
   justify-content: space-around !important;
+  margin: 0 !important;
   padding: 0 8px !important;
-  padding-bottom: env(safe-area-inset-bottom, 0px) !important;
-  background-color: var(--background) !important;
 }

@@ -1,8 +1,10 @@
 "use client";
 
+import { useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { CalendarClock, Clock, Home, MessageSquare, Users } from "lucide-react";
+import { usePinBottomNav } from "@/hooks/usePinBottomNav";
 import styles from "./bottom-nav.module.css";
 
 const TABS = [
@@ -40,9 +42,15 @@ const TABS = [
 
 export function BottomNav() {
   const pathname = usePathname();
+  const navRef = useRef<HTMLElement>(null);
+  usePinBottomNav(navRef);
 
   return (
-    <nav aria-label="Main navigation" className={`${styles.fixedNav} bottom-nav`}>
+    <nav
+      ref={navRef}
+      aria-label="Main navigation"
+      className={`${styles.fixedNav} bottom-nav`}
+    >
       <div className={styles.navInner}>
         {TABS.map(({ href, label, icon: Icon, match }) => {
           const active = match(pathname);
