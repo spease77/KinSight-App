@@ -5,13 +5,12 @@ alwaysApply: true
 
 # Bottom Navigation Layout Rules
 
-Locked files: `src/components/BottomNav.tsx` and `src/components/bottom-nav.module.css`, rendered once as a **direct child of `<body>`** in `src/app/layout.tsx`. Do not add a second nav in pages. Do not wrap it in `<main>`, flex shells, or page layouts.
+Locked files: `src/components/BottomNav.tsx` and `src/components/bottom-nav.module.css`, rendered once as a **direct child of `<body>`** in `src/app/layout.tsx`. Do not add a second nav in pages.
 
-- Do NOT `position: fixed` on `html`. Do NOT make `body` a flex column. Do NOT make `body` `overflow-y: auto`.
-- Nav geometry lives in `bottom-nav.module.css`: outer height `calc(50px + env(safe-area-inset-bottom))` with `padding-bottom: env(safe-area-inset-bottom)` and `box-sizing: border-box`. Inner row is exactly `50px` at the top. Do not add Tailwind height/padding on the nav.
-- Do NOT add extra `pb-safe` / `mb-safe` on the icon row. The env() padding is only on the outer bar so the background fills the home indicator.
+- Do NOT `position: fixed` on `html`. Do NOT make `body` a flex column or `overflow-y: auto`.
+- iOS Home Screen already parks `bottom: 0` on the safe edge. Do NOT use `height: calc(50px + env(safe-area-inset-bottom))` with `bottom: 0` or `padding-bottom: env(safe-area-inset-bottom)` — that grows the bar **up** and leaves an empty band under the icons.
+- Correct standalone geometry in `bottom-nav.module.css`: `bottom: calc(-1 * env(safe-area-inset-bottom))`, `height: calc(50px + env(safe-area-inset-bottom))`, inner row `50px` at the top, `padding-bottom: 0`.
 - Do NOT hide the nav on route change.
 
-Every route uses `PageShell` with `w-full min-h-full pb-[calc(60px+env(safe-area-inset-bottom))] pt-[env(safe-area-inset-top)] bg-background`.
-Do not add a second `pt-[env(safe-area-inset-top)]` on pages.
+Every route uses `PageShell` with `w-full min-h-full pb-[70px] pt-[env(safe-area-inset-top)] bg-background`.
 `PageHeader` is not sticky.
