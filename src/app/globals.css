@@ -553,10 +553,10 @@ b {
 :root {
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
-  /* 52px tab bar. No env() padding on the nav. Pages clear it with pb-[70px]. */
-  --bottom-nav-tab-row-height: 52px;
+  /* 50px tab bar. Geometry is in bottom-nav.module.css. Pages clear it with pb-[70px]. */
+  --bottom-nav-tab-row-height: 50px;
   --bottom-nav-indicator-padding: 0px;
-  --bottom-nav-height: 52px;
+  --bottom-nav-height: 50px;
   --bottom-nav-clearance: var(--bottom-nav-height);
   --app-chrome-bottom: var(--bottom-nav-height);
   --home-header-height: 5.75rem;
@@ -606,18 +606,6 @@ b {
   z-index: 40;
 }
 
-.bottom-nav {
-  box-sizing: border-box;
-  height: 52px;
-  margin: 0;
-  padding: 0;
-  padding-bottom: 0 !important;
-  transform: none !important;
-}
-
-.bottom-nav > :first-child {
-  height: 52px;
-}
 
 .app-scroll.home-scroll-locked {
   display: flex;
@@ -2735,10 +2723,6 @@ html.scroll-chrome-hidden .home-dashboard--conversation .kinsight-conversation-m
 
 html.scroll-chrome-hidden .home-dashboard--conversation .home-conversation-panel {
   flex: 1 1 auto;
-}
-
-.bottom-nav {
-  transform: none !important;
 }
 
 .bottom-nav__inner {

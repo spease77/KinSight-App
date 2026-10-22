@@ -5,13 +5,12 @@ alwaysApply: true
 
 # Bottom Navigation Layout Rules
 
-Locked files: `src/components/BottomNav.tsx`, rendered once as a **direct child of `<body>`** in `src/app/layout.tsx`. Do not add a second nav in pages. Do not wrap it in `<main>`, flex shells, or page layouts.
+Locked files: `src/components/BottomNav.tsx` and `src/components/bottom-nav.module.css`, rendered once as a **direct child of `<body>`** in `src/app/layout.tsx`. Do not add a second nav in pages. Do not wrap it in `<main>`, flex shells, or page layouts.
 
 - Do NOT `position: fixed` on `html`. Do NOT make `body` a flex column.
-- The outer `<nav>` stays `fixed bottom-0 left-0 right-0 z-50 h-[52px] w-full bg-background border-t border-border/30`.
-- Inner wrapper stays `flex h-[52px] w-full items-center justify-around px-2 pb-0`.
-- Do NOT add `pb-[env(safe-area-inset-bottom)]`, `pb-safe`, `mb-safe`, extra nav height, or negative `bottom` on the nav or its inner wrappers.
-- Do NOT `transform` or hide the nav on scroll or route change.
+- Nav geometry lives in `bottom-nav.module.css` (`.fixedNav` / `.navInner`): `position: fixed; bottom: 0; height: 50px`. Do not restyle it with Tailwind position/height/padding utilities.
+- Do NOT add `pb-[env(safe-area-inset-bottom)]`, `pb-safe`, or `mb-safe` on the nav or its inner wrappers.
+- Do NOT hide the nav on route change.
 
 Every route uses `PageShell` with `w-full min-h-full pb-[70px] pt-[env(safe-area-inset-top)] bg-background`.
 Do not add a second `pt-[env(safe-area-inset-top)]` on pages.

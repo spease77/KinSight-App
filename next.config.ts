@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  generateBuildId: async () => `kinsight-${Date.now()}`,
+  generateBuildId: async () => `build-${Date.now()}`,
   async headers() {
     return [
       {

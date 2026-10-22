@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { CalendarClock, Clock, Home, MessageSquare, Users } from "lucide-react";
+import styles from "./bottom-nav.module.css";
 
 const TABS = [
   {
@@ -41,11 +42,8 @@ export function BottomNav() {
   const pathname = usePathname();
 
   return (
-    <nav
-      aria-label="Main navigation"
-      className="bottom-nav fixed bottom-0 left-0 right-0 z-50 h-[52px] w-full bg-background border-t border-border/30"
-    >
-      <div className="flex h-[52px] w-full items-center justify-around px-2 pb-0">
+    <nav aria-label="Main navigation" className={`${styles.fixedNav} bottom-nav`}>
+      <div className={styles.navInner}>
         {TABS.map(({ href, label, icon: Icon, match }) => {
           const active = match(pathname);
 
