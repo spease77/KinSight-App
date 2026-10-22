@@ -558,10 +558,10 @@ b {
 :root {
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
-  /* 50px tab bar. Geometry is in bottom-nav.module.css. Pages clear it with pb-[70px]. */
+  /* Native tab bar: 50px icons + home-indicator fill. */
   --bottom-nav-tab-row-height: 50px;
-  --bottom-nav-indicator-padding: 0px;
-  --bottom-nav-height: 50px;
+  --bottom-nav-indicator-padding: env(safe-area-inset-bottom, 0px);
+  --bottom-nav-height: calc(50px + env(safe-area-inset-bottom, 0px));
   --bottom-nav-clearance: var(--bottom-nav-height);
   --app-chrome-bottom: var(--bottom-nav-height);
   --home-header-height: 5.75rem;
