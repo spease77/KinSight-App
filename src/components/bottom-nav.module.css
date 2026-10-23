@@ -30,6 +30,20 @@
     0 4px 12px -2px rgba(0, 0, 0, 0.2) !important;
   border: 1px solid var(--border, rgba(255, 255, 255, 0.15)) !important;
   z-index: 9999 !important;
+  /* Scroll hide/show (html.scroll-nav-hidden, see useScrollChromeVisibility).
+     Uses the standalone `translate` + `opacity` properties so `top` and the
+     locked `transform: translateX(-50%)` above are never touched. */
+  translate: 0 0;
+  opacity: 1;
+  transition:
+    translate 0.25s ease,
+    opacity 0.2s ease !important;
+}
+
+:global(html.scroll-nav-hidden) .fixedNav {
+  translate: 0 calc(var(--bottom-nav-offset, 20px) + 62px + 16px);
+  opacity: 0;
+  pointer-events: none;
 }
 
 .navInner {
