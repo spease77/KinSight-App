@@ -1244,10 +1244,11 @@ html.home-scroll-locked .app-scroll {
   touch-action: manipulation;
 }
 
-/* Fixed hero footprint — 208px (13rem) button; size never changes between states. */
+/* Fixed hero footprint — 187px (11.7rem, i.e. 10% under the old 13rem) button;
+   size never changes between states. */
 .home-voice-capture__button-slot {
   display: flex;
-  min-height: calc(13rem + 2rem);
+  min-height: calc(11.7rem + 2rem);
   width: 100%;
   align-items: center;
   justify-content: center;
@@ -1256,14 +1257,14 @@ html.home-scroll-locked .app-scroll {
 
 .home-voice-capture__hero-button,
 .home-voice-capture__hero-ring {
-  width: 13rem;
-  height: 13rem;
+  width: 11.7rem;
+  height: 11.7rem;
   box-sizing: border-box;
 }
 
 .home-voice-capture__hero-inner {
-  width: 7.5rem;
-  height: 7.5rem;
+  width: 6.75rem;
+  height: 6.75rem;
 }
 
 .home-voice-capture__wave-slot {
@@ -2766,11 +2767,12 @@ html.scroll-nav-hidden {
   margin-top: calc(var(--header-fade-clearance, 18px) - 4.5px);
 }
 
-/* Home mic: lifted so it is centered between the header and the ask bar
-   instead of touching the ask bar. The ask bar is bottom-pinned and does not
-   move. */
+/* Home mic: positioned so it is centered between the header and the ask bar.
+   The ask bar is bottom-pinned and does not move. -19px centered the old 13rem
+   mic; the 11.7rem mic is 20.8px shorter, so it moves down by half of that
+   (-19 + 10.4) to stay centered. */
 .home-dashboard--state-a .home-hero-mic-zone {
-  margin-top: -19px;
+  margin-top: -8.6px;
 }
 
 .page-header-chrome h1 {

@@ -156,7 +156,7 @@ export function HomeVoiceCapture({
               />
             ) : (
               <Mic
-                className="relative z-10 h-14 w-14 text-white"
+                className="relative z-10 h-[50px] w-[50px] text-white"
                 strokeWidth={2.25}
                 aria-hidden="true"
               />

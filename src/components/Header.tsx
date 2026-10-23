@@ -181,7 +181,7 @@ export function Header({
             <button
               type="button"
               onClick={() => setIsDataManagementOpen(true)}
-              className="p-1 text-foreground opacity-100 transition-colors hover:text-foreground"
+              className="flex h-9 w-9 items-center justify-center rounded-full text-foreground opacity-100 transition-colors hover:bg-card-hover"
               aria-label="Open data management settings"
             >
               <Settings className="h-5 w-5" strokeWidth={2} />
