@@ -62,7 +62,10 @@ export function BottomNav() {
             <Link
               key={href}
               href={href}
-              prefetch
+              // Pages are force-dynamic. Prefetching them stores an empty,
+              // data-less cache entry that Next then treats as the page: the
+              // URL changes but the old page stays until a second tap.
+              prefetch={false}
               onClick={() => {
                 if (!match(pathname)) setPendingPath(href);
               }}
