@@ -2755,6 +2755,24 @@ html.scroll-nav-hidden {
   mix-blend-mode: normal;
 }
 
+/* Optical alignment: measured from phone screenshots so every title lands at the
+   same height as Contacts (the base 18px). Agenda sat ~1.4px lower, Home ~4.4px
+   lower (its header also carries 0.25rem top padding). */
+.page-header-chrome.agenda-page-header {
+  margin-top: calc(var(--header-fade-clearance, 18px) - 1.5px);
+}
+
+.page-header-chrome.home-page-header {
+  margin-top: calc(var(--header-fade-clearance, 18px) - 4.5px);
+}
+
+/* Home mic: lifted so it is centered between the header and the ask bar
+   instead of touching the ask bar. The ask bar is bottom-pinned and does not
+   move. */
+.home-dashboard--state-a .home-hero-mic-zone {
+  margin-top: -19px;
+}
+
 .page-header-chrome h1 {
   font-weight: 800;
   color: var(--text-primary);
