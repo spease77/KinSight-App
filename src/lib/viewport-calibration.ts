@@ -25,8 +25,20 @@ export type ViewportMetrics = {
   screenHeight: number;
   insetTop: number;
   insetBottom: number;
+  fixedHeight: number;
+  unitHeight: number;
   extra: number;
 };
+
+function probeHeight(css: string): number {
+  const probe = document.createElement("div");
+  probe.setAttribute("aria-hidden", "true");
+  probe.style.cssText = `position:fixed;left:0;width:1px;${css};visibility:hidden;pointer-events:none;`;
+  document.body.appendChild(probe);
+  const height = probe.getBoundingClientRect().height;
+  probe.remove();
+  return Number.isFinite(height) ? height : 0;
+}
 
 function isStandalone(): boolean {
   const nav = window.navigator as Navigator & { standalone?: boolean };
@@ -57,7 +69,19 @@ export function readViewportMetrics(): ViewportMetrics {
   const screenHeight = portrait ? longSide : shortSide;
   const innerHeight = window.innerHeight;
   const standalone = isStandalone();
-  const raw = screenHeight - innerHeight;
+
+  // What `position: fixed; bottom: N` is measured against.
+  const fixedHeight = Math.round(probeHeight("top:0;bottom:0"));
+  // Other height units can report the true screen when % and fixed do not.
+  const unitHeight = Math.round(
+    Math.max(
+      probeHeight("height:100dvh"),
+      probeHeight("height:100lvh"),
+      probeHeight("height:100vh")
+    )
+  );
+  const realHeight = Math.max(screenHeight, unitHeight, innerHeight);
+  const raw = realHeight - fixedHeight;
 
   const extra =
     standalone &&
@@ -78,6 +102,8 @@ export function readViewportMetrics(): ViewportMetrics {
     screenHeight,
     insetTop: Math.round(readInset("top")),
     insetBottom: Math.round(readInset("bottom")),
+    fixedHeight,
+    unitHeight,
     extra,
   };
 }
@@ -87,6 +113,8 @@ export function formatViewportMetrics(metrics: ViewportMetrics): string {
     metrics.standalone ? "home-screen app" : "browser tab",
     `window ${metrics.innerWidth}x${metrics.innerHeight}`,
     `visual h ${metrics.visualHeight}`,
+    `fixed h ${metrics.fixedHeight}`,
+    `dvh/vh ${metrics.unitHeight}`,
     `screen ${metrics.screenWidth}x${metrics.screenHeight}`,
     `inset top ${metrics.insetTop} / bottom ${metrics.insetBottom}`,
     `extra ${metrics.extra}`,
