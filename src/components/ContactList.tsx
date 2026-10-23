@@ -158,7 +158,7 @@ function SortToggle({
 
   return (
     <div
-      className="flex flex-wrap items-center gap-2"
+      className="flex flex-nowrap items-center gap-1"
       role="group"
       aria-label="Sort contacts by"
     >
@@ -167,17 +167,17 @@ function SortToggle({
           {
             value: "first",
             label: "First name",
-            activeClass: "ui-badge-blue px-2.5 py-1 text-xs",
+            activeClass: "ui-badge-blue px-1 py-1 text-xs",
           },
           {
             value: "last",
             label: "Last name",
-            activeClass: "ui-badge-green px-2.5 py-1 text-xs",
+            activeClass: "ui-badge-green px-1 py-1 text-xs",
           },
           {
             value: "relationship",
             label: "Relationship",
-            activeClass: "ui-badge-green px-2.5 py-1 text-xs",
+            activeClass: "ui-badge-green px-1 py-1 text-xs",
           },
         ] as const
       ).map((field) => {
@@ -190,7 +190,7 @@ function SortToggle({
             onClick={() => onChange(field.value)}
             aria-pressed={active}
             className={`
-              flex-1 rounded-lg px-3 py-1.5 text-xs font-normal transition-colors
+              min-w-0 flex-1 whitespace-nowrap rounded-lg px-1.5 py-1.5 text-center text-xs font-normal transition-colors
               ${
                 active
                   ? field.activeClass
