@@ -64,6 +64,59 @@ function lockPageScroll() {
   document.body.scrollTop = 0;
 }
 
+const LOCKED_SCROLL_CLASSES = [
+  "home-scroll-locked",
+  "agenda-scroll-locked",
+  "edit-contact-scroll-locked",
+  "feedback-scroll-locked",
+];
+
+/** Ordinary scrolling pages (Log, Contacts, ...), as opposed to the locked sheets. */
+function isFreeScrollPage(): boolean {
+  const scrollEl = getAppScroll();
+  if (!scrollEl) return false;
+  return !LOCKED_SCROLL_CLASSES.some((name) => scrollEl.classList.contains(name));
+}
+
+/** Gap (px) kept between a revealed field and the top of the keyboard. */
+const KEYBOARD_FIELD_MARGIN_PX = 12;
+
+/** Space the keyboard takes from the bottom of the app frame (gives the page scroll room). */
+function syncKeyboardInset(viewport: VisualViewport) {
+  const frame = document.getElementById("app-frame");
+  const frameBottom = frame
+    ? frame.getBoundingClientRect().bottom
+    : window.innerHeight;
+  const visualBottom = viewport.offsetTop + viewport.height;
+  const inset = Math.max(0, Math.round(frameBottom - visualBottom));
+  document.documentElement.style.setProperty("--kb-inset", `${inset}px`);
+}
+
+/**
+ * Scroll the page so a focused field sits just above the keyboard instead of
+ * behind it. Only for ordinary scrolling pages; locked sheets manage themselves.
+ */
+function revealFieldAboveKeyboard(viewport: VisualViewport) {
+  if (!isFreeScrollPage()) return;
+
+  const field = document.activeElement;
+  if (!isEditableField(field)) return;
+
+  syncKeyboardInset(viewport);
+
+  const scrollEl = getAppScroll();
+  if (!scrollEl) return;
+
+  const visualBottom = viewport.offsetTop + viewport.height;
+  const overflow =
+    (field as HTMLElement).getBoundingClientRect().bottom -
+    (visualBottom - KEYBOARD_FIELD_MARGIN_PX);
+
+  if (overflow > 1) {
+    scrollEl.scrollTop += overflow;
+  }
+}
+
 function isHomeConversationActive(): boolean {
   return Boolean(document.querySelector(".home-dashboard--conversation"));
 }
@@ -136,6 +189,7 @@ function scheduleVisualViewportSync(viewport: VisualViewport) {
 
 function clearVisualViewportGeometry() {
   document.documentElement.style.removeProperty("--vv-layout-bottom-gap");
+  document.documentElement.style.removeProperty("--kb-inset");
 }
 
 /** Sync DOM class for instant nav/mic hide before React re-render. */
@@ -180,7 +234,13 @@ export function useKeyboardOpen(): KeyboardChromeState {
 
     const handleFocusIn = (event: FocusEvent) => {
       if (isEditableField(event.target as Element) && isTouchLikeDevice()) {
-        if (!isHomeConversationActive() && !isHomeStateA()) {
+        if (isFreeScrollPage()) {
+          // Pages such as Log: keep the scroll position and lift the tapped
+          // field above the keyboard once it has finished animating in.
+          [0, 120, 300, 550].forEach((delay) =>
+            window.setTimeout(() => revealFieldAboveKeyboard(viewport), delay)
+          );
+        } else if (!isHomeConversationActive() && !isHomeStateA()) {
           lockPageScroll();
         }
         scheduleVisualViewportSync(viewport);
@@ -204,7 +264,12 @@ export function useKeyboardOpen(): KeyboardChromeState {
       }, 100);
     };
 
-    viewport.addEventListener("resize", update);
+    const handleViewportResize = () => {
+      update();
+      revealFieldAboveKeyboard(viewport);
+    };
+
+    viewport.addEventListener("resize", handleViewportResize);
     viewport.addEventListener("scroll", update);
     window.addEventListener("focusin", handleFocusIn);
     window.addEventListener("focusout", handleFocusOut);
@@ -213,7 +278,7 @@ export function useKeyboardOpen(): KeyboardChromeState {
     update();
 
     return () => {
-      viewport.removeEventListener("resize", update);
+      viewport.removeEventListener("resize", handleViewportResize);
       viewport.removeEventListener("scroll", update);
       window.removeEventListener("focusin", handleFocusIn);
       window.removeEventListener("focusout", handleFocusOut);

@@ -2729,6 +2729,19 @@ html.keyboard-composer-active .bottom-nav {
   pointer-events: none;
 }
 
+/* Keyboard open on an ordinary scrolling page (Log, Contacts, ...): give the
+   page scroll room equal to the keyboard so a field near the bottom can be
+   lifted to sit just above it (see useKeyboardOpen). Locked pages are excluded. */
+html.keyboard-composer-active
+  .app-scroll:not(.home-scroll-locked):not(.agenda-scroll-locked):not(
+    .edit-contact-scroll-locked
+  ):not(.feedback-scroll-locked)
+  .page-body {
+  /* On .page-body, not .page-shell: the shell is only viewport-tall and the
+     body overflows it, so padding on the shell would not extend the scroll. */
+  padding-bottom: calc(var(--kb-inset, 0px) + 24px);
+}
+
 /* Scroll down through content: tuck page headers; the bottom nav stays pinned. */
 html.scroll-chrome-hidden {
   --app-chrome-bottom: var(--bottom-nav-height);
