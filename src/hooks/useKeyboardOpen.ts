@@ -113,8 +113,39 @@ function revealFieldAboveKeyboard(viewport: VisualViewport) {
     (visualBottom - KEYBOARD_FIELD_MARGIN_PX);
 
   if (overflow > 1) {
-    scrollEl.scrollTop += overflow;
+    scrollEl.scrollTo({
+      top: scrollEl.scrollTop + overflow,
+      behavior: "smooth",
+    });
   }
+}
+
+const TEXT_INPUT_TYPES = new Set([
+  "",
+  "text",
+  "search",
+  "email",
+  "tel",
+  "url",
+  "password",
+  "number",
+]);
+
+function asFocusableTextField(
+  target: EventTarget | null
+): HTMLInputElement | HTMLTextAreaElement | null {
+  if (target instanceof HTMLTextAreaElement) {
+    return target.disabled || target.readOnly ? null : target;
+  }
+  if (
+    target instanceof HTMLInputElement &&
+    !target.disabled &&
+    !target.readOnly &&
+    TEXT_INPUT_TYPES.has(target.type.toLowerCase())
+  ) {
+    return target;
+  }
+  return null;
 }
 
 function isHomeConversationActive(): boolean {
@@ -214,6 +245,15 @@ export function useKeyboardOpen(): KeyboardChromeState {
     const viewport = window.visualViewport;
     if (!viewport) return;
 
+    let revealTimer: number | undefined;
+    const scheduleReveal = (delay: number) => {
+      window.clearTimeout(revealTimer);
+      revealTimer = window.setTimeout(
+        () => revealFieldAboveKeyboard(viewport),
+        delay
+      );
+    };
+
     const update = () => {
       const focusInField = isEditableField(document.activeElement);
       const touch = isTouchLikeDevice();
@@ -235,11 +275,9 @@ export function useKeyboardOpen(): KeyboardChromeState {
     const handleFocusIn = (event: FocusEvent) => {
       if (isEditableField(event.target as Element) && isTouchLikeDevice()) {
         if (isFreeScrollPage()) {
-          // Pages such as Log: keep the scroll position and lift the tapped
-          // field above the keyboard once it has finished animating in.
-          [0, 120, 300, 550].forEach((delay) =>
-            window.setTimeout(() => revealFieldAboveKeyboard(viewport), delay)
-          );
+          // Pages such as Log: keep the scroll position and, once the keyboard
+          // has stopped moving, glide the tapped field to just above it.
+          scheduleReveal(650);
         } else if (!isHomeConversationActive() && !isHomeStateA()) {
           lockPageScroll();
         }
@@ -266,8 +304,38 @@ export function useKeyboardOpen(): KeyboardChromeState {
 
     const handleViewportResize = () => {
       update();
-      revealFieldAboveKeyboard(viewport);
+      // The keyboard slides in over several resize events; reveal once, after it settles.
+      scheduleReveal(160);
     };
+
+    // iOS scrolls/pans the whole page to show a tapped field, which made the
+    // screen jump and flash on pages like Log. Take focus ourselves with
+    // preventScroll (the same approach as the Home ask bar) and do a single,
+    // smooth reveal afterwards instead.
+    const handleTextFieldMouseDown = (event: MouseEvent) => {
+      if (!isFreeScrollPage() || !isTouchLikeDevice()) return;
+      const field = asFocusableTextField(event.target);
+      if (field && document.activeElement !== field) {
+        event.preventDefault();
+      }
+    };
+
+    const handleTextFieldClick = (event: MouseEvent) => {
+      if (!isFreeScrollPage() || !isTouchLikeDevice()) return;
+      const field = asFocusableTextField(event.target);
+      if (field && document.activeElement !== field) {
+        field.focus({ preventScroll: true });
+        try {
+          const end = field.value.length;
+          field.setSelectionRange(end, end);
+        } catch {
+          // some input types do not support selection
+        }
+      }
+    };
+
+    document.addEventListener("mousedown", handleTextFieldMouseDown, true);
+    document.addEventListener("click", handleTextFieldClick, true);
 
     viewport.addEventListener("resize", handleViewportResize);
     viewport.addEventListener("scroll", update);
@@ -278,6 +346,9 @@ export function useKeyboardOpen(): KeyboardChromeState {
     update();
 
     return () => {
+      window.clearTimeout(revealTimer);
+      document.removeEventListener("mousedown", handleTextFieldMouseDown, true);
+      document.removeEventListener("click", handleTextFieldClick, true);
       viewport.removeEventListener("resize", handleViewportResize);
       viewport.removeEventListener("scroll", update);
       window.removeEventListener("focusin", handleFocusIn);
