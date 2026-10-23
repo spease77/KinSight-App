@@ -1,10 +1,16 @@
 .fixedNav {
   box-sizing: border-box !important;
-  position: fixed !important;
-  /* 20px above the physical screen edge, anchored from the TOP using the true
-     screen height (--kin-real-h) because iOS's layout-viewport bottom shifts.
-     100% (browsers) equals the viewport height. No env() on purpose.
+  /* position:absolute (NOT fixed) on purpose. iOS Home Screen apps resolve
+     `position: fixed` against a layout viewport whose origin/height drift
+     (that is what kept moving the bar). #app-frame is absolute from the same
+     origin and is verified to fill the real screen, so the bar uses the same
+     document coordinates and always lines up with the page content. The
+     document never scrolls (html/body overflow hidden + scroll pin).
+     20px above the physical screen edge, anchored from the TOP using the true
+     screen height (--kin-real-h); 100% (browsers) equals the viewport height.
+     No env() on purpose.
      Do NOT add another `top:` below: a stray `top: auto` puts the bar at the top. */
+  position: absolute !important;
   bottom: auto !important;
   top: calc(var(--kin-real-h, 100%) - var(--bottom-nav-offset, 20px) - 62px) !important;
   left: 50% !important;

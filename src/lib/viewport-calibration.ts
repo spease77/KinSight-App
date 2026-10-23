@@ -30,6 +30,8 @@ export type ViewportMetrics = {
   unitHeight: number;
   /** True screen height in CSS px when the layout viewport is short, else 0. */
   realHeight: number;
+  scrollY: number;
+  visualTop: number;
   extra: number;
 };
 
@@ -110,6 +112,8 @@ export function readViewportMetrics(): ViewportMetrics {
     fixedHeight,
     unitHeight,
     realHeight: extra > 0 ? realHeight : 0,
+    scrollY: Math.round(window.scrollY),
+    visualTop: Math.round(window.visualViewport?.offsetTop ?? 0),
     extra,
   };
 }
@@ -125,6 +129,7 @@ export function formatViewportMetrics(metrics: ViewportMetrics): string {
     `inset top ${metrics.insetTop} / bottom ${metrics.insetBottom}`,
     `extra ${metrics.extra}`,
     `real ${metrics.realHeight}`,
+    `scrollY ${metrics.scrollY} / vvTop ${metrics.visualTop}`,
   ].join(" · ");
 }
 
