@@ -560,23 +560,31 @@ b {
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --card: color-mix(in srgb, var(--bg-card) 88%, transparent);
   --border: var(--border-subtle);
+  /* How far the real screen extends below the iOS layout viewport. Set by
+     useViewportCalibration (and the viewport-init script); 0 elsewhere. */
+  --kin-extra: 0px;
   --bottom-nav-tab-row-height: 62px;
   --bottom-nav-indicator-padding: 0px;
-  --bottom-nav-offset: max(16px, env(safe-area-inset-bottom, 16px));
+  /* Pill sits 20px above the physical screen edge (Facebook-style margin). */
+  --bottom-nav-offset: 20px;
+  /* Physical distance from the screen bottom to the top of the pill. Use for
+     padding inside the app frame, which already extends to the screen edge. */
   --bottom-nav-height: calc(62px + var(--bottom-nav-offset));
   --bottom-nav-clearance: var(--bottom-nav-height);
-  --app-chrome-bottom: var(--bottom-nav-height);
+  /* Same distance measured from the (possibly short) layout viewport bottom.
+     Use for position:fixed elements that anchor with `bottom`. */
+  --app-chrome-bottom: calc(var(--bottom-nav-height) - var(--kin-extra));
   --home-header-height: 5.75rem;
   --home-composer-dock-height: calc(0.75rem + 3rem + 0.75rem);
   /* Empty Home: dock the ask bar just above the floating pill so the mic
-     can use the full remaining viewport. Keyboard open still uses --vv-layout-bottom-gap. */
+     can use the full remaining screen. Keyboard open still uses --vv-layout-bottom-gap. */
   --home-state-a-composer-pinned-bottom: calc(var(--app-chrome-bottom) + 0.5rem);
   --home-state-a-composer-rest-bottom: var(--home-state-a-composer-pinned-bottom);
   --home-conversation-composer-clearance: calc(
-    var(--app-chrome-bottom) + var(--home-composer-dock-height) + 0.75rem
+    var(--bottom-nav-height) + var(--home-composer-dock-height) + 0.75rem
   );
   --home-state-a-composer-clearance: calc(
-    var(--home-state-a-composer-rest-bottom) + var(--home-composer-dock-height) +
+    var(--bottom-nav-height) + 0.5rem + var(--home-composer-dock-height) +
       0.35rem
   );
 }
@@ -1158,8 +1166,9 @@ html.home-scroll-locked .app-scroll {
 }
 
 .home-dashboard--state-a .home-hero__spacer--lower {
-  /* Slightly more air above the ask bar now that the hero prompt is removed. */
-  flex: 1.15 1 0;
+  /* The mic zone reserves an empty waveform slot below the button, so keep
+     the lower spacer small to place the button near the vertical middle. */
+  flex: 0.35 1 0;
 }
 
 /* Mobile Safari (in-browser): extra clearance so the pinned ask bar never covers the hero mic. */
@@ -2713,11 +2722,11 @@ html.keyboard-composer-active .bottom-nav {
 
 /* Scroll down through content: tuck page headers; the bottom nav stays pinned. */
 html.scroll-chrome-hidden {
-  --app-chrome-bottom: var(--bottom-nav-height);
+  --app-chrome-bottom: calc(var(--bottom-nav-height) - var(--kin-extra));
 }
 
 html.scroll-nav-hidden {
-  --app-chrome-bottom: var(--bottom-nav-height);
+  --app-chrome-bottom: calc(var(--bottom-nav-height) - var(--kin-extra));
 }
 
 .page-header-chrome {

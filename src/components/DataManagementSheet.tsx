@@ -37,6 +37,11 @@ export function DataManagementSheet({
     setPortalReady(true);
   }, []);
 
+  const [screenInfo, setScreenInfo] = useState("");
+  useEffect(() => {
+    if (open) setScreenInfo(document.documentElement.dataset.kinMetrics ?? "");
+  }, [open]);
+
   useEffect(() => {
     if (!open) return;
 
@@ -172,6 +177,12 @@ export function DataManagementSheet({
               generate a portable backup of your KinSight network.
             </p>
           </div>
+
+          {screenInfo && (
+            <p className="break-words text-center text-[10px] leading-snug text-muted/70">
+              Screen: {screenInfo}
+            </p>
+          )}
           </div>
         </div>
       </aside>

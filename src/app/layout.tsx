@@ -12,6 +12,7 @@ import {
   getViewportThemeColor,
 } from "@/lib/theme/theme-server";
 import { KINSIGHT_PWA_VERSION } from "@/lib/pwa-version";
+import { viewportInitScript } from "@/lib/viewport-calibration";
 import { APPLE_STATUS_BAR_STYLE } from "@/types/theme";
 import "./globals.css";
 
@@ -105,6 +106,11 @@ export default async function RootLayout({
           id="theme-init"
           strategy="beforeInteractive"
           dangerouslySetInnerHTML={{ __html: themeInitScript }}
+        />
+        <Script
+          id="viewport-init"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{ __html: viewportInitScript }}
         />
         <ThemeProvider>
           <AppShell>

@@ -1,7 +1,9 @@
 .fixedNav {
   box-sizing: border-box !important;
   position: fixed !important;
-  bottom: max(16px, env(safe-area-inset-bottom, 16px)) !important;
+  /* 20px above the physical screen edge. --kin-extra is how far iOS's layout
+     viewport stops short of that edge (0 in browsers). No env() on purpose. */
+  bottom: calc(var(--bottom-nav-offset, 20px) - var(--kin-extra, 0px)) !important;
   left: 50% !important;
   right: auto !important;
   top: auto !important;
