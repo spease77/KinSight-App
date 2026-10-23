@@ -80,7 +80,9 @@ export function readViewportMetrics(): ViewportMetrics {
       probeHeight("height:100vh")
     )
   );
-  const realHeight = Math.max(screenHeight, unitHeight, innerHeight);
+  // Do not use screen.height: with iOS Display Zoom it reports the unzoomed
+  // device size (e.g. 874) while the app's CSS screen is 760 tall.
+  const realHeight = Math.max(unitHeight, innerHeight);
   const raw = realHeight - fixedHeight;
 
   const extra =
