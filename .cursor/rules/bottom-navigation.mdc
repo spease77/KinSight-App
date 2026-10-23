@@ -11,5 +11,5 @@ Locked files: `src/components/BottomNav.tsx` and `src/components/bottom-nav.modu
 - The tab bar is a **floating pill**, not a full-width flush bar. Geometry in `bottom-nav.module.css`: `position: fixed`, `left: 50%`, `transform: translateX(-50%)`, `width: 92%`, `max-width: 420px`, `height: 62px`, `border-radius: 9999px`, `bottom: max(16px, env(safe-area-inset-bottom, 16px))`, surface `var(--card)` with blur. Do not pin it with JS. Do not add Tailwind `pb-*` / `mb-*` / `pb-safe` on the nav.
 - Do NOT hide the nav on route change.
 
-Every route uses `PageShell` with `w-full min-h-full pb-[100px] pt-[env(safe-area-inset-top)] bg-background`. Agenda inner scrollers also use `padding-bottom: 100px` so the last row clears the pill.
+Every route uses `PageShell` with `w-full min-h-full pb-[100px] pt-[env(safe-area-inset-top)] bg-background`. Home and Agenda locked shells drop that bottom padding (`padding-bottom: 0`) so content fills the viewport; the ask bar docks just above the pill. Agenda inner scrollers keep `padding-bottom: 100px` so the last row clears the pill.
 `PageHeader` is not sticky.

@@ -562,17 +562,15 @@ b {
   --border: var(--border-subtle);
   --bottom-nav-tab-row-height: 62px;
   --bottom-nav-indicator-padding: 0px;
-  --bottom-nav-height: 100px;
+  --bottom-nav-offset: max(16px, env(safe-area-inset-bottom, 16px));
+  --bottom-nav-height: calc(62px + var(--bottom-nav-offset));
   --bottom-nav-clearance: var(--bottom-nav-height);
   --app-chrome-bottom: var(--bottom-nav-height);
   --home-header-height: 5.75rem;
   --home-composer-dock-height: calc(0.75rem + 3rem + 0.75rem);
-  /* Empty Home rest: sit at ~keyboard height (not on the nav) until a message
-     is submitted. useKeyboardOpen refines this to the exact keyboard inset. */
-  --home-state-a-composer-pinned-bottom: max(
-    calc(var(--app-chrome-bottom) + 0.75rem),
-    min(40dvh, 22rem)
-  );
+  /* Empty Home: dock the ask bar just above the floating pill so the mic
+     can use the full remaining viewport. Keyboard open still uses --vv-layout-bottom-gap. */
+  --home-state-a-composer-pinned-bottom: calc(var(--app-chrome-bottom) + 0.5rem);
   --home-state-a-composer-rest-bottom: var(--home-state-a-composer-pinned-bottom);
   --home-conversation-composer-clearance: calc(
     var(--app-chrome-bottom) + var(--home-composer-dock-height) + 0.75rem
@@ -636,7 +634,16 @@ html.home-scroll-locked .app-scroll {
   -webkit-overflow-scrolling: auto;
 }
 
-.app-scroll.home-scroll-locked > .home-dashboard {
+.app-scroll.home-scroll-locked > .page-shell {
+  display: flex;
+  height: 100%;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  padding-bottom: 0;
+}
+
+.app-scroll.home-scroll-locked > .page-shell > .home-dashboard {
   display: flex;
   min-height: 0;
   flex: 1 1 auto;
@@ -651,7 +658,16 @@ html.home-scroll-locked .app-scroll {
   overscroll-behavior: none;
 }
 
-.app-scroll.agenda-scroll-locked > .agenda-page {
+.app-scroll.agenda-scroll-locked > .page-shell {
+  display: flex;
+  height: 100%;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  padding-bottom: 0;
+}
+
+.app-scroll.agenda-scroll-locked .agenda-page {
   display: flex;
   min-height: 0;
   flex: 1 1 auto;
@@ -1110,6 +1126,7 @@ html.home-scroll-locked .app-scroll {
 
 .home-dashboard--state-a {
   min-height: 0;
+  height: 100%;
   flex: 1 1 auto;
 }
 
