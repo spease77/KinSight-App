@@ -8,7 +8,6 @@ import {
   useMemo,
   useState,
 } from "react";
-import { ThemeStatusBarFill } from "@/components/theme/ThemeStatusBarFill";
 import {
   applyThemePreference,
   persistThemePreference,
@@ -17,7 +16,6 @@ import {
 } from "@/lib/theme/theme";
 import {
   DEFAULT_THEME_PREFERENCE,
-  THEME_META_COLORS,
   type ThemePreference,
 } from "@/types/theme";
 
@@ -78,7 +76,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <ThemeContext.Provider value={value}>
-      <ThemeStatusBarFill color={THEME_META_COLORS[effectiveTheme]} />
       {children}
     </ThemeContext.Provider>
   );

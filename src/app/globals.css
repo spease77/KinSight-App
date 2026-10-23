@@ -624,9 +624,10 @@ b {
   z-index: 200;
 }
 
+/* No separate status-bar overlay: the html/body background already paints the
+   area under the clock, and an overlay there looked like a translucent band. */
 .app-shell::before {
-  background-color: var(--background);
-  z-index: 40;
+  display: none;
 }
 
 

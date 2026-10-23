@@ -9,7 +9,6 @@ import { themeInitScript } from "@/lib/theme/theme";
 import {
   getServerThemeChromeColor,
   getServerThemePreference,
-  getViewportThemeColor,
 } from "@/lib/theme/theme-server";
 import { KINSIGHT_PWA_VERSION } from "@/lib/pwa-version";
 import { viewportInitScript } from "@/lib/viewport-calibration";
@@ -74,7 +73,10 @@ export async function generateViewport(): Promise<Viewport> {
         : preference === "dark"
           ? "dark"
           : "light dark",
-    themeColor: getViewportThemeColor(preference),
+    // No `themeColor` here on purpose. theme.ts creates and rewrites the
+    // theme-color <meta> tags itself; if Next also renders them, React later
+    // tries to remove nodes the theme code already deleted, throws
+    // "removeChild", and aborts the route change (the two-tap bug).
   };
 }
 

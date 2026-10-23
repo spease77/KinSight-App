@@ -10,9 +10,6 @@ import {
   type ThemePreference,
 } from "@/types/theme";
 
-/** Marks <meta> tags we created ourselves (the only ones we may remove). */
-const OWN_META_ATTR = "data-kinsight-theme";
-
 export function isThemePreference(value: string): value is ThemePreference {
   return (THEME_PREFERENCES as readonly string[]).includes(value);
 }
@@ -113,44 +110,33 @@ export function appleStatusBarStyleFor(
 export function syncThemeColorMeta(preference: ThemePreference): void {
   const effective = resolveEffectiveTheme(preference);
   const forcedColor = THEME_META_COLORS[effective];
-  const all = [...document.querySelectorAll('meta[name="theme-color"]')];
-  // Next.js/React own the <meta> tags it rendered. Removing them makes React
-  // throw "removeChild" on the next route change, which aborts that navigation
-  // (the URL changes but the old page stays until a second tap). Only ever
-  // edit attributes on those; remove nothing but our own marked tags.
-  const framework = all.filter((node) => !node.hasAttribute(OWN_META_ATTR));
-  all
-    .filter((node) => node.hasAttribute(OWN_META_ATTR))
-    .forEach((node) => node.remove());
+  const existing = [...document.querySelectorAll('meta[name="theme-color"]')];
 
-  if (framework.length > 0) {
-    framework.forEach((node) => {
-      const media = node.getAttribute("media") ?? "";
-      if (preference === "system" && media.includes("prefers-color-scheme")) {
-        node.setAttribute(
-          "content",
-          media.includes("dark") ? THEME_META_COLORS.dark : THEME_META_COLORS.light
-        );
-      } else {
-        node.setAttribute("content", forcedColor);
-        if (preference !== "system") node.removeAttribute("media");
-      }
-    });
-  } else if (preference === "system") {
+  if (preference === "system") {
+    existing.forEach((node) => node.remove());
     THEME_COLOR_MEDIA.forEach(({ media, color }) => {
       const meta = document.createElement("meta");
       meta.setAttribute("name", "theme-color");
       meta.setAttribute("content", color);
       meta.setAttribute("media", media);
-      meta.setAttribute(OWN_META_ATTR, "");
       document.head.appendChild(meta);
     });
   } else {
-    const meta = document.createElement("meta");
-    meta.setAttribute("name", "theme-color");
-    meta.setAttribute("content", forcedColor);
-    meta.setAttribute(OWN_META_ATTR, "");
-    document.head.appendChild(meta);
+    existing.forEach((node, index) => {
+      if (index === 0) {
+        node.setAttribute("content", forcedColor);
+        node.removeAttribute("media");
+      } else {
+        node.remove();
+      }
+    });
+
+    if (existing.length === 0) {
+      const meta = document.createElement("meta");
+      meta.setAttribute("name", "theme-color");
+      meta.setAttribute("content", forcedColor);
+      document.head.appendChild(meta);
+    }
   }
 
   paintDocumentTheme(forcedColor, effective);
@@ -176,15 +162,18 @@ function syncAppleStatusBarMeta(_effective?: "light" | "dark"): void {
   const metas = document.querySelectorAll(
     'meta[name="apple-mobile-web-app-status-bar-style"]'
   );
-  metas.forEach((node) => {
-    node.setAttribute("content", style);
+  metas.forEach((node, index) => {
+    if (index === 0) {
+      node.setAttribute("content", style);
+    } else {
+      node.remove();
+    }
   });
 
   if (metas.length === 0) {
     const meta = document.createElement("meta");
     meta.setAttribute("name", "apple-mobile-web-app-status-bar-style");
     meta.setAttribute("content", style);
-    meta.setAttribute(OWN_META_ATTR, "");
     document.head.appendChild(meta);
   }
 }
@@ -204,43 +193,37 @@ export const themeInitScript = `(() => {
   var light = ${JSON.stringify(THEME_META_COLORS.light)};
   var dark = ${JSON.stringify(THEME_META_COLORS.dark)};
   var mediaPairs = ${JSON.stringify([...THEME_COLOR_MEDIA])};
-  var ownAttr = ${JSON.stringify(OWN_META_ATTR)};
   if (window.navigator.standalone) {
     document.documentElement.classList.add("pwa-standalone");
   }
 
   function syncThemeColor(theme, effective) {
     var color = effective === "light" ? light : dark;
-    // Never remove tags Next/React rendered: that makes React throw on the next
-    // route change and aborts the navigation. Edit attributes only.
-    var themeMetas = Array.prototype.slice.call(document.querySelectorAll('meta[name="theme-color"]'));
-    var frameworkMetas = themeMetas.filter(function(node) { return !node.hasAttribute(ownAttr); });
-    themeMetas.forEach(function(node) { if (node.hasAttribute(ownAttr)) node.remove(); });
-    if (frameworkMetas.length > 0) {
-      frameworkMetas.forEach(function(node) {
-        var media = node.getAttribute("media") || "";
-        if (theme === "system" && media.indexOf("prefers-color-scheme") !== -1) {
-          node.setAttribute("content", media.indexOf("dark") !== -1 ? dark : light);
-        } else {
-          node.setAttribute("content", color);
-          if (theme !== "system") node.removeAttribute("media");
-        }
-      });
-    } else if (theme === "system") {
+    var themeMetas = document.querySelectorAll('meta[name="theme-color"]');
+    if (theme === "system") {
+      themeMetas.forEach(function(node) { node.remove(); });
       mediaPairs.forEach(function(pair) {
         var meta = document.createElement("meta");
         meta.setAttribute("name", "theme-color");
         meta.setAttribute("content", pair.color);
         meta.setAttribute("media", pair.media);
-        meta.setAttribute(ownAttr, "");
         document.head.appendChild(meta);
       });
     } else {
-      var themeMeta = document.createElement("meta");
-      themeMeta.setAttribute("name", "theme-color");
-      themeMeta.setAttribute("content", color);
-      themeMeta.setAttribute(ownAttr, "");
-      document.head.appendChild(themeMeta);
+      themeMetas.forEach(function(node, index) {
+        if (index === 0) {
+          node.setAttribute("content", color);
+          node.removeAttribute("media");
+        } else {
+          node.remove();
+        }
+      });
+      if (themeMetas.length === 0) {
+        var themeMeta = document.createElement("meta");
+        themeMeta.setAttribute("name", "theme-color");
+        themeMeta.setAttribute("content", color);
+        document.head.appendChild(themeMeta);
+      }
     }
     document.documentElement.style.backgroundColor = color;
     document.documentElement.style.colorScheme = effective;
@@ -284,14 +267,17 @@ export const themeInitScript = `(() => {
       syncThemeColor(theme, effective);
       var statusBarStyle = ${JSON.stringify(APPLE_STATUS_BAR_STYLE)};
       var statusMetas = document.querySelectorAll('meta[name="apple-mobile-web-app-status-bar-style"]');
-      statusMetas.forEach(function(node) {
-        node.setAttribute("content", statusBarStyle);
+      statusMetas.forEach(function(node, index) {
+        if (index === 0) {
+          node.setAttribute("content", statusBarStyle);
+        } else {
+          node.remove();
+        }
       });
       if (statusMetas.length === 0) {
         var statusMeta = document.createElement("meta");
         statusMeta.setAttribute("name", "apple-mobile-web-app-status-bar-style");
         statusMeta.setAttribute("content", statusBarStyle);
-        statusMeta.setAttribute(ownAttr, "");
         document.head.appendChild(statusMeta);
       }
     } catch (e) {
