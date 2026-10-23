@@ -558,10 +558,11 @@ b {
 :root {
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
-  /* Native tab bar: 50px icons + home-indicator fill. */
+  --card: color-mix(in srgb, var(--bg-card) 88%, transparent);
+  --border: var(--border-subtle);
   --bottom-nav-tab-row-height: 62px;
   --bottom-nav-indicator-padding: 0px;
-  --bottom-nav-height: 96px;
+  --bottom-nav-height: 100px;
   --bottom-nav-clearance: var(--bottom-nav-height);
   --app-chrome-bottom: var(--bottom-nav-height);
   --home-header-height: 5.75rem;
@@ -748,6 +749,7 @@ html.home-scroll-locked .app-scroll {
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: auto;
   padding-top: 0.25rem;
+  padding-bottom: 100px;
 }
 
 .agenda-month-block {
@@ -835,6 +837,7 @@ html.home-scroll-locked .app-scroll {
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: auto;
+  padding-bottom: 100px;
 }
 
 .agenda-day-scroll-row {
@@ -900,6 +903,7 @@ html.home-scroll-locked .app-scroll {
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: auto;
+  padding-bottom: 100px;
 }
 
 .agenda-week-scroll-content {

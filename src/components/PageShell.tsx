@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 
 /** Identical outer wrapper on every route so iOS WebKit does not relayout the tab bar. */
 export const PAGE_SHELL_CLASS =
-  "page-shell w-full min-h-full pb-[96px] pt-[env(safe-area-inset-top)] bg-background";
+  "page-shell w-full min-h-full pb-[100px] pt-[env(safe-area-inset-top)] bg-background";
 
 export function PageShell({
   children,
