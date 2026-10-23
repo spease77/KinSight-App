@@ -364,6 +364,7 @@ export function AgendaPage() {
             {isListView ? (
               <AgendaListView
                 interactions={searchedInteractions}
+                anchorDate={selectedDate}
                 onInteractionEdit={handleInteractionEdit}
                 emptyMessage={
                   isSearchActive && agendaInteractions.length > 0

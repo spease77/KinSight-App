@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import { ArrowDownAZ, ArrowUpAZ, ChevronRight } from "lucide-react";
 import {
   AGENDA_LIST_SORT_FIELDS,
@@ -23,6 +23,8 @@ interface AgendaListViewProps {
   interactions: ScheduledInteraction[];
   onInteractionEdit: (interaction: ScheduledInteraction) => void;
   emptyMessage?: string;
+  /** Day picked on another tab; omit for "now". */
+  anchorDate?: Date;
 }
 
 function AgendaListSortBar({
@@ -92,7 +94,7 @@ function AgendaListRow({
   const isMockContact = interaction.contactId.startsWith("mock-");
 
   return (
-    <li>
+    <li id={`agenda-list-row-${interaction.id}`}>
       <button
         type="button"
         onClick={() => onEdit(interaction)}
@@ -137,19 +139,95 @@ function AgendaListRow({
   );
 }
 
+function localDateKey(date: Date): string {
+  return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+}
+
+/** Right now when the picked day is today, otherwise the start of the picked day. */
+function resolveAnchorTime(anchorDate: Date | undefined): number {
+  const now = new Date();
+  if (!anchorDate || localDateKey(anchorDate) === localDateKey(now)) {
+    return now.getTime();
+  }
+  const start = new Date(anchorDate);
+  start.setHours(0, 0, 0, 0);
+  return start.getTime();
+}
+
+function interactionEndsAfter(
+  interaction: ScheduledInteraction,
+  anchorTime: number
+): boolean {
+  const start = new Date(interaction.scheduledAt).getTime();
+  const end = start + (interaction.durationMinutes ?? 0) * 60_000;
+  return end >= anchorTime;
+}
+
 export function AgendaListView({
   interactions,
   onInteractionEdit,
   emptyMessage,
+  anchorDate,
 }: AgendaListViewProps) {
   const [sortBy, setSortBy] = useState<AgendaListSortField>("date");
   const [sortDirection, setSortDirection] =
     useState<AgendaListSortDirection>("asc");
+  const listRef = useRef<HTMLUListElement>(null);
+  const userScrolledRef = useRef(false);
+  const appliedKeyRef = useRef<string | null>(null);
 
   const sortedInteractions = useMemo(
     () => sortAgendaInteractions(interactions, sortBy, sortDirection),
     [interactions, sortBy, sortDirection]
   );
+
+  const anchorKey = anchorDate ? localDateKey(anchorDate) : "today";
+
+  // Start at "now" (or the day picked on another tab) instead of the oldest
+  // event; earlier events stay reachable by scrolling up.
+  useLayoutEffect(() => {
+    const list = listRef.current;
+    if (!list || sortedInteractions.length === 0) return;
+
+    const key = `${sortBy}|${sortDirection}|${anchorKey}`;
+    const keyChanged = appliedKeyRef.current !== key;
+    if (keyChanged) {
+      appliedKeyRef.current = key;
+      userScrolledRef.current = false;
+    } else if (userScrolledRef.current) {
+      return; // late-arriving events must not yank a list the user is reading
+    }
+
+    if (sortBy !== "date") {
+      list.scrollTop = 0;
+      return;
+    }
+
+    const anchorTime = resolveAnchorTime(anchorDate);
+    const target =
+      sortDirection === "asc"
+        ? sortedInteractions.find((item) => interactionEndsAfter(item, anchorTime))
+        : sortedInteractions.find(
+            (item) => new Date(item.scheduledAt).getTime() <= anchorTime
+          );
+
+    if (!target) {
+      // Everything is in the past (asc) / future (desc): show the nearest end.
+      list.scrollTop = sortDirection === "asc" ? list.scrollHeight : 0;
+      return;
+    }
+
+    const row = document.getElementById(`agenda-list-row-${target.id}`);
+    if (!row) return;
+    list.scrollTop =
+      row.getBoundingClientRect().top -
+      list.getBoundingClientRect().top +
+      list.scrollTop;
+  }, [sortedInteractions, sortBy, sortDirection, anchorKey, anchorDate]);
+
+  const markUserScrolled = () => {
+    userScrolledRef.current = true;
+  };
 
   const handleDirectionToggle = () => {
     setSortDirection((current) => toggleAgendaListSortDirection(current));
@@ -186,7 +264,12 @@ export function AgendaListView({
         onSortDirectionToggle={handleDirectionToggle}
       />
 
-      <ul className="agenda-list-scroll contact-list-card contacts-scroll min-h-0 flex-1 overflow-y-auto pb-[100px] pr-1">
+      <ul
+        ref={listRef}
+        onTouchStart={markUserScrolled}
+        onWheel={markUserScrolled}
+        className="agenda-list-scroll contact-list-card contacts-scroll min-h-0 flex-1 pb-[100px] pr-1"
+      >
         {sortedInteractions.map((interaction) => (
           <AgendaListRow
             key={interaction.id}

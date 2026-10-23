@@ -4566,6 +4566,18 @@ html.scroll-chrome-hidden:not(.keyboard-composer-active)
   flex-direction: column;
 }
 
+/* Agenda List tab: .contact-list-card clips (overflow:hidden), which made the
+   list impossible to scroll. This list is its own scroller; rows must not
+   shrink inside the flex column either. */
+.contact-list-card.agenda-list-scroll {
+  display: block;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+}
+
 .contact-list-card > li:not(:last-child) .contact-list-row {
   border-bottom: 1px solid rgb(229 231 235 / 0.1);
 }
