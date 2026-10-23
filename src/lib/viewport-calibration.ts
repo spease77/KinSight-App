@@ -11,6 +11,7 @@
  */
 
 export const VIEWPORT_EXTRA_STORAGE_KEY = "kinsight-viewport-extra";
+export const VIEWPORT_REAL_STORAGE_KEY = "kinsight-viewport-real";
 export const MIN_EXTRA_PX = 8;
 export const MAX_EXTRA_PX = 90;
 const MAX_PHONE_SHORT_SIDE_PX = 520;
@@ -27,6 +28,8 @@ export type ViewportMetrics = {
   insetBottom: number;
   fixedHeight: number;
   unitHeight: number;
+  /** True screen height in CSS px when the layout viewport is short, else 0. */
+  realHeight: number;
   extra: number;
 };
 
@@ -106,6 +109,7 @@ export function readViewportMetrics(): ViewportMetrics {
     insetBottom: Math.round(readInset("bottom")),
     fixedHeight,
     unitHeight,
+    realHeight: extra > 0 ? realHeight : 0,
     extra,
   };
 }
@@ -120,6 +124,7 @@ export function formatViewportMetrics(metrics: ViewportMetrics): string {
     `screen ${metrics.screenWidth}x${metrics.screenHeight}`,
     `inset top ${metrics.insetTop} / bottom ${metrics.insetBottom}`,
     `extra ${metrics.extra}`,
+    `real ${metrics.realHeight}`,
   ].join(" · ");
 }
 
@@ -131,8 +136,14 @@ export const viewportInitScript = `(() => {
     var stored = parseInt(localStorage.getItem(${JSON.stringify(
       VIEWPORT_EXTRA_STORAGE_KEY
     )}), 10);
+    var storedReal = parseInt(localStorage.getItem(${JSON.stringify(
+      VIEWPORT_REAL_STORAGE_KEY
+    )}), 10);
     if (standalone && stored >= ${MIN_EXTRA_PX} && stored <= ${MAX_EXTRA_PX}) {
       document.documentElement.style.setProperty("--kin-extra", stored + "px");
+      if (storedReal > 300) {
+        document.documentElement.style.setProperty("--kin-real-h", storedReal + "px");
+      }
     }
   } catch (viewportInitErr) {}
 })();`;

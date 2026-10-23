@@ -19,8 +19,9 @@ export function AppShell({ children }: AppShellProps) {
     <div
       id="app-frame"
       className="absolute left-0 right-0 top-0 z-0 overflow-hidden bg-background [transform:none] [filter:none] [contain:none]"
-      // Extends past the short iOS layout viewport down to the real screen edge.
-      style={{ bottom: "calc(-1 * var(--kin-extra, 0px))" }}
+      // Top-anchored with the true screen height so a short or shifting iOS
+      // layout viewport cannot cut the app off. 100% outside that case.
+      style={{ height: "var(--kin-real-h, 100%)" }}
     >
       <HomeSessionProvider>
         <VoiceExperienceRoot>{children}</VoiceExperienceRoot>

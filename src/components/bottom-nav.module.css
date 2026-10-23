@@ -3,7 +3,8 @@
   position: fixed !important;
   /* 20px above the physical screen edge. --kin-extra is how far iOS's layout
      viewport stops short of that edge (0 in browsers). No env() on purpose. */
-  bottom: calc(var(--bottom-nav-offset, 20px) - var(--kin-extra, 0px)) !important;
+  bottom: auto !important;
+  top: calc(var(--kin-real-h, 100%) - var(--bottom-nav-offset, 20px) - 62px) !important;
   left: 50% !important;
   right: auto !important;
   top: auto !important;
