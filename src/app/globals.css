@@ -1394,7 +1394,7 @@ html.keyboard-composer-active .home-dashboard--state-a .home-hero-mic-zone {
   min-height: 0;
   margin-bottom: 0;
   padding-inline: 0;
-  padding-top: 3.25rem;
+  padding-top: 4.75rem;
   padding-bottom: var(--home-conversation-composer-clearance);
   background: transparent;
   border: none;
@@ -2767,6 +2767,14 @@ html.scroll-nav-hidden {
   margin-top: calc(var(--header-fade-clearance, 18px) - 4.5px);
 }
 
+/* Home chat header is absolutely positioned over the scrolling messages. A
+   margin would leave a see-through strip above it where text scrolls by, so the
+   same offset is padding instead: the opaque header background covers it. */
+.page-header-chrome.home-page-header.home-conversation-header {
+  margin-top: 0;
+  padding-top: calc(var(--header-fade-clearance, 18px) - 4.5px + 0.25rem);
+}
+
 /* Home mic: positioned so it is centered between the header and the ask bar.
    The ask bar is bottom-pinned and does not move. -19px centered the old 13rem
    mic; the 11.7rem mic is 20.8px shorter, so it moves down by half of that
@@ -2785,19 +2793,39 @@ html.scroll-nav-hidden {
   font-synthesis: none;
 }
 
-html.scroll-chrome-hidden .page-header-chrome,
-html.scroll-chrome-hidden .home-dashboard--conversation .home-conversation-header {
-  transform: none;
+/* Home chat: swiping up rolls the title bar and ask bar away (the tab bar goes
+   too, see bottom-nav.module.css); swiping down brings them back. Paint-only
+   (transform / translate / opacity): no layout change, so the scroll position
+   never jumps. Not applied while the keyboard is open. */
+.home-dashboard--conversation .home-conversation-header {
+  transition:
+    transform 0.25s ease,
+    opacity 0.2s ease;
+}
+
+.home-dashboard--conversation .home-composer-dock {
+  translate: 0 0;
   opacity: 1;
-  pointer-events: auto;
+  transition:
+    bottom 0.22s ease,
+    translate 0.25s ease,
+    opacity 0.2s ease;
 }
 
-html.scroll-chrome-hidden .home-dashboard--conversation .kinsight-conversation-messages {
-  padding-top: 0.5rem;
+html.scroll-chrome-hidden:not(.keyboard-composer-active)
+  .home-dashboard--conversation
+  .home-conversation-header {
+  transform: translateY(-110%);
+  opacity: 0;
+  pointer-events: none;
 }
 
-html.scroll-chrome-hidden .home-dashboard--conversation .home-conversation-panel {
-  flex: 1 1 auto;
+html.scroll-chrome-hidden:not(.keyboard-composer-active)
+  .home-dashboard--conversation
+  .home-composer-dock {
+  translate: 0 calc(var(--app-chrome-bottom, 82px) + 120px);
+  opacity: 0;
+  pointer-events: none;
 }
 
 .bottom-nav__inner {
