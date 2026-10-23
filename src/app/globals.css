@@ -2740,6 +2740,10 @@ html.scroll-nav-hidden {
 .page-header-chrome {
   position: relative;
   z-index: 10;
+  /* iOS draws a soft dark fade over the top of the screen under the translucent
+     status bar. We cannot move it, so the header sits this far below it.
+     Plain margin, NOT a safe-area inset. Raise/lower to taste. */
+  margin-top: var(--header-fade-clearance, 18px);
   width: 100%;
   background-color: var(--background);
   opacity: 1;
