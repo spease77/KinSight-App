@@ -13,6 +13,9 @@ import { AssistantMessageBubble } from "@/components/AssistantMessageBubble";
 import { MicrophoneButton } from "@/components/MicrophoneButton";
 import type { MicrophoneAccessFailure } from "@/lib/audio/voice-support";
 
+/** About five lines of text; beyond this the ask bar scrolls inside itself. */
+const ASK_BAR_MAX_HEIGHT_PX = 116;
+
 interface KinSightConversationPanelProps {
   transcript: string;
   isRecording: boolean;
@@ -89,7 +92,7 @@ export function KinSightConversationPanel({
   composerAttachError = null,
 }: KinSightConversationPanelProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const replyInputRef = useRef<HTMLInputElement>(null);
+  const replyInputRef = useRef<HTMLTextAreaElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -151,6 +154,16 @@ export function KinSightConversationPanel({
     e.preventDefault();
     onReplySubmit();
   };
+
+  // Grow the ask bar with the text (wrapping onto new lines) instead of letting
+  // the first characters scroll out of sight. Capped so it never takes over the screen.
+  useEffect(() => {
+    const el = replyInputRef.current;
+    if (!el) return;
+
+    el.style.height = "auto";
+    el.style.height = `${Math.min(el.scrollHeight, ASK_BAR_MAX_HEIGHT_PX)}px`;
+  }, [replyValue, isClient, conversationStarted]);
 
   const openAttachSheet = useCallback(() => {
     if (!canAttach || isLoading) return;
@@ -241,12 +254,23 @@ export function KinSightConversationPanel({
             replyInputRef.current?.focus({ preventScroll: true });
           }}
         >
-          <input
+          <textarea
             ref={replyInputRef}
             id="kinsight-ask"
-            type="text"
+            rows={1}
             value={replyValue}
             onChange={(e) => onReplyChange(e.target.value)}
+            onKeyDown={(e) => {
+              // Return sends (as it did with a single-line field); Shift+Return adds a line.
+              if (
+                e.key === "Enter" &&
+                !e.shiftKey &&
+                !e.nativeEvent.isComposing
+              ) {
+                e.preventDefault();
+                if (canSend) onReplySubmit();
+              }
+            }}
             onFocus={() => onReplyFocus?.()}
             onBlur={() => onReplyBlur?.()}
             placeholder={
@@ -265,8 +289,8 @@ export function KinSightConversationPanel({
             suppressHydrationWarning
             className={
               homeComposerAnchored
-                ? "w-full min-w-0 border-0 bg-transparent py-2 pl-1 pr-10 text-sm text-foreground placeholder:text-muted focus:outline-none disabled:opacity-50"
-                : "w-full min-w-0 border-0 bg-transparent px-1 py-2 text-base text-foreground placeholder:text-muted focus:outline-none disabled:opacity-50 sm:text-sm"
+                ? "block w-full min-w-0 resize-none overflow-y-auto border-0 bg-transparent py-2 pl-1 pr-10 text-sm leading-5 text-foreground placeholder:text-muted focus:outline-none disabled:opacity-50"
+                : "block w-full min-w-0 resize-none overflow-y-auto border-0 bg-transparent px-1 py-2 text-base leading-5 text-foreground placeholder:text-muted focus:outline-none disabled:opacity-50 sm:text-sm"
             }
           />
         </label>
