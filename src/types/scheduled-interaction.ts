@@ -25,6 +25,16 @@ export const INTERACTION_SOURCE_LABELS: Record<InteractionSource, string> = {
   outlook: "Outlook",
 };
 
+/** Demo rows and events read from Google Calendar have no KinSight contact to open or edit. */
+export function isReadOnlyInteraction(
+  interaction: Pick<ScheduledInteraction, "contactId">
+): boolean {
+  return (
+    interaction.contactId.startsWith("mock-") ||
+    interaction.contactId.startsWith("google-")
+  );
+}
+
 export type ScheduledInteraction = {
   id: string;
   contactId: string;

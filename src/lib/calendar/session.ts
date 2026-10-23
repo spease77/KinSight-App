@@ -36,6 +36,40 @@ export function calendarUserIdFromGoogleSub(sub: string): string {
   return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20, 32)}`;
 }
 
+/**
+ * Per-install identity. An iOS Home Screen app and the Safari sheet that
+ * Google sign-in opens do NOT share cookies, so the signed-in-with-Google
+ * cookie set during connect never reached the app (Settings kept offering
+ * "Connect" and no events appeared). Instead the app keeps a random device id
+ * in its own cookie, sends it along when starting Connect, and the connection
+ * is stored under that id, so the app can always find it again.
+ */
+export const CALENDAR_DEVICE_COOKIE = "kinsight_device";
+
+const DEVICE_ID_RE = /^[A-Za-z0-9_-]{22,64}$/;
+
+export function isValidCalendarDeviceId(value: string | null | undefined): value is string {
+  return Boolean(value && DEVICE_ID_RE.test(value));
+}
+
+export function calendarUserIdFromDeviceId(deviceId: string): string {
+  const bytes = createHash("sha1")
+    .update(`kinsight-gcal-device:${deviceId}`)
+    .digest();
+  bytes[6] = (bytes[6] & 0x0f) | 0x50;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  const hex = bytes.subarray(0, 16).toString("hex");
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20, 32)}`;
+}
+
+export async function getCalendarDeviceUserId(): Promise<string | null> {
+  const cookieStore = await cookies();
+  const deviceId = cookieStore.get(CALENDAR_DEVICE_COOKIE)?.value;
+  return isValidCalendarDeviceId(deviceId)
+    ? calendarUserIdFromDeviceId(deviceId)
+    : null;
+}
+
 export function encodeCalendarSession(userId: string): string {
   return `${userId}.${sign(userId)}`;
 }
@@ -87,6 +121,8 @@ export async function resolveCalendarUserId(
 ): Promise<string | null> {
   const user = await getAuthenticatedUser(request);
   if (user) return user.id;
+  const deviceUserId = await getCalendarDeviceUserId();
+  if (deviceUserId) return deviceUserId;
   return getCalendarSessionUserId();
 }
 

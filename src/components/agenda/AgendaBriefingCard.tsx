@@ -9,6 +9,7 @@ import { formatAgendaEventTime } from "@/lib/agenda/time-frame";
 import { AGENDA_ITEM_SELECTED_CLASS } from "@/components/agenda/agenda-panel-styles";
 import {
   INTERACTION_SOURCE_LABELS,
+  isReadOnlyInteraction,
   type ScheduledInteraction,
 } from "@/types/scheduled-interaction";
 
@@ -24,7 +25,7 @@ export function AgendaBriefingCard({
   onEdit,
 }: AgendaBriefingCardProps) {
   const eventTime = formatAgendaEventTime(interaction.scheduledAt);
-  const isMockContact = interaction.contactId.startsWith("mock-");
+  const isMockContact = isReadOnlyInteraction(interaction);
   const showSourceBadge = interaction.source !== "kinsight";
 
   return (

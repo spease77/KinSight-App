@@ -19,6 +19,7 @@ import { AgendaSearchBar } from "@/components/agenda/AgendaSearchBar";
 import { AgendaTimeFrameSwitcher } from "@/components/agenda/AgendaTimeFrameSwitcher";
 import { AddMeetingModal } from "@/components/AddMeetingModal";
 import { readApiJson } from "@/lib/api/read-json";
+import { ensureCalendarDeviceId } from "@/lib/calendar/device-id-client";
 import { resolveAgendaInteractions } from "@/lib/agenda/mock-scheduled-interactions";
 import { filterInteractionsByQuery } from "@/lib/agenda/search-interactions";
 import {
@@ -31,6 +32,7 @@ import {
 } from "@/lib/agenda/view-preference";
 import {
   DEFAULT_AGENDA_TIME_FRAME,
+  isReadOnlyInteraction,
   type AgendaTimeFrame,
   type ScheduledInteraction,
 } from "@/types/scheduled-interaction";
@@ -55,6 +57,9 @@ export function AgendaPage() {
     string | null
   >(null);
   const [interactions, setInteractions] = useState<ScheduledInteraction[]>([]);
+  const [googleInteractions, setGoogleInteractions] = useState<
+    ScheduledInteraction[]
+  >([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isAddMeetingOpen, setIsAddMeetingOpen] = useState(false);
@@ -125,6 +130,42 @@ export function AgendaPage() {
     void loadInteractions();
   }, [loadInteractions]);
 
+  // Read-only events from the connected Google Calendar(s). Loaded separately so
+  // a Google hiccup never blocks KinSight's own meetings.
+  const loadGoogleEvents = useCallback(async () => {
+    try {
+      ensureCalendarDeviceId();
+      const res = await fetch("/api/calendar/google/events", {
+        cache: "no-store",
+      });
+      const data = await readApiJson<{
+        connected?: boolean;
+        interactions?: ScheduledInteraction[];
+        error?: string;
+      }>(res);
+
+      if (!res.ok) return;
+      setGoogleInteractions(data.connected ? (data.interactions ?? []) : []);
+    } catch {
+      // keep whatever was loaded last
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadGoogleEvents();
+
+    // Refresh when returning to the app (e.g. after connecting in Settings).
+    let lastLoad = Date.now();
+    const handleVisible = () => {
+      if (document.visibilityState !== "visible") return;
+      if (Date.now() - lastLoad < 30_000) return;
+      lastLoad = Date.now();
+      void loadGoogleEvents();
+    };
+    document.addEventListener("visibilitychange", handleVisible);
+    return () => document.removeEventListener("visibilitychange", handleVisible);
+  }, [loadGoogleEvents]);
+
   useEffect(() => {
     setTimeFrame(loadAgendaViewPreference());
   }, []);
@@ -155,10 +196,21 @@ export function AgendaPage() {
     setSearchQuery("");
   }, []);
 
-  const agendaInteractions = useMemo(
-    () => resolveAgendaInteractions(interactions),
-    [interactions]
-  );
+  const agendaInteractions = useMemo(() => {
+    const syncedIds = new Set(
+      interactions
+        .map((item) => item.externalEventId)
+        .filter((id): id is string => Boolean(id))
+    );
+    const googleOnly = googleInteractions.filter(
+      (item) => !item.externalEventId || !syncedIds.has(item.externalEventId)
+    );
+    const combined = [...interactions, ...googleOnly];
+    return resolveAgendaInteractions(combined).slice().sort(
+      (a, b) =>
+        new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime()
+    );
+  }, [interactions, googleInteractions]);
 
   const filteredInteractions = useMemo(() => {
     if (timeFrame === "list") {
@@ -222,7 +274,7 @@ export function AgendaPage() {
 
   const handleInteractionEdit = useCallback(
     (interaction: ScheduledInteraction) => {
-      if (interaction.contactId.startsWith("mock-")) return;
+      if (isReadOnlyInteraction(interaction)) return;
       setEditingInteraction(interaction);
     },
     []

@@ -3,7 +3,9 @@ import { getAuthenticatedUser } from "@/lib/supabase/auth-server";
 import { upsertCalendarConnection } from "@/lib/calendar/connections";
 import {
   attachCalendarSessionCookie,
+  calendarUserIdFromDeviceId,
   calendarUserIdFromGoogleSub,
+  isValidCalendarDeviceId,
 } from "@/lib/calendar/session";
 import {
   GOOGLE_OAUTH_STATE_COOKIE,
@@ -50,8 +52,12 @@ export async function GET(request: Request) {
     }
 
     const kinSightUser = await getAuthenticatedUser(request);
+    const deviceId = state.includes(".") ? state.slice(state.indexOf(".") + 1) : null;
     const userId =
-      kinSightUser?.id ?? calendarUserIdFromGoogleSub(profile.id);
+      kinSightUser?.id ??
+      (isValidCalendarDeviceId(deviceId)
+        ? calendarUserIdFromDeviceId(deviceId)
+        : calendarUserIdFromGoogleSub(profile.id));
 
     const saved = await upsertCalendarConnection({
       userId,

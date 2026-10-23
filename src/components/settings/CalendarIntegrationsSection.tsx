@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Calendar, Check, Link2, Unlink } from "lucide-react";
 import { readApiJson } from "@/lib/api/read-json";
+import { ensureCalendarDeviceId } from "@/lib/calendar/device-id-client";
 import { showErrorToast, showSuccessToast } from "@/lib/ui/toast";
 import type { CalendarStatusResponse } from "@/types/calendar-connection";
 
@@ -33,6 +34,8 @@ export function CalendarIntegrationsSection() {
 
   const loadStatus = useCallback(async () => {
     try {
+      // Makes sure this install's device id cookie exists before asking the server.
+      ensureCalendarDeviceId();
       const res = await fetch("/api/calendar/status", { cache: "no-store" });
       const data = await readApiJson<CalendarStatusResponse>(res);
       setStatus({
@@ -53,10 +56,23 @@ export function CalendarIntegrationsSection() {
 
   useEffect(() => {
     void loadStatus();
+
+    // Connecting happens in a Safari sheet on iPhone; re-check when the app is
+    // shown again so the card flips to "Connected" without a manual refresh.
+    const handleVisible = () => {
+      if (document.visibilityState === "visible") void loadStatus();
+    };
+    document.addEventListener("visibilitychange", handleVisible);
+    window.addEventListener("focus", handleVisible);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisible);
+      window.removeEventListener("focus", handleVisible);
+    };
   }, [loadStatus]);
 
   const handleConnectGoogle = useCallback(() => {
-    window.location.href = "/api/calendar/google/connect";
+    const device = ensureCalendarDeviceId();
+    window.location.href = `/api/calendar/google/connect?device=${encodeURIComponent(device)}`;
   }, []);
 
   const handleDisconnectGoogle = useCallback(async () => {
@@ -94,7 +110,8 @@ export function CalendarIntegrationsSection() {
           Integrations
         </h3>
         <p className="mt-1 text-sm leading-relaxed text-muted">
-          Connect your Gmail calendar for free. Meetings you push from KinSight
+          Connect your Gmail calendar for free. Your Google events appear in the
+          Agenda (day, week, month and list), and meetings you add in KinSight
           are created on that Google account.
         </p>
       </div>
@@ -121,7 +138,7 @@ export function CalendarIntegrationsSection() {
               <p className="mt-1 text-xs leading-relaxed text-muted">
                 {google.connected && google.accountEmail
                   ? `Syncing as ${google.accountEmail}`
-                  : "Add meetings from KinSight onto your Gmail calendar. No password is stored — Google OAuth only."}
+                  : "See your Google events in KinSight and add KinSight meetings to your Gmail calendar. No password is stored — Google OAuth only."}
               </p>
 
               {isLoading ? (
