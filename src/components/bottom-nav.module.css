@@ -1,13 +1,14 @@
 .fixedNav {
   box-sizing: border-box !important;
   position: fixed !important;
-  /* 20px above the physical screen edge. --kin-extra is how far iOS's layout
-     viewport stops short of that edge (0 in browsers). No env() on purpose. */
+  /* 20px above the physical screen edge, anchored from the TOP using the true
+     screen height (--kin-real-h) because iOS's layout-viewport bottom shifts.
+     100% (browsers) equals the viewport height. No env() on purpose.
+     Do NOT add another `top:` below: a stray `top: auto` puts the bar at the top. */
   bottom: auto !important;
   top: calc(var(--kin-real-h, 100%) - var(--bottom-nav-offset, 20px) - 62px) !important;
   left: 50% !important;
   right: auto !important;
-  top: auto !important;
   transform: translateX(-50%) !important;
   width: 92% !important;
   max-width: 420px !important;
