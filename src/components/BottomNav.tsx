@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { CalendarClock, Clock, Home, MessageSquare, Users } from "lucide-react";
@@ -40,17 +41,31 @@ const TABS = [
 
 export function BottomNav() {
   const pathname = usePathname();
+  // Highlight the tapped tab immediately, before the next route has loaded, so
+  // a slow navigation never looks like the tap was ignored (which made people
+  // tap again and restart the navigation).
+  const [pendingPath, setPendingPath] = useState<string | null>(null);
+
+  useEffect(() => {
+    setPendingPath(null);
+  }, [pathname]);
+
+  const effectivePath = pendingPath ?? pathname;
 
   return (
     <nav aria-label="Main navigation" className={`${styles.fixedNav} bottom-nav`}>
       <div className={styles.navInner}>
         {TABS.map(({ href, label, icon: Icon, match }) => {
-          const active = match(pathname);
+          const active = match(effectivePath);
 
           return (
             <Link
               key={href}
               href={href}
+              prefetch
+              onClick={() => {
+                if (!match(pathname)) setPendingPath(href);
+              }}
               className={`bottom-nav__tab${
                 active ? " bottom-nav__tab--active" : ""
               }`}

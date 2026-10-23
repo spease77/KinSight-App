@@ -1,6 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useRouter } from "next/navigation";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
@@ -549,7 +556,8 @@ export function Dashboard({ homeSession: _homeSession = 0 }: DashboardProps) {
   const hasConversationStarted = conversationEngaged;
   useKeyboardOpen();
 
-  useEffect(() => {
+  // Layout effect: lock before first paint so Home doesn't flash unlocked.
+  useLayoutEffect(() => {
     const root = document.documentElement;
     const scrollEl = document.querySelector<HTMLElement>(".app-scroll");
     if (!scrollEl) return;

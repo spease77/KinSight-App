@@ -29,7 +29,7 @@
   --bg-tint-blue: #1c1e2a;
 
   /* Typography */
-  --text-primary: #f4f5f6;
+  --text-primary: #f4f5f6; --title-color: #ffffff;
   --text-body: #c2c6d0;
   --text-secondary: #7e8492;
   --text-icon: #7e8492;
@@ -105,7 +105,7 @@
   --bg-tint-blue: #eef0fa;
 
   /* Typography */
-  --text-primary: #08090a;
+  --text-primary: #08090a; --title-color: #08090a;
   --text-body: #2e3033;
   --text-secondary: #6a6d73;
   --text-icon: #6a6d73;
@@ -180,7 +180,7 @@
     --bg-tint-yellow: #fff7e6;
     --bg-tint-blue: #eef0fa;
 
-    --text-primary: #08090a;
+    --text-primary: #08090a; --title-color: #08090a;
     --text-body: #2e3033;
     --text-secondary: #6a6d73;
     --text-icon: #6a6d73;
@@ -254,7 +254,7 @@
     --bg-tint-yellow: rgba(181, 121, 0, 0.15);
     --bg-tint-blue: #1c1e2a;
 
-    --text-primary: #f4f5f6;
+    --text-primary: #f4f5f6; --title-color: #ffffff;
     --text-body: #c2c6d0;
     --text-secondary: #7e8492;
     --text-icon: #7e8492;
@@ -375,7 +375,7 @@ html {
   --bg-card: #ffffff;
   --bg-card-hover: #f3f4f4;
   --bg-elevated: #ffffff;
-  --text-primary: #08090a;
+  --text-primary: #08090a; --title-color: #08090a;
   --text-body: #2e3033;
   --text-secondary: #6a6d73;
   --text-icon: #6a6d73;
@@ -576,15 +576,18 @@ b {
   --app-chrome-bottom: var(--bottom-nav-height);
   --home-header-height: 5.75rem;
   --home-composer-dock-height: calc(0.75rem + 3rem + 0.75rem);
-  /* Empty Home: dock the ask bar just above the floating pill so the mic
-     can use the full remaining screen. Keyboard open still uses --vv-layout-bottom-gap. */
-  --home-state-a-composer-pinned-bottom: calc(var(--app-chrome-bottom) + 0.5rem);
+  /* Empty Home: the ask bar rests exactly where it sits with the keyboard open
+     (just above the keyboard, near mid-screen) so focusing it moves nothing and
+     never covers the mic. 43% of the screen height is the default iPhone
+     keyboard; useKeyboardOpen replaces it with the measured value. Distance is
+     from the PHYSICAL screen bottom. */
+  --home-state-a-composer-pinned-bottom: calc(var(--kin-real-h, 100vh) * 0.43);
   --home-state-a-composer-rest-bottom: var(--home-state-a-composer-pinned-bottom);
   --home-conversation-composer-clearance: calc(
     var(--bottom-nav-height) + var(--home-composer-dock-height) + 0.75rem
   );
   --home-state-a-composer-clearance: calc(
-    var(--bottom-nav-height) + 0.5rem + var(--home-composer-dock-height) +
+    var(--home-state-a-composer-rest-bottom) + var(--home-composer-dock-height) +
       0.35rem
   );
 }
@@ -1160,15 +1163,15 @@ html.home-scroll-locked .app-scroll {
 }
 
 .home-dashboard--state-a .home-hero__spacer {
-  flex: 1 1 0;
+  /* Top-anchored: the mic sits just under the header and never shifts when the
+     keyboard opens; all spare height goes to the lower spacer. */
+  flex: 0 0 0.75rem;
   min-height: 0;
   width: 100%;
 }
 
 .home-dashboard--state-a .home-hero__spacer--lower {
-  /* The mic zone reserves an empty waveform slot below the button, so keep
-     the lower spacer small to place the button near the vertical middle. */
-  flex: 0.35 1 0;
+  flex: 1 1 0;
 }
 
 /* Mobile Safari (in-browser): extra clearance so the pinned ask bar never covers the hero mic. */
@@ -6924,4 +6927,15 @@ html.scroll-chrome-hidden .home-dashboard--conversation .home-conversation-panel
 
 .related-person-row__error--section {
   padding: 0 var(--related-person-row-pad-x) 0.75rem;
+}
+/* Page titles: solid, fully opaque, no fade or tint on every route. */
+.page-header-chrome h1,
+h1.type-page-title,
+.home-page-header h1 {
+  color: var(--title-color, var(--text-primary)) !important;
+  -webkit-text-fill-color: var(--title-color, var(--text-primary)) !important;
+  opacity: 1 !important;
+  text-shadow: none !important;
+  mix-blend-mode: normal !important;
+  filter: none !important;
 }

@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect } from "react";
+import { useLayoutEffect } from "react";
 
 /** Keeps app-scroll from scrolling so the edit/add contact sheet header stays pinned. */
 export function useEditContactScrollLock(): void {
-  useEffect(() => {
+  useLayoutEffect(() => {
     const scrollEl = document.querySelector<HTMLElement>(".app-scroll");
     if (!scrollEl) return;
 

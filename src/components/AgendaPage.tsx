@@ -1,6 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { usePathname } from "next/navigation";
 import { Plus, Search } from "lucide-react";
 import { Header } from "@/components/Header";
@@ -58,7 +65,8 @@ export function AgendaPage() {
   const feedRef = useRef<HTMLDivElement>(null);
   const [headerScrolled, setHeaderScrolled] = useState(false);
 
-  useEffect(() => {
+  // Layout effect: lock before first paint so the page doesn't flash unlocked.
+  useLayoutEffect(() => {
     if (pathname !== "/agenda") return;
 
     const scrollEl = document.querySelector<HTMLElement>(".app-scroll");

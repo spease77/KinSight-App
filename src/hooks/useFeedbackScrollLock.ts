@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect } from "react";
+import { useLayoutEffect } from "react";
 
 /** Prevents app-scroll from shifting when the feedback textarea is focused. */
 export function useFeedbackScrollLock(active: boolean): void {
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!active) return;
 
     const scrollEl = document.querySelector<HTMLElement>(".app-scroll");

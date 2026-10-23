@@ -79,17 +79,23 @@ function persistHomeStateAComposerPin(viewport: VisualViewport) {
     return;
   }
 
-  const gapFromLayoutBottom = Math.max(
-    0,
-    window.innerHeight - viewport.offsetTop - viewport.height
-  );
+  // Measure from the real (top-anchored) app frame, not the layout viewport,
+  // whose bottom edge is unreliable in iOS Home Screen apps. The resting
+  // composer is placed with `top: frame height - this value`.
+  const dock = document.querySelector<HTMLElement>(".home-composer-dock");
+  const frame = document.getElementById("app-frame");
+  if (!dock || !frame) return;
 
-  // Ignore tiny offsets; real iOS keyboard inset is usually 200px+.
-  if (gapFromLayoutBottom < 120) return;
+  const frameHeight = frame.getBoundingClientRect().height;
+  const dockBottom = dock.getBoundingClientRect().bottom;
+  const gap = frameHeight - dockBottom;
+
+  // Ignore bogus readings; a real iOS keyboard sits 200px+ up the screen.
+  if (gap < 120 || gap > frameHeight * 0.7 || viewport.height <= 0) return;
 
   document.documentElement.style.setProperty(
     "--home-state-a-composer-pinned-bottom",
-    `${Math.round(gapFromLayoutBottom)}px`
+    `${Math.round(gap)}px`
   );
 }
 
