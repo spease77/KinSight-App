@@ -573,7 +573,7 @@ b {
   --bottom-nav-clearance: var(--bottom-nav-height);
   /* Same distance measured from the (possibly short) layout viewport bottom.
      Use for position:fixed elements that anchor with `bottom`. */
-  --app-chrome-bottom: calc(var(--bottom-nav-height) - var(--kin-extra));
+  --app-chrome-bottom: var(--bottom-nav-height);
   --home-header-height: 5.75rem;
   --home-composer-dock-height: calc(0.75rem + 3rem + 0.75rem);
   /* Empty Home: dock the ask bar just above the floating pill so the mic
@@ -1348,8 +1348,10 @@ html.keyboard-composer-active .home-dashboard--state-a .home-hero-mic-zone {
   position: fixed;
   right: 0;
   left: 0;
-  bottom: var(--home-state-a-composer-rest-bottom);
-  top: auto;
+  /* Top-anchored from the true screen height: the iOS layout viewport bottom shifts. */
+  top: calc(var(--kin-real-h, 100%) - var(--home-state-a-composer-rest-bottom));
+  bottom: auto;
+  transform: translateY(-100%);
   z-index: 40;
   margin: 0 auto;
   max-width: 32rem;
@@ -1359,7 +1361,7 @@ html.keyboard-composer-active .home-dashboard--state-a .home-hero-mic-zone {
   padding-bottom: 0.5rem;
   background: transparent;
   box-shadow: none;
-  transition: bottom 0.22s ease;
+  transition: none;
 }
 
 /* Home conversation + keyboard: composer pinned above nav/keyboard. */
@@ -1367,8 +1369,9 @@ html.keyboard-composer-active .home-dashboard--state-a .home-hero-mic-zone {
   position: fixed;
   right: 0;
   left: 0;
-  bottom: var(--app-chrome-bottom);
-  top: auto;
+  top: calc(var(--kin-real-h, 100%) - var(--app-chrome-bottom));
+  bottom: auto;
+  transform: translateY(-100%);
   z-index: 40;
   margin: 0 auto;
   max-width: 32rem;
@@ -1434,6 +1437,7 @@ html.keyboard-composer-active .home-dashboard--state-a .home-hero-mic-zone {
 html.keyboard-composer-active .home-composer-dock {
   top: auto !important;
   bottom: var(--vv-layout-bottom-gap, 0px) !important;
+  transform: none !important;
   padding-top: 0.125rem;
   padding-bottom: 0.375rem;
   background: transparent;
@@ -2722,11 +2726,11 @@ html.keyboard-composer-active .bottom-nav {
 
 /* Scroll down through content: tuck page headers; the bottom nav stays pinned. */
 html.scroll-chrome-hidden {
-  --app-chrome-bottom: calc(var(--bottom-nav-height) - var(--kin-extra));
+  --app-chrome-bottom: var(--bottom-nav-height);
 }
 
 html.scroll-nav-hidden {
-  --app-chrome-bottom: calc(var(--bottom-nav-height) - var(--kin-extra));
+  --app-chrome-bottom: var(--bottom-nav-height);
 }
 
 .page-header-chrome {

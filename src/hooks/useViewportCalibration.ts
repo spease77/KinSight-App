@@ -10,7 +10,7 @@ import {
 } from "@/lib/viewport-calibration";
 
 const RETRY_DELAYS_MS = [0, 60, 150, 400, 800, 1500, 3000];
-const POLL_MS = 500;
+const POLL_MS = 1500;
 
 /**
  * iOS Home Screen apps can have a layout viewport that is shorter than the
@@ -35,9 +35,13 @@ export function useViewportCalibration() {
 
       const metrics = readViewportMetrics();
       root.style.setProperty("--kin-extra", `${metrics.extra}px`);
+      // The true screen height (100vh) does not change, but the layout
+      // viewport can briefly report the full height mid-load. Once we have seen
+      // it short, keep the real height for the whole portrait session so the
+      // layout cannot flip back and forth.
       if (metrics.realHeight > 0) {
         root.style.setProperty("--kin-real-h", `${metrics.realHeight}px`);
-      } else {
+      } else if (!(metrics.standalone && metrics.portrait)) {
         root.style.removeProperty("--kin-real-h");
       }
       root.dataset.kinMetrics = formatViewportMetrics(metrics);
@@ -52,7 +56,7 @@ export function useViewportCalibration() {
             VIEWPORT_REAL_STORAGE_KEY,
             String(metrics.realHeight)
           );
-        } else {
+        } else if (!(metrics.standalone && metrics.portrait)) {
           window.localStorage.removeItem(VIEWPORT_EXTRA_STORAGE_KEY);
           window.localStorage.removeItem(VIEWPORT_REAL_STORAGE_KEY);
         }
@@ -67,6 +71,17 @@ export function useViewportCalibration() {
     // The shortfall can change after load and on navigation; keep tracking it.
     const poll = window.setInterval(apply, POLL_MS);
 
+    // The frame can be taller than the layout viewport, so the document is
+    // technically scrollable by a few px. Route changes and focus can scroll it
+    // programmatically (the "bounce"); always snap back to the top.
+    const pinScroll = () => {
+      if (window.scrollY !== 0 || window.scrollX !== 0) {
+        window.scrollTo(0, 0);
+      }
+    };
+    window.addEventListener("scroll", pinScroll, { passive: true });
+    pinScroll();
+
     window.addEventListener("resize", apply);
     window.addEventListener("orientationchange", apply);
     window.addEventListener("pageshow", apply);
@@ -75,6 +90,7 @@ export function useViewportCalibration() {
     return () => {
       timers.forEach((id) => window.clearTimeout(id));
       window.clearInterval(poll);
+      window.removeEventListener("scroll", pinScroll);
       window.removeEventListener("resize", apply);
       window.removeEventListener("orientationchange", apply);
       window.removeEventListener("pageshow", apply);
