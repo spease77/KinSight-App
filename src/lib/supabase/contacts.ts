@@ -76,6 +76,7 @@ import {
   linkRecordingToContact,
   resolveRecordingAudioUrl,
 } from "@/lib/supabase/voice-recordings";
+import { reconcileContactAge } from "@/lib/contacts/age";
 import type { Contact, ContactDetail } from "@/types/contact";
 import type { ContactProfile } from "@/types/contact-profile";
 import {
@@ -458,7 +459,8 @@ export async function fetchContactsForExport(): Promise<{
       return { contacts: [], error: error.message };
     }
 
-    return { contacts: (data ?? []).map(rowToContactDetail) };
+    const rows = await persistAgeUpdates(data ?? []);
+    return { contacts: rows.map(rowToContactDetail) };
   } catch (err) {
     const message = err instanceof Error ? err.message : "Database connection failed";
     return { contacts: [], error: message };
@@ -513,10 +515,9 @@ export async function fetchContacts(): Promise<ContactsResult> {
       };
     }
 
+    const rows = await persistAgeUpdates(data ?? []);
     const contacts = await Promise.all(
-      (data ?? []).map(async (row) =>
-        enrichContactWithAvatar(rowToContact(row), row)
-      )
+      rows.map(async (row) => enrichContactWithAvatar(rowToContact(row), row))
     );
     return { contacts };
   } catch (err) {
@@ -564,16 +565,67 @@ export async function checkDatabaseHealth(): Promise<{
   };
 }
 
+/** Age/birth year kept current from the stored age, birthday and note history. */
+function reconcileRowAge(row: ContactRow): {
+  profile: ContactProfile;
+  changed: boolean;
+} {
+  return reconcileContactAge({
+    profile: (row.profile ?? undefined) as ContactProfile | undefined,
+    notesLog: resolveRowNotesLog(row),
+    fallbackRecordedAt: row.updated_at ?? row.created_at,
+  });
+}
+
+/**
+ * Writes refreshed ages back so every device (and the AI) sees them, not just
+ * whichever screen happened to compute them. Failures never block a read.
+ */
+async function persistAgeUpdates(rows: ContactRow[]): Promise<ContactRow[]> {
+  const pending = rows
+    .map((row) => ({ row, result: reconcileRowAge(row) }))
+    .filter(({ result }) => result.changed);
+
+  if (pending.length === 0) return rows;
+
+  const supabase = createServerSupabase();
+  const updated = new Map<string, ContactRow>();
+
+  await Promise.all(
+    pending.map(async ({ row, result }) => {
+      try {
+        const { data, error } = await supabase
+          .from("contacts")
+          .update({ profile: result.profile as never } as never)
+          .eq("id", row.id)
+          .select()
+          .single();
+
+        if (error || !data) {
+          console.error("persistAgeUpdates error:", error?.message);
+          return;
+        }
+        updated.set(row.id, data as ContactRow);
+      } catch (err) {
+        console.error("persistAgeUpdates failed:", err);
+      }
+    })
+  );
+
+  return rows.map((row) => updated.get(row.id) ?? row);
+}
+
 function rowToContactDetail(row: ContactRow): ContactDetail {
   const notesLog = resolveRowNotesLog(row);
   const base = rowToContact(row);
+  const ageProfile = reconcileRowAge(row).profile;
 
   return {
     ...base,
     notes: notesLog.length > 0 ? serializeNotesLog(notesLog) : row.notes ?? undefined,
     notesLog,
     inquiryTranscript: row.inquiry_transcript ?? undefined,
-    profile: ensureProfileNameFromContact(row.profile ?? undefined, row.name),
+    profile: ensureProfileNameFromContact(ageProfile, row.name),
     sourceMetadata: sanitizeSourceMetadata(row.source_metadata),
   };
 }
@@ -981,7 +1033,8 @@ async function fetchContactByIdInternal(
     return { contact: null, error: "Contact not found" };
   }
 
-  const synced = await ensureContactProfileNamesPersisted(row);
+  const named = await ensureContactProfileNamesPersisted(row);
+  const [synced] = await persistAgeUpdates([named]);
   const contact = await enrichContactWithAvatar(
     rowToContactDetail(synced),
     synced

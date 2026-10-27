@@ -119,19 +119,75 @@ export function KinSightConversationPanel({
           ? "KinSight is speaking…"
           : null;
 
+  // Keep the newest entry and the streaming reply in view. Following stops only
+  // when the reader scrolls up, and resumes when they send again or return to
+  // the bottom.
+  const stickToBottomRef = useRef(true);
+  const lastMessageCountRef = useRef(0);
+
   useEffect(() => {
     const el = scrollRef.current;
+    if (!el || !showMessageHistory) return;
+
+    const scrollToEnd = () => {
+      el.scrollTop = el.scrollHeight;
+    };
+
+    const handleScroll = () => {
+      const distanceFromBottom =
+        el.scrollHeight - el.scrollTop - el.clientHeight;
+      stickToBottomRef.current = distanceFromBottom < 80;
+    };
+
+    const observer = new MutationObserver(() => {
+      if (stickToBottomRef.current) scrollToEnd();
+    });
+    observer.observe(el, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+    });
+
+    // Images (and fonts) change height after the text lands.
+    const resizeObserver =
+      typeof ResizeObserver === "undefined"
+        ? null
+        : new ResizeObserver(() => {
+            if (stickToBottomRef.current) scrollToEnd();
+          });
+    resizeObserver?.observe(el);
+
+    el.addEventListener("scroll", handleScroll, { passive: true });
+    scrollToEnd();
+
+    return () => {
+      observer.disconnect();
+      resizeObserver?.disconnect();
+      el.removeEventListener("scroll", handleScroll);
+    };
+  }, [showMessageHistory]);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    const previousCount = lastMessageCountRef.current;
+    lastMessageCountRef.current = messages.length;
     if (!el) return;
 
-    const distanceFromBottom =
-      el.scrollHeight - el.scrollTop - el.clientHeight;
-    if (distanceFromBottom > 140) return;
+    const lastMessage = messages[messages.length - 1];
+    if (messages.length > previousCount && lastMessage?.role === "user") {
+      // A new entry from the user always jumps to the bottom.
+      stickToBottomRef.current = true;
+      requestAnimationFrame(() => {
+        el.scrollTop = el.scrollHeight;
+      });
+    }
+  }, [messages]);
 
-    el.scrollTo({
-      top: el.scrollHeight,
-      behavior: "smooth",
-    });
-  }, [messages, isLoading]);
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el || !stickToBottomRef.current) return;
+    el.scrollTop = el.scrollHeight;
+  }, [messages, isLoading, statusLabel, voiceError, chatError]);
 
   useEffect(() => {
     if (!conversationStarted) return;

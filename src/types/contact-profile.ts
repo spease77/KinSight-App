@@ -26,6 +26,7 @@ export type ContactProfileFieldKey =
   | "personalEmail"
   | "otherEmail"
   | "birthDate"
+  | "age"
   | "birthPlace"
   | "hometown"
   | "height"
@@ -127,6 +128,8 @@ export type KinSightProfileMeta = {
   __kinsightLabeledDates?: string;
   __kinsightLabeledInterests?: string;
   __kinsightContactFacts?: string;
+  /** `YYYY-MM-DD:<age>` — when the stored age was entered, so it can be kept current. */
+  __kinsightAgeRecordedAt?: string;
 };
 
 const KINSIGHT_PROFILE_META_KEYS: (keyof KinSightProfileMeta)[] = [
@@ -142,6 +145,7 @@ const KINSIGHT_PROFILE_META_KEYS: (keyof KinSightProfileMeta)[] = [
   "__kinsightLabeledDates",
   "__kinsightLabeledInterests",
   "__kinsightContactFacts",
+  "__kinsightAgeRecordedAt",
 ];
 
 export interface ContactProfileFieldDef {
@@ -254,6 +258,7 @@ export const CONTACT_PROFILE_SECTIONS: ContactProfileSection[] = [
         title: "Birth & Background",
         fields: [
           f("birthDate", "Birth Date", CONTACT_DATE_HINT, true),
+          f("age", "Age", "Age in years. KinSight keeps it current.", true),
           f("birthPlace", "Birth Place", "City and country of birth.", true),
           f("hometown", "Hometown", "Where they grew up.", true),
         ],

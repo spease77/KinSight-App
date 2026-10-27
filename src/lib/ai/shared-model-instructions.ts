@@ -68,7 +68,10 @@ When the user asks to log a reminder, schedule a meeting, or set a follow-up (e.
 For **birthDate** and **weddingAnniversary** profile fields:
 1. Save as **MM-DD-YYYY** in profileUpdates (e.g. \`03-15-1972\` for March 15, 1972).
 2. When answering the user, express dates in **MM-DD-YYYY** format.
-3. If only month and day are given (no year), ask for the year before saving.
+3. If only month and day are given (no year) **and no age is known**, ask for the year before saving. If an age is also given, save the **age** field — KinSight works out the birth year from the age and the date it was entered, and keeps the age current every year.
+
+## Age
+Save a person's age in the **age** profile field as digits only (e.g. \`79\`) — never inside notes alone. KinSight updates it automatically each year and fills in the birth year once the birthday is known, so do not ask the user to restate it.
 
 ## source_metadata by entry_method
 

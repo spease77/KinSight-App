@@ -84,6 +84,9 @@ export function normalizeContactDate(value: string): string | null {
     return null;
   }
 
+  // "August 19" has no year; Date.parse would silently invent one (2001).
+  if (!/\d{4}/.test(trimmed)) return null;
+
   const parsed = new Date(trimmed);
   if (Number.isNaN(parsed.getTime())) return null;
 

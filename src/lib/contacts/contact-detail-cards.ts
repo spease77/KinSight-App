@@ -77,11 +77,13 @@ const INTERESTS_FIELD_KEYS: ContactProfileFieldKey[] = [
 
 const DATES_FIELD_KEYS: ContactProfileFieldKey[] = [
   "birthDate",
+  "age",
   "weddingAnniversary",
 ];
 
 const PROFILE_OVERVIEW_DATE_KEYS: ContactProfileFieldKey[] = [
   "birthDate",
+  "age",
   "weddingAnniversary",
 ];
 
@@ -114,6 +116,7 @@ const SUBTLE_LABEL_FIELD_KEYS = new Set<ContactProfileFieldKey>([
   "personalEmail",
   "otherEmail",
   "birthDate",
+  "age",
   "weddingAnniversary",
 ]);
 
@@ -144,6 +147,7 @@ const FIELD_LABEL_OVERRIDES: Partial<Record<ContactProfileFieldKey, string>> = {
   personalEmail: "Personal",
   otherEmail: "Other",
   birthDate: "Birthday",
+  age: "Age",
   weddingAnniversary: "Anniversary",
 };
 
