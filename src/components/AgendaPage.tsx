@@ -14,7 +14,6 @@ import { Header } from "@/components/Header";
 import { PageHeader } from "@/components/PageHeader";
 import { AgendaFeed } from "@/components/agenda/AgendaFeed";
 import { AgendaHourlyGrid } from "@/components/agenda/AgendaHourlyGrid";
-import { AgendaListView } from "@/components/agenda/AgendaListView";
 import { AgendaSearchBar } from "@/components/agenda/AgendaSearchBar";
 import { AgendaTimeFrameSwitcher } from "@/components/agenda/AgendaTimeFrameSwitcher";
 import { AddMeetingModal } from "@/components/AddMeetingModal";
@@ -243,15 +242,6 @@ export function AgendaPage() {
     [searchedInteractions]
   );
 
-  const scrollToInteraction = useCallback((interactionId: string) => {
-    setSelectedInteractionId(interactionId);
-
-    requestAnimationFrame(() => {
-      const element = document.getElementById(`agenda-event-${interactionId}`);
-      element?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-    });
-  }, []);
-
   const handleInteractionSelect = useCallback(
     (interactionId: string) => {
       const interaction = agendaInteractions.find(
@@ -262,9 +252,9 @@ export function AgendaPage() {
         eventDate.setHours(0, 0, 0, 0);
         setSelectedDate(eventDate);
       }
-      scrollToInteraction(interactionId);
+      setSelectedInteractionId(interactionId);
     },
-    [agendaInteractions, scrollToInteraction]
+    [agendaInteractions]
   );
 
   const closeMeetingModal = useCallback(() => {
@@ -288,7 +278,6 @@ export function AgendaPage() {
   const isMeetingModalOpen = isAddMeetingOpen || editingInteraction != null;
 
   const hasScheduledInView = searchedInteractions.length > 0;
-  const hasTimeFrameResults = filteredInteractions.length > 0;
   const isSearchActive = searchQuery.trim().length > 0;
 
   const headerActions = (
@@ -317,11 +306,7 @@ export function AgendaPage() {
     </>
   );
 
-  const isCalendarView =
-    timeFrame === "day" || timeFrame === "week" || timeFrame === "month";
   const isListView = timeFrame === "list";
-  const showEmptyStateMessage =
-    !hasScheduledInView && (!isCalendarView || isSearchActive) && !isListView;
 
   return (
     <>
@@ -362,58 +347,36 @@ export function AgendaPage() {
         ) : (
           <>
             {isListView ? (
-              <AgendaListView
-                interactions={searchedInteractions}
-                anchorDate={selectedDate}
-                onInteractionEdit={handleInteractionEdit}
-                emptyMessage={
-                  isSearchActive && agendaInteractions.length > 0
-                    ? "No meetings match your search."
-                    : undefined
-                }
-              />
-            ) : (
-              <>
-                <AgendaHourlyGrid
-                  selectedDate={selectedDate}
-                  timeFrame={timeFrame}
-                  interactions={
-                    isSearchActive ? searchedInteractions : agendaInteractions
-                  }
+              hasScheduledInView ? (
+                <AgendaFeed
+                  ref={feedRef}
+                  groups={filteredGroups}
+                  anchorDate={selectedDate}
                   selectedInteractionId={selectedInteractionId}
-                  onSelectedDateChange={setSelectedDate}
-                  onInteractionSelect={handleInteractionSelect}
+                  onDateHeaderSelect={handleDateHeaderSelect}
+                  onInteractionEdit={handleInteractionEdit}
                 />
-
-                {hasScheduledInView ? (
-                  <>
-                    <div
-                      className="border-t border-border-green/60"
-                      role="separator"
-                      aria-hidden="true"
-                    />
-
-                    <AgendaFeed
-                      ref={feedRef}
-                      groups={filteredGroups}
-                      selectedInteractionId={selectedInteractionId}
-                      onDateHeaderSelect={handleDateHeaderSelect}
-                      onInteractionEdit={handleInteractionEdit}
-                    />
-                  </>
-                ) : showEmptyStateMessage ? (
-                  isSearchActive && hasTimeFrameResults ? (
-                    <p className="py-3 text-center text-sm text-muted">
-                      No meetings match your search.
-                    </p>
-                  ) : (
-                    <div className="flex flex-col gap-2 py-3 text-center text-sm text-muted">
-                      <p>Nothing scheduled.</p>
-                      <p>Use &apos;+&apos; button or home mic to add.</p>
-                    </div>
-                  )
-                ) : null}
-              </>
+              ) : isSearchActive && agendaInteractions.length > 0 ? (
+                <p className="py-8 text-center text-sm text-muted">
+                  No meetings match your search.
+                </p>
+              ) : (
+                <div className="flex flex-col gap-2 py-8 text-center text-sm text-muted">
+                  <p>Nothing scheduled.</p>
+                  <p>Use &apos;+&apos; button or home mic to add.</p>
+                </div>
+              )
+            ) : (
+              <AgendaHourlyGrid
+                selectedDate={selectedDate}
+                timeFrame={timeFrame}
+                interactions={
+                  isSearchActive ? searchedInteractions : agendaInteractions
+                }
+                selectedInteractionId={selectedInteractionId}
+                onSelectedDateChange={setSelectedDate}
+                onInteractionSelect={handleInteractionSelect}
+              />
             )}
           </>
         )}
