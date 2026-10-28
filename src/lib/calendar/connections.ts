@@ -16,6 +16,7 @@ export type CalendarConnectionRow = {
   user_id: string;
   provider: CalendarProvider;
   account_email: string | null;
+  provider_account_id?: string | null;
   access_token: string;
   refresh_token: string | null;
   token_expires_at: string | null;
@@ -26,6 +27,17 @@ export type CalendarConnectionRow = {
 
 const CONNECTION_SELECT =
   "user_id, provider, account_email, access_token, refresh_token, token_expires_at, scope, connected_at, updated_at";
+
+function isProviderAccountColumnMissing(message: string): boolean {
+  const lower = message.toLowerCase();
+  return (
+    lower.includes("provider_account_id") &&
+    (lower.includes("does not exist") ||
+      lower.includes("schema cache") ||
+      lower.includes("could not find") ||
+      lower.includes("column"))
+  );
+}
 
 export function isCalendarConnectionsTableMissing(message: string): boolean {
   const lower = message.toLowerCase();
@@ -82,10 +94,98 @@ export async function getCalendarConnection(
   }
 }
 
+export async function findCalendarConnectionByAccount(input: {
+  provider: CalendarProvider;
+  providerAccountId?: string | null;
+  accountEmail?: string | null;
+}): Promise<{
+  connection: CalendarConnectionRow | null;
+  error?: string;
+  setupRequired?: boolean;
+}> {
+  const accountId = input.providerAccountId?.trim() || null;
+  const email = input.accountEmail?.trim().toLowerCase() || null;
+  if (!accountId && !email) {
+    return { connection: null };
+  }
+
+  try {
+    const supabase = createServiceRoleSupabase();
+
+    if (accountId) {
+      const byAccount = await supabase
+        .from("calendar_connections")
+        .select(CONNECTION_SELECT)
+        .eq("provider", input.provider)
+        .eq("provider_account_id", accountId)
+        .order("updated_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (byAccount.error && isProviderAccountColumnMissing(byAccount.error.message)) {
+        // Column not applied yet — fall through to email lookup.
+      } else if (byAccount.error) {
+        if (isCalendarConnectionsTableMissing(byAccount.error.message)) {
+          return {
+            connection: null,
+            setupRequired: true,
+            error:
+              "Calendar connections are not set up yet — run migration 019_calendar_connections.sql in the Supabase SQL editor.",
+          };
+        }
+        return {
+          connection: null,
+          error: humanizeSupabaseFetchError(byAccount.error.message),
+        };
+      } else if (byAccount.data) {
+        return { connection: byAccount.data as CalendarConnectionRow };
+      }
+    }
+
+    if (email) {
+      const byEmail = await supabase
+        .from("calendar_connections")
+        .select(CONNECTION_SELECT)
+        .eq("provider", input.provider)
+        .ilike("account_email", email)
+        .order("updated_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (byEmail.error) {
+        if (isCalendarConnectionsTableMissing(byEmail.error.message)) {
+          return {
+            connection: null,
+            setupRequired: true,
+            error:
+              "Calendar connections are not set up yet — run migration 019_calendar_connections.sql in the Supabase SQL editor.",
+          };
+        }
+        return {
+          connection: null,
+          error: humanizeSupabaseFetchError(byEmail.error.message),
+        };
+      }
+
+      return { connection: (byEmail.data as CalendarConnectionRow | null) ?? null };
+    }
+
+    return { connection: null };
+  } catch (err) {
+    return {
+      connection: null,
+      error: humanizeSupabaseFetchError(
+        err instanceof Error ? err.message : "Could not load calendar connection."
+      ),
+    };
+  }
+}
+
 export async function upsertCalendarConnection(input: {
   userId: string;
   provider: CalendarProvider;
   accountEmail?: string | null;
+  providerAccountId?: string | null;
   accessToken: string;
   refreshToken?: string | null;
   expiresAt?: string | null;
@@ -97,24 +197,56 @@ export async function upsertCalendarConnection(input: {
       return { error: existing.error, setupRequired: true };
     }
 
+    const previous =
+      existing.connection ??
+      (
+        await findCalendarConnectionByAccount({
+          provider: input.provider,
+          providerAccountId: input.providerAccountId,
+          accountEmail: input.accountEmail,
+        })
+      ).connection;
+
     const supabase = createServiceRoleSupabase();
     const now = new Date().toISOString();
-    const { error } = await supabase.from("calendar_connections").upsert(
-      {
-        user_id: input.userId,
-        provider: input.provider,
-        account_email:
-          input.accountEmail ?? existing.connection?.account_email ?? null,
-        access_token: input.accessToken,
-        refresh_token:
-          input.refreshToken ?? existing.connection?.refresh_token ?? null,
-        token_expires_at: input.expiresAt ?? null,
-        scope: input.scope ?? existing.connection?.scope ?? null,
-        connected_at: existing.connection?.connected_at ?? now,
-        updated_at: now,
-      } as never,
-      { onConflict: "user_id,provider" }
-    );
+    const row = {
+      user_id: input.userId,
+      provider: input.provider,
+      account_email:
+        input.accountEmail ?? previous?.account_email ?? null,
+      provider_account_id:
+        input.providerAccountId ?? previous?.provider_account_id ?? null,
+      access_token: input.accessToken,
+      refresh_token:
+        input.refreshToken ?? previous?.refresh_token ?? null,
+      token_expires_at: input.expiresAt ?? null,
+      scope: input.scope ?? previous?.scope ?? null,
+      connected_at: existing.connection?.connected_at ?? previous?.connected_at ?? now,
+      updated_at: now,
+    };
+
+    const write = async (includeAccountId: boolean) =>
+      supabase.from("calendar_connections").upsert(
+        (includeAccountId
+          ? row
+          : {
+              user_id: row.user_id,
+              provider: row.provider,
+              account_email: row.account_email,
+              access_token: row.access_token,
+              refresh_token: row.refresh_token,
+              token_expires_at: row.token_expires_at,
+              scope: row.scope,
+              connected_at: row.connected_at,
+              updated_at: row.updated_at,
+            }) as never,
+        { onConflict: "user_id,provider" }
+      );
+
+    let { error } = await write(true);
+    if (error && isProviderAccountColumnMissing(error.message)) {
+      ({ error } = await write(false));
+    }
 
     if (error) {
       if (isCalendarConnectionsTableMissing(error.message)) {

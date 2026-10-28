@@ -2,7 +2,7 @@
 
 const STORAGE_KEY = "kinsight-device-id";
 const COOKIE_NAME = "kinsight_device";
-const ONE_YEAR_SECONDS = 60 * 60 * 24 * 365;
+const TEN_YEAR_SECONDS = 60 * 60 * 24 * 365 * 10;
 
 function readCookie(): string | null {
   const prefix = `${COOKIE_NAME}=`;
@@ -45,7 +45,7 @@ export function ensureCalendarDeviceId(): string {
     // ignore storage failures; the cookie still works
   }
 
-  document.cookie = `${COOKIE_NAME}=${encodeURIComponent(id)}; path=/; max-age=${ONE_YEAR_SECONDS}; samesite=lax${
+  document.cookie = `${COOKIE_NAME}=${encodeURIComponent(id)}; path=/; max-age=${TEN_YEAR_SECONDS}; samesite=lax${
     window.location.protocol === "https:" ? "; secure" : ""
   }`;
 

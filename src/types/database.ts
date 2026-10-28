@@ -177,6 +177,7 @@ export interface Database {
           user_id: string;
           provider: string;
           account_email: string | null;
+          provider_account_id: string | null;
           access_token: string;
           refresh_token: string | null;
           token_expires_at: string | null;
@@ -188,6 +189,7 @@ export interface Database {
           user_id: string;
           provider: string;
           account_email?: string | null;
+          provider_account_id?: string | null;
           access_token: string;
           refresh_token?: string | null;
           token_expires_at?: string | null;
@@ -199,6 +201,7 @@ export interface Database {
           user_id?: string;
           provider?: string;
           account_email?: string | null;
+          provider_account_id?: string | null;
           access_token?: string;
           refresh_token?: string | null;
           token_expires_at?: string | null;

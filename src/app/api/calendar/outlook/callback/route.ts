@@ -69,6 +69,7 @@ export async function GET(request: Request) {
       userId,
       provider: "outlook",
       accountEmail: profile.email,
+      providerAccountId: profile.id,
       accessToken: tokens.accessToken,
       refreshToken: tokens.refreshToken,
       expiresAt: tokens.expiresAt,

@@ -100,7 +100,7 @@ export function calendarSessionCookieOptions(request: Request) {
     httpOnly: true,
     sameSite: "lax" as const,
     secure: new URL(request.url).protocol === "https:",
-    maxAge: 60 * 60 * 24 * 180,
+    maxAge: 60 * 60 * 24 * 365 * 10,
     path: "/",
   };
 }
