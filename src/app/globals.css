@@ -856,6 +856,11 @@ html.home-scroll-locked .app-scroll {
   border-radius: 9999px;
 }
 
+.agenda-swipe-frame {
+  min-height: 0;
+  touch-action: pan-y;
+}
+
 .agenda-day-time-scroll {
   display: block;
   min-height: 0;
@@ -865,6 +870,8 @@ html.home-scroll-locked .app-scroll {
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: auto;
+  overscroll-behavior-x: none;
+  touch-action: pan-y;
   padding-bottom: 100px;
 }
 
@@ -929,6 +936,7 @@ html.home-scroll-locked .app-scroll {
   height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
+  touch-action: pan-y;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: auto;
   padding-bottom: 100px;
@@ -963,11 +971,13 @@ html.home-scroll-locked .app-scroll {
   min-width: 0;
   flex: 1;
   align-self: flex-start;
-  overflow-x: auto;
+  /* All seven days are on screen, so sideways pans change week instead of
+     scrolling inside the grid. */
+  overflow-x: hidden;
   overflow-y: visible;
   scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior-x: auto;
+  overscroll-behavior-x: none;
+  touch-action: pan-y;
 }
 
 .agenda-week-day-header-scroll::-webkit-scrollbar,

@@ -31,7 +31,6 @@ export function AgendaHourlyGrid({
   const swipeFrameRef = useRef<HTMLDivElement>(null);
   const canSwipe = timeFrame === "day" || timeFrame === "week";
 
-  // Swipe left = the next day/week, swipe right = the previous one.
   const step = useCallback(
     (direction: -1 | 1) => {
       if (!canSwipe) return;
@@ -41,10 +40,9 @@ export function AgendaHourlyGrid({
           : shiftSelectedDate(selectedDate, direction)
       );
 
-      // Brief slide-in from the side the new page came from.
       swipeFrameRef.current?.animate(
         [
-          { transform: `translateX(${direction * 28}px)`, opacity: 0.35 },
+          { transform: `translateX(${direction * 28}px)`, opacity: 0.4 },
           { transform: "translateX(0)", opacity: 1 },
         ],
         { duration: 200, easing: "ease-out" }
@@ -53,10 +51,19 @@ export function AgendaHourlyGrid({
     [canSwipe, onSelectedDateChange, selectedDate, timeFrame]
   );
 
-  const swipeHandlers = useHorizontalSwipe({
+  const bindSwipe = useHorizontalSwipe({
     onSwipeLeft: () => step(1),
     onSwipeRight: () => step(-1),
+    enabled: canSwipe,
   });
+
+  const setSwipeRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      swipeFrameRef.current = node;
+      bindSwipe(node);
+    },
+    [bindSwipe]
+  );
 
   if (timeFrame === "list") {
     return null;
@@ -64,11 +71,7 @@ export function AgendaHourlyGrid({
 
   if (timeFrame === "week") {
     return (
-      <div
-        ref={swipeFrameRef}
-        className="flex min-h-0 flex-1 flex-col"
-        {...swipeHandlers}
-      >
+      <div ref={setSwipeRef} className="agenda-swipe-frame flex min-h-0 flex-1 flex-col">
         <AgendaWeekHourlyGrid
           selectedDate={selectedDate}
           interactions={interactions}
@@ -94,11 +97,7 @@ export function AgendaHourlyGrid({
   }
 
   return (
-    <div
-      ref={swipeFrameRef}
-      className="flex min-h-0 flex-1 flex-col"
-      {...swipeHandlers}
-    >
+    <div ref={setSwipeRef} className="agenda-swipe-frame flex min-h-0 flex-1 flex-col">
       <AgendaDayHourlyGrid
         selectedDate={selectedDate}
         interactions={interactions}

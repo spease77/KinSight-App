@@ -67,11 +67,34 @@ export function formatAgendaEventTime(iso: string): string {
   }).format(date);
 }
 
-function toDateKey(date: Date): string {
+export function toAgendaDateKey(date: Date): string {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
+}
+
+function toDateKey(date: Date): string {
+  return toAgendaDateKey(date);
+}
+
+/** Puts an empty day in the list so it can open on today even with no events. */
+export function ensureDateGroup(
+  groups: AgendaDateGroup[],
+  date: Date
+): AgendaDateGroup[] {
+  const dateKey = toAgendaDateKey(date);
+  if (groups.some((group) => group.dateKey === dateKey)) return groups;
+
+  const empty: AgendaDateGroup = {
+    dateKey,
+    label: formatAgendaDateHeader(date),
+    items: [],
+  };
+
+  const next = [...groups, empty];
+  next.sort((a, b) => a.dateKey.localeCompare(b.dateKey));
+  return next;
 }
 
 export function filterInteractionsForTimeFrame(

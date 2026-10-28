@@ -23,6 +23,7 @@ import { ensureCalendarDeviceId } from "@/lib/calendar/device-id-client";
 import { resolveAgendaInteractions } from "@/lib/agenda/mock-scheduled-interactions";
 import { filterInteractionsByQuery } from "@/lib/agenda/search-interactions";
 import {
+  ensureDateGroup,
   filterInteractionsForTimeFrame,
   groupInteractionsByDate,
 } from "@/lib/agenda/time-frame";
@@ -70,6 +71,8 @@ export function AgendaPage() {
   >(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const datePickedRef = useRef(false);
+  const [listResetKey, setListResetKey] = useState(0);
   const feedRef = useRef<HTMLDivElement>(null);
   const [headerScrolled, setHeaderScrolled] = useState(false);
 
@@ -176,16 +179,34 @@ export function AgendaPage() {
   const handleTimeFrameChange = useCallback((value: AgendaTimeFrame) => {
     setTimeFrame(value);
     saveAgendaViewPreference(value);
+    if (value === "list" && !datePickedRef.current) {
+      setSelectedDate(startOfToday());
+      setListResetKey((key) => key + 1);
+    }
+  }, []);
+
+  const handleSelectedDateChange = useCallback((date: Date) => {
+    datePickedRef.current = true;
+    setSelectedDate(date);
+  }, []);
+
+  const resetAgendaToToday = useCallback(() => {
+    datePickedRef.current = false;
+    setSelectedDate(startOfToday());
+    setSelectedInteractionId(null);
+    setDetailsInteractions(null);
+    setListResetKey((key) => key + 1);
   }, []);
 
   useEffect(() => {
-    if (pathname === "/agenda") {
-      setSelectedDate(startOfToday());
-      setSelectedInteractionId(null);
-      setIsSearchOpen(false);
-      setSearchQuery("");
+    if (pathname !== "/agenda") {
+      datePickedRef.current = false;
+      return;
     }
-  }, [pathname]);
+    resetAgendaToToday();
+    setIsSearchOpen(false);
+    setSearchQuery("");
+  }, [pathname, resetAgendaToToday]);
 
   const handleSearchToggle = useCallback(() => {
     setIsSearchOpen((current) => {
@@ -241,10 +262,13 @@ export function AgendaPage() {
     [filteredInteractions, searchQuery]
   );
 
-  const filteredGroups = useMemo(
-    () => groupInteractionsByDate(searchedInteractions),
-    [searchedInteractions]
-  );
+  const filteredGroups = useMemo(() => {
+    const groups = groupInteractionsByDate(searchedInteractions);
+    if (timeFrame !== "list" || searchedInteractions.length === 0) {
+      return groups;
+    }
+    return ensureDateGroup(groups, selectedDate);
+  }, [searchedInteractions, timeFrame, selectedDate]);
 
   const handleInteractionSelect = useCallback(
     (interactionId: string) => {
@@ -254,20 +278,26 @@ export function AgendaPage() {
       if (interaction) {
         const eventDate = new Date(interaction.scheduledAt);
         eventDate.setHours(0, 0, 0, 0);
-        setSelectedDate(eventDate);
+        handleSelectedDateChange(eventDate);
       }
       setSelectedInteractionId(interactionId);
       if (interaction) setDetailsInteractions([interaction]);
     },
-    [agendaInteractions]
+    [agendaInteractions, handleSelectedDateChange]
   );
 
   const handleDayEventsSelect = useCallback(
     (events: ScheduledInteraction[]) => {
+      const first = events[0];
+      if (first) {
+        const eventDate = new Date(first.scheduledAt);
+        eventDate.setHours(0, 0, 0, 0);
+        handleSelectedDateChange(eventDate);
+      }
       setSelectedInteractionId(null);
       setDetailsInteractions(events);
     },
-    []
+    [handleSelectedDateChange]
   );
 
   const handleInteractionOpen = useCallback(
@@ -294,9 +324,9 @@ export function AgendaPage() {
   );
 
   const handleDateHeaderSelect = useCallback((dateKey: string) => {
-    setSelectedDate(dateFromKey(dateKey));
+    handleSelectedDateChange(dateFromKey(dateKey));
     setSelectedInteractionId(null);
-  }, []);
+  }, [handleSelectedDateChange]);
 
   const isMeetingModalOpen = isAddMeetingOpen || editingInteraction != null;
 
@@ -375,6 +405,7 @@ export function AgendaPage() {
                   ref={feedRef}
                   groups={filteredGroups}
                   anchorDate={selectedDate}
+                  resetKey={listResetKey}
                   selectedInteractionId={selectedInteractionId}
                   onDateHeaderSelect={handleDateHeaderSelect}
                   onInteractionEdit={handleInteractionOpen}
@@ -397,7 +428,7 @@ export function AgendaPage() {
                   isSearchActive ? searchedInteractions : agendaInteractions
                 }
                 selectedInteractionId={selectedInteractionId}
-                onSelectedDateChange={setSelectedDate}
+                onSelectedDateChange={handleSelectedDateChange}
                 onInteractionSelect={handleInteractionSelect}
                 onDayEventsSelect={handleDayEventsSelect}
               />

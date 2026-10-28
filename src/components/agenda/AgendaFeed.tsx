@@ -15,8 +15,10 @@ interface AgendaFeedProps {
   selectedInteractionId: string | null;
   onDateHeaderSelect?: (dateKey: string) => void;
   onInteractionEdit?: (interaction: ScheduledInteraction) => void;
-  /** Day picked on another tab; the feed opens there (or at "now" for today). */
+  /** Day picked on another tab; the feed opens there (or at today). */
   anchorDate?: Date;
+  /** Bumped when returning to Agenda so the list re-opens on the anchor day. */
+  resetKey?: number | string;
 }
 
 function localDateKey(date: Date): string {
@@ -38,11 +40,13 @@ export const AgendaFeed = forwardRef<HTMLDivElement, AgendaFeedProps>(
       onDateHeaderSelect,
       onInteractionEdit,
       anchorDate,
+      resetKey,
     },
     ref
   ) {
     const scrollerRef = useRef<HTMLDivElement | null>(null);
     const userScrolledRef = useRef(false);
+    const aligningRef = useRef(false);
     const appliedKeyRef = useRef<string | null>(null);
 
     const setRefs = useCallback(
@@ -54,7 +58,7 @@ export const AgendaFeed = forwardRef<HTMLDivElement, AgendaFeedProps>(
       [ref]
     );
 
-    const anchorKey = anchorDate ? localDateKey(anchorDate) : "today";
+    const anchorKey = `${resetKey ?? 0}|${anchorDate ? localDateKey(anchorDate) : "today"}`;
     const itemCount = groups.reduce((sum, group) => sum + group.items.length, 0);
 
     // Open at "now" (or the day picked on another tab) instead of the oldest
@@ -79,20 +83,29 @@ export const AgendaFeed = forwardRef<HTMLDivElement, AgendaFeedProps>(
 
       const header = document.getElementById(`agenda-${targetGroup.dateKey}`);
       if (!header) return;
-      scroller.scrollTop =
-        header.getBoundingClientRect().top -
-        scroller.getBoundingClientRect().top +
-        scroller.scrollTop;
+      const align = () => {
+        aligningRef.current = true;
+        scroller.scrollTop =
+          header.getBoundingClientRect().top -
+          scroller.getBoundingClientRect().top +
+          scroller.scrollTop;
+        requestAnimationFrame(() => {
+          aligningRef.current = false;
+        });
+      };
+      align();
+      requestAnimationFrame(align);
     }, [groups, itemCount, anchorDate, anchorKey]);
 
     const markUserScrolled = () => {
+      if (aligningRef.current) return;
       userScrolledRef.current = true;
     };
 
     return (
       <div
         ref={setRefs}
-        onTouchStart={markUserScrolled}
+        onScroll={markUserScrolled}
         onWheel={markUserScrolled}
         className="agenda-feed-scroll contacts-scroll flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-1 pb-[100px]"
       >
@@ -123,6 +136,8 @@ export const AgendaFeed = forwardRef<HTMLDivElement, AgendaFeedProps>(
             </ul>
           </section>
         ))}
+        {/* Lets the target day sit at the top even when it is the last group. */}
+        <div className="pointer-events-none shrink-0" style={{ minHeight: "70%" }} aria-hidden="true" />
       </div>
     );
   }
