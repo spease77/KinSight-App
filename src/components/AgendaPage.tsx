@@ -61,6 +61,9 @@ export function AgendaPage() {
   const [googleInteractions, setGoogleInteractions] = useState<
     ScheduledInteraction[]
   >([]);
+  const [outlookInteractions, setOutlookInteractions] = useState<
+    ScheduledInteraction[]
+  >([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isAddMeetingOpen, setIsAddMeetingOpen] = useState(false);
@@ -136,29 +139,37 @@ export function AgendaPage() {
     void loadInteractions();
   }, [loadInteractions]);
 
-  // Read-only events from the connected Google Calendar(s). Loaded separately so
-  // a Google hiccup never blocks KinSight's own meetings.
-  const loadGoogleEvents = useCallback(async () => {
-    try {
-      ensureCalendarDeviceId();
-      const res = await fetch("/api/calendar/google/events", {
-        cache: "no-store",
-      });
-      const data = await readApiJson<{
-        connected?: boolean;
-        interactions?: ScheduledInteraction[];
-        error?: string;
-      }>(res);
+  // External calendar events. Loaded separately so a provider hiccup never
+  // blocks KinSight's own meetings.
+  const loadExternalEvents = useCallback(async () => {
+    ensureCalendarDeviceId();
 
-      if (!res.ok) return;
-      setGoogleInteractions(data.connected ? (data.interactions ?? []) : []);
-    } catch {
-      // keep whatever was loaded last
-    }
+    const loadProvider = async (
+      path: string,
+      setRows: (rows: ScheduledInteraction[]) => void
+    ) => {
+      try {
+        const res = await fetch(path, { cache: "no-store" });
+        const data = await readApiJson<{
+          connected?: boolean;
+          interactions?: ScheduledInteraction[];
+          error?: string;
+        }>(res);
+        if (!res.ok) return;
+        setRows(data.connected ? (data.interactions ?? []) : []);
+      } catch {
+        // keep whatever was loaded last
+      }
+    };
+
+    await Promise.all([
+      loadProvider("/api/calendar/google/events", setGoogleInteractions),
+      loadProvider("/api/calendar/outlook/events", setOutlookInteractions),
+    ]);
   }, []);
 
   useEffect(() => {
-    void loadGoogleEvents();
+    void loadExternalEvents();
 
     // Refresh when returning to the app (e.g. after connecting in Settings).
     let lastLoad = Date.now();
@@ -166,11 +177,11 @@ export function AgendaPage() {
       if (document.visibilityState !== "visible") return;
       if (Date.now() - lastLoad < 30_000) return;
       lastLoad = Date.now();
-      void loadGoogleEvents();
+      void loadExternalEvents();
     };
     document.addEventListener("visibilitychange", handleVisible);
     return () => document.removeEventListener("visibilitychange", handleVisible);
-  }, [loadGoogleEvents]);
+  }, [loadExternalEvents]);
 
   useEffect(() => {
     setTimeFrame(loadAgendaViewPreference());
@@ -226,15 +237,15 @@ export function AgendaPage() {
         .map((item) => item.externalEventId)
         .filter((id): id is string => Boolean(id))
     );
-    const googleOnly = googleInteractions.filter(
+    const externalOnly = [...googleInteractions, ...outlookInteractions].filter(
       (item) => !item.externalEventId || !syncedIds.has(item.externalEventId)
     );
-    const combined = [...interactions, ...googleOnly];
+    const combined = [...interactions, ...externalOnly];
     return resolveAgendaInteractions(combined).slice().sort(
       (a, b) =>
         new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime()
     );
-  }, [interactions, googleInteractions]);
+  }, [interactions, googleInteractions, outlookInteractions]);
 
   const filteredInteractions = useMemo(() => {
     if (timeFrame === "list") {

@@ -1,14 +1,9 @@
 import { NextResponse } from "next/server";
+import { GOOGLE_CALENDAR_SCOPES } from "@/lib/calendar/scopes";
 import { readEnv } from "@/lib/supabase/server";
 
 export const GOOGLE_OAUTH_STATE_COOKIE = "kinsight_gcal_oauth_state";
-export const GOOGLE_CALENDAR_SCOPES = [
-  "https://www.googleapis.com/auth/calendar.events",
-  // Read-only access to the calendar list so events from every calendar
-  // (not just the primary one) can be shown in the Agenda.
-  "https://www.googleapis.com/auth/calendar.readonly",
-  "https://www.googleapis.com/auth/userinfo.email",
-].join(" ");
+export { GOOGLE_CALENDAR_SCOPES };
 
 const AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
 const TOKEN_URL = "https://oauth2.googleapis.com/token";

@@ -6,6 +6,10 @@ import {
   fetchGoogleAccountEmail,
   refreshGoogleAccessToken,
 } from "@/lib/calendar/google-oauth";
+import {
+  fetchOutlookAccountEmail,
+  refreshOutlookAccessToken,
+} from "@/lib/calendar/outlook-oauth";
 import type { CalendarProvider } from "@/types/calendar-connection";
 
 export type CalendarConnectionRow = {
@@ -168,17 +172,45 @@ export async function deleteCalendarConnection(
   }
 }
 
-export async function getValidGoogleAccessToken(userId: string): Promise<{
+type ValidAccessToken = {
   accessToken?: string;
   accountEmail?: string | null;
   error?: string;
   setupRequired?: boolean;
   connected: boolean;
-}> {
+};
+
+export async function getValidGoogleAccessToken(
+  userId: string
+): Promise<ValidAccessToken> {
+  return getValidProviderAccessToken(userId, "google");
+}
+
+export async function getValidOutlookAccessToken(
+  userId: string
+): Promise<ValidAccessToken> {
+  return getValidProviderAccessToken(userId, "outlook");
+}
+
+export async function hasOtherCalendarConnection(
+  userId: string,
+  besides: CalendarProvider
+): Promise<boolean> {
+  const other: CalendarProvider = besides === "google" ? "outlook" : "google";
+  const { connection } = await getCalendarConnection(userId, other);
+  return Boolean(connection);
+}
+
+async function getValidProviderAccessToken(
+  userId: string,
+  provider: CalendarProvider
+): Promise<ValidAccessToken> {
   const { connection, error, setupRequired } = await getCalendarConnection(
     userId,
-    "google"
+    provider
   );
+
+  const label = provider === "google" ? "Google Calendar" : "Outlook Calendar";
 
   if (setupRequired) {
     return { connected: false, setupRequired, error };
@@ -208,20 +240,24 @@ export async function getValidGoogleAccessToken(userId: string): Promise<{
   if (!connection.refresh_token) {
     return {
       connected: true,
-      error:
-        "Google Calendar needs to be reconnected — the saved session has no refresh token.",
+      error: `${label} needs to be reconnected — the saved session has no refresh token.`,
     };
   }
 
   try {
-    const tokens = await refreshGoogleAccessToken(connection.refresh_token);
+    const tokens =
+      provider === "google"
+        ? await refreshGoogleAccessToken(connection.refresh_token)
+        : await refreshOutlookAccessToken(connection.refresh_token);
     const accountEmail =
       connection.account_email ??
-      (await fetchGoogleAccountEmail(tokens.accessToken));
+      (provider === "google"
+        ? await fetchGoogleAccountEmail(tokens.accessToken)
+        : await fetchOutlookAccountEmail(tokens.accessToken));
 
     await upsertCalendarConnection({
       userId,
-      provider: "google",
+      provider,
       accountEmail,
       accessToken: tokens.accessToken,
       refreshToken: tokens.refreshToken,
@@ -240,7 +276,7 @@ export async function getValidGoogleAccessToken(userId: string): Promise<{
       error:
         err instanceof Error
           ? err.message
-          : "Could not refresh Google Calendar access.",
+          : `Could not refresh ${label} access.`,
     };
   }
 }

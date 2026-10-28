@@ -3,6 +3,10 @@ import {
   getGoogleRedirectUri,
   isGoogleCalendarConfigured,
 } from "@/lib/calendar/google-oauth";
+import {
+  getOutlookRedirectUri,
+  isOutlookCalendarConfigured,
+} from "@/lib/calendar/outlook-oauth";
 import { resolveCalendarUserId } from "@/lib/calendar/session";
 import type { CalendarStatusResponse } from "@/types/calendar-connection";
 
@@ -15,6 +19,7 @@ function emptyStatus(
   return {
     signedIn,
     googleRedirectUri: getGoogleRedirectUri(request),
+    outlookRedirectUri: getOutlookRedirectUri(request),
     google: {
       provider: "google",
       configured: isGoogleCalendarConfigured(),
@@ -23,7 +28,7 @@ function emptyStatus(
     },
     outlook: {
       provider: "outlook",
-      configured: false,
+      configured: isOutlookCalendarConfigured(),
       connected: false,
       accountEmail: null,
     },
@@ -39,11 +44,15 @@ export async function GET(request: Request) {
     });
   }
 
-  const google = await getCalendarConnection(userId, "google");
+  const [google, outlook] = await Promise.all([
+    getCalendarConnection(userId, "google"),
+    getCalendarConnection(userId, "outlook"),
+  ]);
 
   const body: CalendarStatusResponse = {
     signedIn: true,
     googleRedirectUri: getGoogleRedirectUri(request),
+    outlookRedirectUri: getOutlookRedirectUri(request),
     google: {
       provider: "google",
       configured: isGoogleCalendarConfigured(),
@@ -53,9 +62,10 @@ export async function GET(request: Request) {
     },
     outlook: {
       provider: "outlook",
-      configured: false,
-      connected: false,
-      accountEmail: null,
+      configured: isOutlookCalendarConfigured(),
+      connected: Boolean(outlook.connection),
+      accountEmail: outlook.connection?.account_email ?? null,
+      setupRequired: outlook.setupRequired,
     },
   };
 

@@ -6,6 +6,7 @@ import {
 } from "@/lib/calendar/calendar-attendees";
 import { getCalendarConnection } from "@/lib/calendar/connections";
 import { upsertGoogleCalendarEvent } from "@/lib/calendar/google-events";
+import { upsertOutlookCalendarEvent } from "@/lib/calendar/outlook-events";
 
 export type CalendarSyncPayload = {
   userId?: string;
@@ -31,7 +32,6 @@ export type CalendarSyncResult = {
 
 /**
  * Pushes a KinSight meeting to the signed-in user's connected calendars.
- * Google Calendar is free (OAuth + Calendar API). Outlook stays a no-op until connected.
  */
 export async function syncMeetingToExternalCalendars(
   payload: CalendarSyncPayload
@@ -49,22 +49,28 @@ export async function syncMeetingToExternalCalendars(
 
   if (!payload.userId) {
     console.info(
-      "[calendar-sync] Skipping Google Calendar — no signed-in user for this meeting.",
+      "[calendar-sync] Skipping external calendars — no signed-in user for this meeting.",
       payload.interactionId
     );
   } else {
-    const google = await getCalendarConnection(payload.userId, "google");
+    const [google, outlook] = await Promise.all([
+      getCalendarConnection(payload.userId, "google"),
+      getCalendarConnection(payload.userId, "outlook"),
+    ]);
+
     if (google.connection) {
       const pushed = await pushToGoogleCalendar(syncPayload, payload.userId);
       if (pushed) providers.push("google");
     } else if (google.setupRequired) {
       console.warn("[calendar-sync]", google.error);
     }
-  }
 
-  if (process.env.OUTLOOK_CALENDAR_SYNC_ENABLED === "true") {
-    providers.push("outlook");
-    await pushToOutlookCalendar(syncPayload);
+    if (outlook.connection) {
+      const pushed = await pushToOutlookCalendar(syncPayload, payload.userId);
+      if (pushed) providers.push("outlook");
+    } else if (outlook.setupRequired) {
+      console.warn("[calendar-sync]", outlook.error);
+    }
   }
 
   if (providers.length === 0) {
@@ -109,19 +115,28 @@ async function pushToGoogleCalendar(
 }
 
 async function pushToOutlookCalendar(
-  payload: CalendarSyncPayload & { attendees: CalendarAttendee[] }
-): Promise<void> {
-  console.info("[calendar-sync] Outlook Calendar placeholder", {
+  payload: CalendarSyncPayload & { attendees: CalendarAttendee[] },
+  userId: string
+): Promise<boolean> {
+  const result = await upsertOutlookCalendarEvent({
+    userId,
     interactionId: payload.interactionId,
-    subject: payload.title,
-    start: payload.scheduledAt,
-    end: payload.scheduledEndAt,
-    attendees: payload.attendees.map((attendee) => ({
-      emailAddress: {
-        address: attendee.email,
-        name: attendee.displayName ?? attendee.email,
-      },
-      type: "required",
-    })),
+    title: payload.title,
+    scheduledAt: payload.scheduledAt,
+    scheduledEndAt: payload.scheduledEndAt,
+    notes: payload.notes,
+    attendees: payload.attendees,
   });
+
+  if (result.error || !result.eventId) {
+    console.error("[calendar-sync] Outlook Calendar push failed:", result.error);
+    return false;
+  }
+
+  console.info("[calendar-sync] Outlook Calendar event saved", {
+    interactionId: payload.interactionId,
+    eventId: result.eventId,
+    attendees: payload.attendees.map((attendee) => attendee.email),
+  });
+  return true;
 }

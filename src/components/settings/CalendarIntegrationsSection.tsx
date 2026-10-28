@@ -12,6 +12,8 @@ function emptyStatus(): CalendarStatusResponse {
     signedIn: false,
     googleRedirectUri:
       "https://kin-sight-app.vercel.app/api/calendar/google/callback",
+    outlookRedirectUri:
+      "https://kin-sight-app.vercel.app/api/calendar/outlook/callback",
     google: {
       provider: "google",
       configured: false,
@@ -30,7 +32,9 @@ function emptyStatus(): CalendarStatusResponse {
 export function CalendarIntegrationsSection() {
   const [status, setStatus] = useState<CalendarStatusResponse>(emptyStatus);
   const [isLoading, setIsLoading] = useState(true);
-  const [isDisconnecting, setIsDisconnecting] = useState(false);
+  const [isDisconnecting, setIsDisconnecting] = useState<
+    "google" | "outlook" | null
+  >(null);
 
   const loadStatus = useCallback(async () => {
     try {
@@ -42,6 +46,8 @@ export function CalendarIntegrationsSection() {
         signedIn: Boolean(data.signedIn),
         googleRedirectUri:
           data.googleRedirectUri || emptyStatus().googleRedirectUri,
+        outlookRedirectUri:
+          data.outlookRedirectUri || emptyStatus().outlookRedirectUri,
         google: data.google ?? emptyStatus().google,
         outlook: data.outlook ?? emptyStatus().outlook,
       });
@@ -80,7 +86,7 @@ export function CalendarIntegrationsSection() {
       return;
     }
 
-    setIsDisconnecting(true);
+    setIsDisconnecting("google");
     try {
       const res = await fetch("/api/calendar/google/disconnect", {
         method: "POST",
@@ -96,12 +102,44 @@ export function CalendarIntegrationsSection() {
         err instanceof Error ? err.message : "Could not disconnect Google Calendar."
       );
     } finally {
-      setIsDisconnecting(false);
+      setIsDisconnecting(null);
+    }
+  }, [loadStatus]);
+
+  const handleConnectOutlook = useCallback(() => {
+    const device = ensureCalendarDeviceId();
+    window.location.href = `/api/calendar/outlook/connect?device=${encodeURIComponent(device)}`;
+  }, []);
+
+  const handleDisconnectOutlook = useCallback(async () => {
+    if (!window.confirm("Disconnect Outlook Calendar from this KinSight account?")) {
+      return;
+    }
+
+    setIsDisconnecting("outlook");
+    try {
+      const res = await fetch("/api/calendar/outlook/disconnect", {
+        method: "POST",
+      });
+      const data = await readApiJson<{ error?: string }>(res);
+      if (!res.ok) {
+        throw new Error(data.error ?? "Could not disconnect Outlook Calendar.");
+      }
+      showSuccessToast("Outlook Calendar disconnected.");
+      await loadStatus();
+    } catch (err) {
+      showErrorToast(
+        err instanceof Error ? err.message : "Could not disconnect Outlook Calendar."
+      );
+    } finally {
+      setIsDisconnecting(null);
     }
   }, [loadStatus]);
 
   const google = status.google;
   const googleReady = google.configured && !google.setupRequired;
+  const outlook = status.outlook;
+  const outlookReady = outlook.configured && !outlook.setupRequired;
 
   return (
     <section className="flex flex-col gap-3">
@@ -110,9 +148,8 @@ export function CalendarIntegrationsSection() {
           Integrations
         </h3>
         <p className="mt-1 text-sm leading-relaxed text-muted">
-          Connect your Gmail calendar for free. Your Google events appear in the
-          Agenda (day, week, month and list), and meetings you add in KinSight
-          are created on that Google account.
+          Connect Google or Outlook. Their events appear in the Agenda, and
+          meetings you add in KinSight are created on the connected calendar.
         </p>
       </div>
 
@@ -187,11 +224,13 @@ export function CalendarIntegrationsSection() {
                     <button
                       type="button"
                       onClick={() => void handleDisconnectGoogle()}
-                      disabled={isDisconnecting}
+                      disabled={isDisconnecting === "google"}
                       className="inline-flex items-center gap-2 rounded-lg border border-border/70 bg-card/80 px-3 py-2 text-xs font-medium text-muted transition-colors hover:text-foreground disabled:opacity-50"
                     >
                       <Unlink className="h-3.5 w-3.5" strokeWidth={2} />
-                      {isDisconnecting ? "Disconnecting…" : "Disconnect"}
+                      {isDisconnecting === "google"
+                        ? "Disconnecting…"
+                        : "Disconnect"}
                     </button>
                   )}
                 </div>
@@ -206,21 +245,66 @@ export function CalendarIntegrationsSection() {
               <Calendar className="h-4 w-4 text-foreground" strokeWidth={2} />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-medium text-foreground">
-                Outlook Calendar
-              </p>
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="text-sm font-medium text-foreground">
+                  Outlook Calendar
+                </p>
+                {outlook.connected && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-accent-green-muted px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-accent-green-bright">
+                    <Check className="h-3 w-3" strokeWidth={2.5} />
+                    Connected
+                  </span>
+                )}
+              </div>
               <p className="mt-1 text-xs leading-relaxed text-muted">
-                Outlook sync is coming soon. Use Google Calendar to test invites
-                today.
+                {outlook.connected && outlook.accountEmail
+                  ? `Syncing as ${outlook.accountEmail}`
+                  : "See your Outlook events in KinSight and add KinSight meetings to that calendar. No password is stored — Microsoft OAuth only."}
               </p>
-              <button
-                type="button"
-                disabled
-                className="mt-3 inline-flex cursor-not-allowed items-center gap-2 rounded-lg border border-border/70 bg-card/80 px-3 py-2 text-xs font-medium text-muted opacity-60"
-              >
-                <Link2 className="h-3.5 w-3.5" strokeWidth={2} />
-                Coming soon
-              </button>
+
+              {isLoading ? (
+                <p className="mt-3 text-xs text-muted">Checking connection…</p>
+              ) : outlook.setupRequired ? (
+                <p className="mt-3 text-xs leading-relaxed text-muted">
+                  Run <code>019_calendar_connections.sql</code> in the Supabase
+                  SQL editor, then refresh.
+                </p>
+              ) : !outlook.configured ? (
+                <OutlookCalendarSetupSteps
+                  redirectUri={status.outlookRedirectUri}
+                />
+              ) : (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={handleConnectOutlook}
+                    disabled={!outlookReady}
+                    className={
+                      outlook.connected
+                        ? "inline-flex items-center gap-2 rounded-lg border border-border/70 bg-card/80 px-3 py-2 text-xs font-medium text-muted transition-colors hover:text-foreground"
+                        : "ui-btn-green inline-flex items-center gap-2 px-3 py-2 text-xs shadow-none"
+                    }
+                  >
+                    <Link2 className="h-3.5 w-3.5" strokeWidth={2} />
+                    {outlook.connected
+                      ? "Reconnect"
+                      : "Connect Outlook Calendar"}
+                  </button>
+                  {outlook.connected && (
+                    <button
+                      type="button"
+                      onClick={() => void handleDisconnectOutlook()}
+                      disabled={isDisconnecting === "outlook"}
+                      className="inline-flex items-center gap-2 rounded-lg border border-border/70 bg-card/80 px-3 py-2 text-xs font-medium text-muted transition-colors hover:text-foreground disabled:opacity-50"
+                    >
+                      <Unlink className="h-3.5 w-3.5" strokeWidth={2} />
+                      {isDisconnecting === "outlook"
+                        ? "Disconnecting…"
+                        : "Disconnect"}
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -266,11 +350,64 @@ function GoogleCalendarSetupSteps({ redirectUri }: { redirectUri: string }) {
           <code>GOOGLE_CALENDAR_CLIENT_SECRET</code>, then Redeploy.
         </li>
         <li>
-          Run <code>019_calendar_connections.sql</code> in the Supabase SQL
-          editor if you have not already.
+          Run <code>019_calendar_connections.sql</code> and{" "}
+          <code>021_calendar_events_sync.sql</code> in the Supabase SQL editor
+          if you have not already.
         </li>
       </ol>
       <p>After that, this card will show Connect Google Calendar.</p>
+    </div>
+  );
+}
+
+function OutlookCalendarSetupSteps({ redirectUri }: { redirectUri: string }) {
+  return (
+    <div className="mt-3 space-y-2 text-xs leading-relaxed text-muted">
+      <p>
+        Connect is one Microsoft Entra step away. Outlook does not let an app
+        edit your calendar until you create an app registration (no password is
+        stored).
+      </p>
+      <ol className="list-decimal space-y-1.5 pl-4">
+        <li>
+          Open{" "}
+          <a
+            href="https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationsListBlade"
+            target="_blank"
+            rel="noreferrer"
+            className="text-foreground underline underline-offset-2"
+          >
+            Azure App registrations
+          </a>
+          , create a registration, and choose accounts in any org directory and
+          personal Microsoft accounts.
+        </li>
+        <li>
+          Authentication → Add a platform → Web. Redirect URI:
+          <code className="mt-1 block break-all rounded-md bg-card/80 px-2 py-1 text-[11px] text-foreground">
+            {redirectUri}
+          </code>
+        </li>
+        <li>
+          Certificates & secrets → New client secret. Copy the value.
+        </li>
+        <li>
+          API permissions → Microsoft Graph → Delegated:{" "}
+          <code>Calendars.ReadWrite</code>, <code>offline_access</code>,{" "}
+          <code>User.Read</code>.
+        </li>
+        <li>
+          In Vercel → Settings → Environment Variables, add{" "}
+          <code>OUTLOOK_CALENDAR_CLIENT_ID</code> and{" "}
+          <code>OUTLOOK_CALENDAR_CLIENT_SECRET</code>, then Redeploy.
+        </li>
+        <li>
+          Run <code>019_calendar_connections.sql</code> and{" "}
+          <code>021_calendar_events_sync.sql</code> in the Supabase SQL editor
+          if you have not already.
+        </li>
+      </ol>
+      <p>After that, this card will show Connect Outlook Calendar.</p>
     </div>
   );
 }

@@ -1,6 +1,7 @@
-import { createServerSupabase } from "@/lib/supabase/server";
+import { rememberExternalCalendarEvent } from "@/lib/calendar/calendar-events";
 import { getValidGoogleAccessToken } from "@/lib/calendar/connections";
 import type { CalendarAttendee } from "@/lib/calendar/calendar-attendees";
+import { createServerSupabase } from "@/lib/supabase/server";
 
 export type GoogleCalendarEventPayload = {
   userId: string;
@@ -100,28 +101,20 @@ async function googleCalendarRequest(input: {
 }
 
 async function rememberSyncedEvent(
+  userId: string,
   interactionId: string,
   eventId: string
 ): Promise<void> {
-  try {
-    const supabase = createServerSupabase();
-    const { error } = await supabase
-      .from("scheduled_interactions")
-      .update({
-        external_event_id: eventId,
-        last_synced_at: new Date().toISOString(),
-      } as never)
-      .eq("id", interactionId);
-
-    if (error) {
-      console.error(
-        "[calendar-sync] Could not store Google event id:",
-        error.message
-      );
-    }
-  } catch (err) {
-    console.error("[calendar-sync] Could not store Google event id:", err);
-  }
+  await rememberExternalCalendarEvent({
+    userId,
+    interactionId,
+    provider: "google",
+    externalEventId: eventId,
+    calendarId: "primary",
+    isOrganizer: true,
+    isReadOnly: false,
+    syncStatus: "synced",
+  });
 }
 
 export async function upsertGoogleCalendarEvent(
@@ -164,7 +157,7 @@ export async function upsertGoogleCalendarEvent(
     return { error: result.error ?? "Google Calendar did not return an event id." };
   }
 
-  await rememberSyncedEvent(payload.interactionId, result.id);
+  await rememberSyncedEvent(payload.userId, payload.interactionId, result.id);
   return { eventId: result.id };
 }
 
@@ -174,14 +167,33 @@ async function readExistingGoogleEventId(
   try {
     const supabase = createServerSupabase();
     const { data, error } = await supabase
-      .from("scheduled_interactions")
+      .from("calendar_events")
       .select("external_event_id")
+      .eq("scheduled_interaction_id", interactionId)
+      .eq("provider", "google")
+      .maybeSingle();
+
+    if (!error && data) {
+      const id = (data as { external_event_id?: string | null })
+        .external_event_id;
+      if (id?.trim()) return id.trim();
+    }
+
+    const fallback = await supabase
+      .from("scheduled_interactions")
+      .select("external_event_id, source")
       .eq("id", interactionId)
       .maybeSingle();
 
-    if (error || !data) return null;
-    const eventId = (data as { external_event_id?: string | null }).external_event_id;
-    return eventId?.trim() || null;
+    if (fallback.error || !fallback.data) return null;
+    const row = fallback.data as {
+      external_event_id?: string | null;
+      source?: string | null;
+    };
+    if (row.source && row.source !== "google" && row.source !== "kinsight") {
+      return null;
+    }
+    return row.external_event_id?.trim() || null;
   } catch {
     return null;
   }

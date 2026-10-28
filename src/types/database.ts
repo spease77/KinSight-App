@@ -217,6 +217,10 @@ export interface Database {
           notes: string | null;
           source: string;
           external_event_id: string | null;
+          calendar_id: string | null;
+          is_organizer: boolean;
+          is_read_only: boolean;
+          sync_status: string;
           last_synced_at: string | null;
           created_at: string;
         };
@@ -229,6 +233,10 @@ export interface Database {
           notes?: string | null;
           source?: string;
           external_event_id?: string | null;
+          calendar_id?: string | null;
+          is_organizer?: boolean;
+          is_read_only?: boolean;
+          sync_status?: string;
           last_synced_at?: string | null;
           created_at?: string;
         };
@@ -240,7 +248,53 @@ export interface Database {
           notes?: string | null;
           source?: string;
           external_event_id?: string | null;
+          calendar_id?: string | null;
+          is_organizer?: boolean;
+          is_read_only?: boolean;
+          sync_status?: string;
           last_synced_at?: string | null;
+        };
+      };
+      calendar_events: {
+        Row: {
+          id: string;
+          user_id: string;
+          scheduled_interaction_id: string | null;
+          provider: string;
+          external_event_id: string | null;
+          calendar_id: string | null;
+          is_organizer: boolean;
+          is_read_only: boolean;
+          sync_status: string;
+          last_synced_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          scheduled_interaction_id?: string | null;
+          provider: string;
+          external_event_id?: string | null;
+          calendar_id?: string | null;
+          is_organizer?: boolean;
+          is_read_only?: boolean;
+          sync_status?: string;
+          last_synced_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          user_id?: string;
+          scheduled_interaction_id?: string | null;
+          provider?: string;
+          external_event_id?: string | null;
+          calendar_id?: string | null;
+          is_organizer?: boolean;
+          is_read_only?: boolean;
+          sync_status?: string;
+          last_synced_at?: string | null;
+          updated_at?: string;
         };
       };
     };

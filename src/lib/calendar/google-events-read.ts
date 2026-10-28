@@ -13,6 +13,7 @@ type GoogleCalendarListEntry = {
   selected?: boolean;
   hidden?: boolean;
   primary?: boolean;
+  accessRole?: string;
 };
 
 type GoogleEvent = {
@@ -220,6 +221,13 @@ function toInteraction(
     source: "google",
     externalEventId: event.id,
     lastSyncedAt: syncedAt,
+    calendarId: calendar.id,
+    isOrganizer: event.organizer?.self !== false,
+    isReadOnly:
+      calendar.accessRole === "reader" ||
+      calendar.accessRole === "freeBusyReader" ||
+      event.organizer?.self === false,
+    syncStatus: "synced",
     location: event.location?.trim() || null,
     attendees: (event.attendees ?? [])
       .filter((attendee) => !attendee.resource && !attendee.self)

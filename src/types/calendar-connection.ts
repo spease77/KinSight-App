@@ -13,6 +13,7 @@ export type CalendarConnectionStatus = {
 export type CalendarStatusResponse = {
   signedIn: boolean;
   googleRedirectUri: string;
+  outlookRedirectUri: string;
   google: CalendarConnectionStatus;
   outlook: CalendarConnectionStatus;
 };

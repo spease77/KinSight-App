@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
-import { deleteCalendarConnection } from "@/lib/calendar/connections";
+import {
+  deleteCalendarConnection,
+  hasOtherCalendarConnection,
+} from "@/lib/calendar/connections";
 import {
   clearCalendarSessionCookie,
   resolveCalendarUserId,
@@ -25,5 +28,8 @@ export async function POST(request: Request) {
   }
 
   const response = NextResponse.json({ success: true });
+  if (await hasOtherCalendarConnection(userId, "google")) {
+    return response;
+  }
   return clearCalendarSessionCookie(response);
 }

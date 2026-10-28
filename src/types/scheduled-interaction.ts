@@ -1,5 +1,6 @@
 import type { BehavioralProfileTag } from "@/lib/psychological-profile";
 import type { ContactType } from "@/lib/contacts/contact-type";
+import type { CalendarSyncStatus } from "@/types/calendar-event";
 
 export type AgendaTimeFrame = "day" | "week" | "month" | "list";
 
@@ -25,13 +26,15 @@ export const INTERACTION_SOURCE_LABELS: Record<InteractionSource, string> = {
   outlook: "Outlook",
 };
 
-/** Demo rows and events read from Google Calendar have no KinSight contact to open or edit. */
+/** Demo rows and events read from an external calendar have no KinSight contact to open or edit. */
 export function isReadOnlyInteraction(
-  interaction: Pick<ScheduledInteraction, "contactId">
+  interaction: Pick<ScheduledInteraction, "contactId" | "isReadOnly">
 ): boolean {
+  if (interaction.isReadOnly) return true;
   return (
     interaction.contactId.startsWith("mock-") ||
-    interaction.contactId.startsWith("google-")
+    interaction.contactId.startsWith("google-") ||
+    interaction.contactId.startsWith("outlook-")
   );
 }
 
@@ -48,6 +51,10 @@ export type ScheduledInteraction = {
   source: InteractionSource;
   externalEventId: string | null;
   lastSyncedAt: string | null;
+  calendarId?: string | null;
+  isOrganizer?: boolean;
+  isReadOnly?: boolean;
+  syncStatus?: CalendarSyncStatus;
   /** Filled for events read from an external calendar. */
   location?: string | null;
   attendees?: string[];

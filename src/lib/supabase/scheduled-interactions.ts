@@ -16,6 +16,7 @@ import {
 
 import { createServerSupabase, humanizeSupabaseFetchError } from "@/lib/supabase/server";
 
+import { isCalendarSyncStatus } from "@/types/calendar-event";
 import type { Database } from "@/types/database";
 
 import {
@@ -37,7 +38,7 @@ type ContactInteractionContextRow = Pick<
 
 const SCHEDULED_INTERACTION_SELECT =
 
-  "id, contact_id, scheduled_at, title, behavioral_tags, notes, source, external_event_id, last_synced_at, contacts(id, name, contact_type, profile)";
+  "id, contact_id, scheduled_at, title, behavioral_tags, notes, source, external_event_id, calendar_id, is_organizer, is_read_only, sync_status, last_synced_at, contacts(id, name, contact_type, profile)";
 
 
 
@@ -58,6 +59,14 @@ type ScheduledInteractionRow = {
   source?: string | null;
 
   external_event_id?: string | null;
+
+  calendar_id?: string | null;
+
+  is_organizer?: boolean | null;
+
+  is_read_only?: boolean | null;
+
+  sync_status?: string | null;
 
   last_synced_at?: string | null;
 
@@ -162,6 +171,14 @@ function mapRow(row: ScheduledInteractionRow): ScheduledInteraction | null {
     externalEventId: row.external_event_id ?? null,
 
     lastSyncedAt: row.last_synced_at ?? null,
+
+    calendarId: row.calendar_id ?? null,
+
+    isOrganizer: row.is_organizer !== false,
+
+    isReadOnly: row.is_read_only === true,
+
+    syncStatus: isCalendarSyncStatus(row.sync_status) ? row.sync_status : "synced",
 
   };
 
@@ -456,6 +473,14 @@ export async function createAgendaItem(input: {
         source: "kinsight",
 
         external_event_id: null,
+
+        calendar_id: null,
+
+        is_organizer: true,
+
+        is_read_only: false,
+
+        sync_status: "pending",
 
         last_synced_at: null,
 
