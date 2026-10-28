@@ -48,4 +48,8 @@ export type ScheduledInteraction = {
   source: InteractionSource;
   externalEventId: string | null;
   lastSyncedAt: string | null;
+  /** Filled for events read from an external calendar. */
+  location?: string | null;
+  attendees?: string[];
+  meetingUrl?: string | null;
 };

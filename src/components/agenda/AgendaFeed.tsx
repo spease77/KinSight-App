@@ -8,10 +8,7 @@ import {
 } from "react";
 import { AgendaBriefingCard } from "@/components/agenda/AgendaBriefingCard";
 import type { AgendaDateGroup } from "@/lib/agenda/time-frame";
-import {
-  isReadOnlyInteraction,
-  type ScheduledInteraction,
-} from "@/types/scheduled-interaction";
+import type { ScheduledInteraction } from "@/types/scheduled-interaction";
 
 interface AgendaFeedProps {
   groups: AgendaDateGroup[];
@@ -131,9 +128,7 @@ export const AgendaFeed = forwardRef<HTMLDivElement, AgendaFeedProps>(
                   <AgendaBriefingCard
                     interaction={item}
                     isSelected={selectedInteractionId === item.id}
-                    onEdit={
-                      isReadOnlyInteraction(item) ? undefined : onInteractionEdit
-                    }
+                    onEdit={onInteractionEdit}
                   />
                 </li>
               ))}

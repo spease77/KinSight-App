@@ -12,6 +12,7 @@ import { usePathname } from "next/navigation";
 import { Plus, Search } from "lucide-react";
 import { Header } from "@/components/Header";
 import { PageHeader } from "@/components/PageHeader";
+import { AgendaEventDetailsSheet } from "@/components/agenda/AgendaEventDetailsSheet";
 import { AgendaFeed } from "@/components/agenda/AgendaFeed";
 import { AgendaHourlyGrid } from "@/components/agenda/AgendaHourlyGrid";
 import { AgendaSearchBar } from "@/components/agenda/AgendaSearchBar";
@@ -64,6 +65,9 @@ export function AgendaPage() {
   const [isAddMeetingOpen, setIsAddMeetingOpen] = useState(false);
   const [editingInteraction, setEditingInteraction] =
     useState<ScheduledInteraction | null>(null);
+  const [detailsInteractions, setDetailsInteractions] = useState<
+    ScheduledInteraction[] | null
+  >(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const feedRef = useRef<HTMLDivElement>(null);
@@ -253,9 +257,28 @@ export function AgendaPage() {
         setSelectedDate(eventDate);
       }
       setSelectedInteractionId(interactionId);
+      if (interaction) setDetailsInteractions([interaction]);
     },
     [agendaInteractions]
   );
+
+  const handleDayEventsSelect = useCallback(
+    (events: ScheduledInteraction[]) => {
+      setSelectedInteractionId(null);
+      setDetailsInteractions(events);
+    },
+    []
+  );
+
+  const handleInteractionOpen = useCallback(
+    (interaction: ScheduledInteraction) => {
+      setSelectedInteractionId(interaction.id);
+      setDetailsInteractions([interaction]);
+    },
+    []
+  );
+
+  const closeDetails = useCallback(() => setDetailsInteractions(null), []);
 
   const closeMeetingModal = useCallback(() => {
     setIsAddMeetingOpen(false);
@@ -354,7 +377,7 @@ export function AgendaPage() {
                   anchorDate={selectedDate}
                   selectedInteractionId={selectedInteractionId}
                   onDateHeaderSelect={handleDateHeaderSelect}
-                  onInteractionEdit={handleInteractionEdit}
+                  onInteractionEdit={handleInteractionOpen}
                 />
               ) : isSearchActive && agendaInteractions.length > 0 ? (
                 <p className="py-8 text-center text-sm text-muted">
@@ -376,12 +399,22 @@ export function AgendaPage() {
                 selectedInteractionId={selectedInteractionId}
                 onSelectedDateChange={setSelectedDate}
                 onInteractionSelect={handleInteractionSelect}
+                onDayEventsSelect={handleDayEventsSelect}
               />
             )}
           </>
         )}
         </main>
       </div>
+
+      <AgendaEventDetailsSheet
+        interactions={detailsInteractions}
+        onClose={closeDetails}
+        onEdit={(interaction) => {
+          setDetailsInteractions(null);
+          handleInteractionEdit(interaction);
+        }}
+      />
 
       <AddMeetingModal
         open={isMeetingModalOpen}

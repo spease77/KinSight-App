@@ -30,7 +30,38 @@ type GoogleEvent = {
     resource?: boolean;
   }>;
   extendedProperties?: { private?: Record<string, string> };
+  location?: string;
+  hangoutLink?: string;
+  conferenceData?: {
+    entryPoints?: Array<{ entryPointType?: string; uri?: string }>;
+  };
 };
+
+/** Google descriptions can carry HTML; show them as plain text. */
+function plainTextDescription(raw: string | undefined): string | null {
+  if (!raw?.trim()) return null;
+  const text = raw
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/(p|div|li)>/gi, "\n")
+    .replace(/<[^>]+>/g, "")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+  return text || null;
+}
+
+function resolveMeetingUrl(event: GoogleEvent): string | null {
+  if (event.hangoutLink) return event.hangoutLink;
+  const video = event.conferenceData?.entryPoints?.find(
+    (entry) => entry.entryPointType === "video" && entry.uri
+  );
+  return video?.uri ?? null;
+}
 
 export type GoogleAgendaResult = {
   connected: boolean;
@@ -185,10 +216,20 @@ function toInteraction(
     title: event.summary?.trim() || "(No title)",
     durationMinutes,
     behavioralTags: [],
-    notes: event.description?.trim() || null,
+    notes: plainTextDescription(event.description),
     source: "google",
     externalEventId: event.id,
     lastSyncedAt: syncedAt,
+    location: event.location?.trim() || null,
+    attendees: (event.attendees ?? [])
+      .filter((attendee) => !attendee.resource && !attendee.self)
+      .map((attendee) =>
+        attendee.displayName?.trim() && attendee.email
+          ? `${attendee.displayName.trim()} (${attendee.email})`
+          : (attendee.displayName?.trim() || attendee.email || "")
+      )
+      .filter(Boolean),
+    meetingUrl: resolveMeetingUrl(event),
   };
 }
 

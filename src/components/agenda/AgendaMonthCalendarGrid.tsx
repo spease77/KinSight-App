@@ -73,6 +73,8 @@ interface AgendaMonthCalendarGridProps {
   selectedInteractionId: string | null;
   onSelectedDateChange: (date: Date) => void;
   onInteractionSelect: (interactionId: string) => void;
+  /** Month view: every event on the tapped day. */
+  onDayEventsSelect?: (events: ScheduledInteraction[]) => void;
 }
 
 function AgendaMonthBlock({
@@ -183,6 +185,7 @@ export function AgendaMonthCalendarGrid({
   interactions,
   onSelectedDateChange,
   onInteractionSelect,
+  onDayEventsSelect,
 }: AgendaMonthCalendarGridProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const monthBlockRefs = useRef<Map<string, HTMLDivElement>>(new Map());
@@ -222,11 +225,14 @@ export function AgendaMonthCalendarGrid({
   const handleDaySelect = useCallback(
     (cell: AgendaMonthCell, dayEvents: ScheduledInteraction[]) => {
       onSelectedDateChange(cell.date);
-      if (dayEvents.length > 0) {
+      if (dayEvents.length === 0) return;
+      if (onDayEventsSelect) {
+        onDayEventsSelect(dayEvents);
+      } else {
         onInteractionSelect(dayEvents[0].id);
       }
     },
-    [onInteractionSelect, onSelectedDateChange]
+    [onDayEventsSelect, onInteractionSelect, onSelectedDateChange]
   );
 
   const scrollToMonthBlock = useCallback((monthStart: Date) => {

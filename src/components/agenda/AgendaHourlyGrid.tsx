@@ -13,6 +13,7 @@ interface AgendaHourlyGridProps {
   selectedInteractionId: string | null;
   onSelectedDateChange: (date: Date) => void;
   onInteractionSelect: (interactionId: string) => void;
+  onDayEventsSelect?: (events: ScheduledInteraction[]) => void;
 }
 
 export function AgendaHourlyGrid({
@@ -22,6 +23,7 @@ export function AgendaHourlyGrid({
   selectedInteractionId,
   onSelectedDateChange,
   onInteractionSelect,
+  onDayEventsSelect,
 }: AgendaHourlyGridProps) {
   if (timeFrame === "list") {
     return null;
@@ -47,6 +49,7 @@ export function AgendaHourlyGrid({
         selectedInteractionId={selectedInteractionId}
         onSelectedDateChange={onSelectedDateChange}
         onInteractionSelect={onInteractionSelect}
+        onDayEventsSelect={onDayEventsSelect}
       />
     );
   }
