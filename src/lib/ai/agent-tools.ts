@@ -12,6 +12,7 @@ import {
   updateContactFromVoice,
   updateContactName,
   addConnectionFromProposed,
+  appendContactNote,
 } from "@/lib/supabase/contacts";
 import { createAgendaItem } from "@/lib/supabase/scheduled-interactions";
 import { buildAgendaSuccessMessage } from "@/lib/agenda/format-schedule-phrase";
@@ -151,6 +152,43 @@ export function createAgentTools(ctx: AgentToolsContext) {
             company: contact.company,
             role: contact.role,
           },
+        };
+      },
+    }),
+
+    saveContactNotes: tool({
+      description:
+        "Save cleaned, summarized notes onto an existing contact's Notes section. Call this whenever the user shares facts about someone who is already in KinSight — hobbies, family, politics, gear, licensing, opinions, etc. Do not ask them to paste into Edit. Do not skip this because another save path failed.",
+      inputSchema: z.object({
+        contactId: z.string().uuid().describe("The contact's UUID"),
+        notes: z
+          .string()
+          .describe(
+            "Clean summarized notes for the contact card. Use short headings and bullets. Do not include chat filler or system errors."
+          ),
+        profileUpdates: z
+          .record(z.string())
+          .optional()
+          .describe(
+            "Optional profile field keys to store alongside the note, e.g. hobbiesRecreation, politicalActivity, nonBusinessStrongOpinions"
+          ),
+      }),
+      execute: async ({ contactId, notes, profileUpdates }) => {
+        const { contact, error } = await appendContactNote(
+          contactId,
+          notes,
+          profileUpdates
+        );
+
+        if (error || !contact) {
+          return { success: false, error: error ?? "Could not save notes" };
+        }
+
+        return {
+          success: true,
+          contactId: contact.id,
+          name: contact.name,
+          notesPreview: contact.notes?.slice(0, 400) ?? notes.slice(0, 400),
         };
       },
     }),

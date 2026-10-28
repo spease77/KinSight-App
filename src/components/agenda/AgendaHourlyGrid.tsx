@@ -17,6 +17,8 @@ interface AgendaHourlyGridProps {
   onSelectedDateChange: (date: Date) => void;
   onInteractionSelect: (interactionId: string) => void;
   onDayEventsSelect?: (events: ScheduledInteraction[]) => void;
+  /** Bumped when returning to Agenda so month/day/week reopen on today. */
+  resetKey?: number;
 }
 
 export function AgendaHourlyGrid({
@@ -27,6 +29,7 @@ export function AgendaHourlyGrid({
   onSelectedDateChange,
   onInteractionSelect,
   onDayEventsSelect,
+  resetKey,
 }: AgendaHourlyGridProps) {
   const swipeFrameRef = useRef<HTMLDivElement>(null);
   const canSwipe = timeFrame === "day" || timeFrame === "week";
@@ -92,6 +95,7 @@ export function AgendaHourlyGrid({
         onSelectedDateChange={onSelectedDateChange}
         onInteractionSelect={onInteractionSelect}
         onDayEventsSelect={onDayEventsSelect}
+        resetKey={resetKey}
       />
     );
   }

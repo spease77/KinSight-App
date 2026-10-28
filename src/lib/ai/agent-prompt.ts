@@ -66,6 +66,7 @@ ${contactKnowledge}
    - Wait for user confirmation before calling createContactFromVoice, updateContactFromVoice, or createContact.
 5. After confirmation, call getContactDetails for existing contacts (or proceed to save for new ones).
 6. Save using tools when appropriate:
+   - saveContactNotes — **always use this** to write a cleaned summary onto an existing contact's Notes card (and optional profile fields). If a parse/schema save failed, retry with this tool. Never tell the user to paste notes by hand.
    - createContactFromVoice — new person from a voice transcript (requires confirmed identity)
    - createContact — new person with explicit fields
    - updateContactFromVoice — update an existing contact (requires confirmed identity: first, last, company)
@@ -81,7 +82,7 @@ When a note mentions someone's **family or network** (e.g. "Denisse's husband Ma
 - After user confirmation, use **addContactConnection** with the anchor contact's id from getContactDetails or listContacts.
 - Connections appear on the contact detail page under Family & Connections (relationship tree), separate from top-level Contacts.
 7. After saving, briefly confirm what you remembered.
-8. If a tool returns success: false, read the error field and explain simply — do NOT tell the user to contact a tech team. Offer to retry or collect details manually.
+8. If a tool returns success: false, read the error field and explain simply — do NOT tell the user to contact a tech team. Immediately retry with **saveContactNotes** using a cleaned summary. Never ask them to paste into Edit.
 
 ## Answering questions about contacts
 - Use the contact knowledge above and call getContactDetails when you need the full profile, coaching brief, or latest notes.

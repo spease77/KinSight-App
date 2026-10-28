@@ -147,6 +147,7 @@ export async function parseMultiContactNote(
       ? `4. sourceSnippets per person: REQUIRED — verbatim quotes from the note for each field you populate for that person.`
       : `4. sourceSnippets: leave {} for each person — manual notes do not use audio snippets.`;
 
+  try {
   const { object } = await generateObject({
     model: openai(MODELS.parse),
     schema: multiContactParseSchema,
@@ -181,7 +182,9 @@ ${transcript.trim()}
 """`,
     providerOptions: {
       openai: {
-        strictJsonSchema: true,
+        // z.record() is not valid in OpenAI strict mode and was aborting
+        // contact detection before notes could be saved.
+        strictJsonSchema: false,
       },
     },
   });
@@ -198,4 +201,8 @@ ${transcript.trim()}
   }
 
   return people;
+  } catch (err) {
+    console.error("parseMultiContactNote failed:", err);
+    return [];
+  }
 }

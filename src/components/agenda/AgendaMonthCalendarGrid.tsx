@@ -75,6 +75,7 @@ interface AgendaMonthCalendarGridProps {
   onInteractionSelect: (interactionId: string) => void;
   /** Month view: every event on the tapped day. */
   onDayEventsSelect?: (events: ScheduledInteraction[]) => void;
+  resetKey?: number;
 }
 
 function AgendaMonthBlock({
@@ -186,6 +187,7 @@ export function AgendaMonthCalendarGrid({
   onSelectedDateChange,
   onInteractionSelect,
   onDayEventsSelect,
+  resetKey,
 }: AgendaMonthCalendarGridProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const monthBlockRefs = useRef<Map<string, HTMLDivElement>>(new Map());
@@ -198,6 +200,17 @@ export function AgendaMonthCalendarGrid({
   const [months, setMonths] = useState(() =>
     buildMonthWindow(selectedDate, INITIAL_MONTH_BUFFER, INITIAL_MONTH_BUFFER)
   );
+
+  useEffect(() => {
+    if (resetKey === undefined) return;
+    setMonths(
+      buildMonthWindow(selectedDate, INITIAL_MONTH_BUFFER, INITIAL_MONTH_BUFFER)
+    );
+    hasInitialScrolledRef.current = false;
+    trackedMonthKeyRef.current = monthAnchorKey(selectedDate);
+    // Only when returning to Agenda — not on every day tap.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resetKey]);
 
   const eventsByDate = useMemo(
     () => interactionsByDateKey(interactions),

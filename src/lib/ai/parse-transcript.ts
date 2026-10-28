@@ -85,13 +85,14 @@ export async function parseTranscriptWithSources(
 4. Scalar source keys use camelCase: company, role, notes, lastContact, lastMeetingDate, nextSteps, topics, contactType.`
       : `3. sourceSnippets: leave as {} — manual entry does not use audio snippets (source_metadata is set server-side).`;
 
-  const { object } = await generateObject({
-    model: openai(MODELS.parse),
-    schema: sourcedTranscriptParseSchema,
-    schemaName: "SourcedContactInquiry",
-    schemaDescription:
-      "Contact fields extracted from a voice or manual note, with resolved dates and source rules",
-    prompt: `${buildSharedModelInstructions(requestContext)}
+  try {
+    const { object } = await generateObject({
+      model: openai(MODELS.parse),
+      schema: sourcedTranscriptParseSchema,
+      schemaName: "SourcedContactInquiry",
+      schemaDescription:
+        "Contact fields extracted from a voice or manual note, with resolved dates and source rules",
+      prompt: `${buildSharedModelInstructions(requestContext)}
 
 You extract structured contact facts from a hospitality sales note.
 
@@ -111,14 +112,35 @@ Transcript:
 """
 ${transcript.trim()}
 """`,
-    providerOptions: {
-      openai: {
-        strictJsonSchema: true,
+      providerOptions: {
+        openai: {
+          // z.record() is not valid in OpenAI strict mode and was aborting saves
+          // with a "backend schema error" before any note was written.
+          strictJsonSchema: false,
+        },
       },
-    },
-  });
+    });
 
-  return splitSourcedParse(object);
+    return splitSourcedParse(object);
+  } catch (err) {
+    console.error("parseTranscriptWithSources failed:", err);
+    return {
+      fields: contactParseSchema.parse({
+        name: null,
+        company: null,
+        role: null,
+        notes: transcript.trim() || null,
+        last_contact: null,
+        last_meeting_date: null,
+        next_steps: null,
+        topics: null,
+        contact_type: null,
+        contact_type_needs_confirmation: false,
+      }),
+      profile: {},
+      sourceSnippets: {},
+    };
+  }
 }
 
 /** Scalar-only parse (legacy). Prefer parseTranscriptWithSources for voice saves. */

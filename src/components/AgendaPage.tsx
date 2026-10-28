@@ -431,6 +431,7 @@ export function AgendaPage() {
                 onSelectedDateChange={handleSelectedDateChange}
                 onInteractionSelect={handleInteractionSelect}
                 onDayEventsSelect={handleDayEventsSelect}
+                resetKey={listResetKey}
               />
             )}
           </>

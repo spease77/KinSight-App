@@ -70,6 +70,7 @@ export function isSystemGeneratedNoteContent(content: string): boolean {
   }
 
   if (/^Imported \d+ notes? from file\b/i.test(trimmed)) return true;
+  if (/^Connection\s+[—–-]/i.test(trimmed)) return true;
   if (isPhoneOrEmailImportStub(trimmed)) return true;
 
   const lines = trimmed
@@ -124,11 +125,16 @@ export function resolveUserAuthoredNoteDisplay(
     notes?: string;
     notesLog?: ContactNoteEntry[];
   },
-  maxLength = 500
+  maxLength = 800
 ): string | null {
-  const latestFromLog = getLatestUserAuthoredNote(contact.notesLog ?? []);
-  if (latestFromLog) {
-    return formatUserAuthoredNoteValue(latestFromLog, maxLength);
+  const userNotes = filterUserAuthoredNotes(contact.notesLog ?? []);
+  if (userNotes.length > 0) {
+    const combined = sortNotesNewestFirst(userNotes)
+      .map((entry) => entry.content.trim())
+      .filter(Boolean)
+      .join("\n\n");
+    if (combined.length <= maxLength) return combined;
+    return `${combined.slice(0, maxLength - 1)}…`;
   }
 
   const legacy = contact.notes?.trim();
@@ -333,12 +339,9 @@ export function buildNoteLogContent(
   transcript: string,
   supplemental?: string | null
 ): string {
-  const parts = [transcript.trim()];
   const extra = supplemental?.trim();
-  if (extra && !transcript.includes(extra)) {
-    parts.push(extra);
-  }
-  return parts.filter(Boolean).join("\n\n");
+  if (extra) return extra;
+  return transcript.trim();
 }
 
 export type NotesLogExportFormat = "json" | "txt";

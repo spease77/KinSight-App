@@ -85,12 +85,36 @@ export function useProposedContactQueue() {
           requestContext: data.requestContext ?? requestContext,
         };
 
+        const existingUpdates = data.existingUpdates ?? [];
+        // Existing contacts: save notes immediately so facts are not lost if
+        // the confirmation sheet is dismissed. New people still need a popup.
+        await Promise.all(
+          existingUpdates.map(async (update) => {
+            try {
+              await fetch("/api/contacts/confirm", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  action: "update",
+                  contactId: update.contactId,
+                  person: update.person,
+                  transcript: trimmed,
+                  recordingId: options?.recordingId,
+                  requestContext: data.requestContext ?? requestContext,
+                }),
+              });
+            } catch (err) {
+              console.warn(
+                "Existing contact note save skipped:",
+                err instanceof Error ? err.message : err
+              );
+            }
+          })
+        );
+
         const items: ContactReviewItem[] = [
           ...(data.newContacts ?? []).map(
             (proposal): ContactReviewItem => ({ kind: "create", proposal })
-          ),
-          ...(data.existingUpdates ?? []).map(
-            (update): ContactReviewItem => ({ kind: "update", update })
           ),
           ...(data.newConnections ?? []).map(
             (connection): ContactReviewItem => ({
@@ -99,6 +123,10 @@ export function useProposedContactQueue() {
             })
           ),
         ];
+
+        if (existingUpdates.length > 0) {
+          router.refresh();
+        }
 
         if (items.length === 0) {
           return;
@@ -115,7 +143,7 @@ export function useProposedContactQueue() {
         setIsDetecting(false);
       }
     },
-    []
+    [router]
   );
 
   const confirmCurrent = useCallback(async () => {

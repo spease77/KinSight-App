@@ -847,7 +847,8 @@ export async function importContactNotesLog(
 
 export async function appendContactNote(
   contactId: string,
-  content: string
+  content: string,
+  profilePatch?: Partial<Record<string, string>>
 ): Promise<{ contact: ContactDetail | null; error?: string }> {
   const existing = await getContactRowById(contactId);
   if (!existing) {
@@ -855,15 +856,29 @@ export async function appendContactNote(
   }
 
   const trimmed = content.trim();
-  if (!trimmed) {
+  if (!trimmed && !profilePatch) {
     return { contact: null, error: "Note is required" };
   }
 
-  const notePatch = withAppendedNote(existing, trimmed);
+  const notePatch = trimmed
+    ? withAppendedNote(existing, trimmed)
+    : {
+        notes_log: resolveRowNotesLog(existing),
+        notes: existing.notes,
+      };
+
+  const mergedProfile = profilePatch
+    ? mergeProfileFromVoice(
+        sanitizeContactProfile(existing.profile ?? {}),
+        profilePatch
+      )
+    : undefined;
+
   const supabase = createServerSupabase();
   const { data, error } = await updateContactRow(supabase, contactId, {
     notes_log: notePatch.notes_log,
     notes: notePatch.notes,
+    ...(mergedProfile ? { profile: mergedProfile } : {}),
     updated_at: new Date().toISOString(),
   });
 
