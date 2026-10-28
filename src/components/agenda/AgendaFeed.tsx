@@ -23,21 +23,11 @@ function localDateKey(date: Date): string {
   return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
 }
 
-/** Right now when the picked day is today, otherwise the start of the picked day. */
-function resolveAnchorTime(anchorDate: Date | undefined): number {
-  const now = new Date();
-  if (!anchorDate || localDateKey(anchorDate) === localDateKey(now)) {
-    return now.getTime();
-  }
-  const start = new Date(anchorDate);
-  start.setHours(0, 0, 0, 0);
-  return start.getTime();
-}
-
-function endsAfter(interaction: ScheduledInteraction, anchorTime: number) {
-  const start = new Date(interaction.scheduledAt).getTime();
-  const end = start + (interaction.durationMinutes ?? 0) * 60_000;
-  return end >= anchorTime;
+/** Same YYYY-MM-DD shape as the feed's group keys, so keys compare as text. */
+function toPaddedDateKey(date: Date): string {
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${date.getFullYear()}-${month}-${day}`;
 }
 
 export const AgendaFeed = forwardRef<HTMLDivElement, AgendaFeedProps>(
@@ -80,19 +70,17 @@ export const AgendaFeed = forwardRef<HTMLDivElement, AgendaFeedProps>(
         return; // late-arriving events must not yank a feed being read
       }
 
-      const anchorTime = resolveAnchorTime(anchorDate);
-      const items = groups.flatMap((group) => group.items);
-      const target = items.find((item) => endsAfter(item, anchorTime));
+      // The day itself (today unless another tab picked one) sits at the top,
+      // header first. With nothing on that day, the next day that has events.
+      const anchorDay = toPaddedDateKey(anchorDate ?? new Date());
+      const targetGroup =
+        groups.find((group) => group.dateKey >= anchorDay) ??
+        groups[groups.length - 1];
 
-      if (!target) {
-        scroller.scrollTop = scroller.scrollHeight;
-        return;
-      }
-
-      const card = document.getElementById(`agenda-event-${target.id}`);
-      if (!card) return;
+      const header = document.getElementById(`agenda-${targetGroup.dateKey}`);
+      if (!header) return;
       scroller.scrollTop =
-        card.getBoundingClientRect().top -
+        header.getBoundingClientRect().top -
         scroller.getBoundingClientRect().top +
         scroller.scrollTop;
     }, [groups, itemCount, anchorDate, anchorKey]);
