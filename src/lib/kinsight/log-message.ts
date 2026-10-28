@@ -7,6 +7,7 @@ import { getMessageText } from "@/lib/ai/message-text";
 import type {
   DetectContactsResult,
   ExistingContactUpdate,
+  ProposedConnectionForReview,
   ProposedContactForReview,
 } from "@/lib/contacts/detect-from-note";
 import type { DetectedAgendaItem } from "@/lib/agenda/detect-from-note";
@@ -60,6 +61,7 @@ async function saveDetectedContacts(
   const items: Array<
     | { kind: "create"; proposal: ProposedContactForReview }
     | { kind: "update"; update: ExistingContactUpdate }
+    | { kind: "add_connection"; connection: ProposedConnectionForReview }
   > = [
     ...(data.newContacts ?? []).map((proposal) => ({
       kind: "create" as const,
@@ -68,6 +70,10 @@ async function saveDetectedContacts(
     ...(data.existingUpdates ?? []).map((update) => ({
       kind: "update" as const,
       update,
+    })),
+    ...(data.newConnections ?? []).map((connection) => ({
+      kind: "add_connection" as const,
+      connection,
     })),
   ];
 
@@ -83,14 +89,23 @@ async function saveDetectedContacts(
             recordingId,
             requestContext,
           }
-        : {
-            action: "update" as const,
-            contactId: item.update.contactId,
-            person: item.update.person,
-            transcript,
-            recordingId,
-            requestContext,
-          };
+        : item.kind === "add_connection"
+          ? {
+              action: "add_connection" as const,
+              contactId: item.connection.contactId,
+              person: item.connection.person,
+              transcript,
+              recordingId,
+              requestContext,
+            }
+          : {
+              action: "update" as const,
+              contactId: item.update.contactId,
+              person: item.update.person,
+              transcript,
+              recordingId,
+              requestContext,
+            };
 
     const res = await fetch("/api/contacts/confirm", {
       method: "POST",

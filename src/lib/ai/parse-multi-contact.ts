@@ -131,7 +131,11 @@ function toParsedPerson(raw: ProposedPersonParse): ParsedProposedPerson {
     contactType,
     contactTypeNeedsConfirmation,
     relationshipHint: raw.relationshipHint?.trim() || undefined,
-    recordAs: raw.recordAs ?? "contact",
+    recordAs:
+      raw.recordAs ??
+      (raw.connectionAnchorName?.trim() || raw.relationshipHint?.trim()
+        ? "connection"
+        : "contact"),
     connectionAnchorName: raw.connectionAnchorName?.trim() || undefined,
     profile: sanitizeContactProfile(profile),
     sourceSnippets,
@@ -159,13 +163,15 @@ export async function parseMultiContactNote(
 You extract EVERY distinct person mentioned in a hospitality relationship note.
 
 RULES:
-1. Return one entry per person who is named or clearly identified.
-2. Assign facts ONLY to the person they describe — do not put Jane's traits on Pat's record.
-3. When the note is mainly ABOUT someone (e.g. updating Pat Pease) and mentions their family, colleagues, or assistants, add those people as **connections** under that anchor:
-   - Set recordAs to "connection" and connectionAnchorName to the anchor contact's name (e.g. Pat Pease).
-   - Set relationshipHint (e.g. "wife of Pat Pease", "assistant to Pat Pease").
-   - Do NOT also create them as separate top-level contacts unless they are clearly independent clients too.
-4. If Pat is married to Jane Pease and BOTH are primary subjects, Pat can be recordAs contact and Jane recordAs connection with connectionAnchorName Pat Pease (or both contacts if the user is clearly tracking both as clients).
+1. Return one entry per person who is named or clearly identified — including spouses, children, parents, assistants, and colleagues as soon as a first name is given.
+2. Assign facts ONLY to the person they describe. Never put the anchor's hobbies, work, guns, politics, or cars on a family member.
+3. When the note is ABOUT a saved contact (e.g. Chuck Wilk, Pat Pease) and names their family or network ("his wife Stacy", "Chuck's son Ryan", "Denisse's husband Marcus"):
+   - ALWAYS add that named person as a **connection**, not a top-level contact.
+   - Set recordAs to "connection" and connectionAnchorName to the anchor's full name (e.g. "Chuck Wilk").
+   - Set relationshipHint like "wife of Chuck Wilk" or "son of Chuck Wilk".
+   - Put details that belong to the connection (job, birthday, hobbies, kids) in THAT person's notes — one fact per line. Those become facts on their Family & Connections card.
+   - Do NOT only mention them in the anchor's notes. They must be their own contacts[] entry.
+4. If two people are both independent clients, they can both be recordAs "contact". Family of a client is still a connection under that client.
 5. Use atomic profile keys (firstName, lastName, spouseFirstName, companyCity, etc.).
 6. Use null for fields not stated about that person.
 ${voiceSnippetRules}

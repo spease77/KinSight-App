@@ -312,7 +312,7 @@ export function createAgentTools(ctx: AgentToolsContext) {
 
     addContactConnection: tool({
       description:
-        "Add a family member or professional connection under an existing contact's Family & Connections on their profile. Use when the user mentions someone's spouse, child, parent, assistant, colleague, etc. in relation to a saved contact. Confirm the anchor contact and the connection's name before calling.",
+        "Add a named family member or professional connection under an existing contact's Family & Connections. Call as soon as a spouse, child, parent, assistant, or colleague is named — do not wait for extra confirmation. Details in notes become facts on that person.",
       inputSchema: z.object({
         contactId: z.string().uuid().describe("The anchor contact's UUID"),
         firstName: z.string(),

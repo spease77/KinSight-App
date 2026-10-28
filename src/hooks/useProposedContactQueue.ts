@@ -86,10 +86,11 @@ export function useProposedContactQueue() {
         };
 
         const existingUpdates = data.existingUpdates ?? [];
-        // Existing contacts: save notes immediately so facts are not lost if
-        // the confirmation sheet is dismissed. New people still need a popup.
-        await Promise.all(
-          existingUpdates.map(async (update) => {
+        const newConnections = data.newConnections ?? [];
+        // Existing contacts and named family/network people: save immediately
+        // so a dismissed popup cannot drop a spouse, child, or assistant.
+        await Promise.all([
+          ...existingUpdates.map(async (update) => {
             try {
               await fetch("/api/contacts/confirm", {
                 method: "POST",
@@ -109,22 +110,35 @@ export function useProposedContactQueue() {
                 err instanceof Error ? err.message : err
               );
             }
-          })
+          }),
+          ...newConnections.map(async (connection) => {
+            try {
+              await fetch("/api/contacts/confirm", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  action: "add_connection",
+                  contactId: connection.contactId,
+                  person: connection.person,
+                  transcript: trimmed,
+                  recordingId: options?.recordingId,
+                  requestContext: data.requestContext ?? requestContext,
+                }),
+              });
+            } catch (err) {
+              console.warn(
+                "Family connection save skipped:",
+                err instanceof Error ? err.message : err
+              );
+            }
+          }),
+        ]);
+
+        const items: ContactReviewItem[] = (data.newContacts ?? []).map(
+          (proposal): ContactReviewItem => ({ kind: "create", proposal })
         );
 
-        const items: ContactReviewItem[] = [
-          ...(data.newContacts ?? []).map(
-            (proposal): ContactReviewItem => ({ kind: "create", proposal })
-          ),
-          ...(data.newConnections ?? []).map(
-            (connection): ContactReviewItem => ({
-              kind: "add_connection",
-              connection,
-            })
-          ),
-        ];
-
-        if (existingUpdates.length > 0) {
+        if (existingUpdates.length > 0 || newConnections.length > 0) {
           router.refresh();
         }
 

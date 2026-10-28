@@ -88,6 +88,48 @@ export async function detectContactsFromNote(
     });
   });
 
+  const named = new Set(
+    newConnections.map((item) => item.person.displayName.trim().toLowerCase())
+  );
+
+  for (const update of existingUpdates) {
+    const first = update.person.profile?.spouseFirstName?.trim();
+    if (!first) continue;
+    const last = update.person.profile?.spouseLastName?.trim() || "";
+    const displayName = [first, last].filter(Boolean).join(" ");
+    if (named.has(displayName.toLowerCase())) continue;
+    named.add(displayName.toLowerCase());
+
+    const person: ParsedProposedPerson = {
+      displayName,
+      firstName: first,
+      lastName: last || undefined,
+      notes:
+        [
+          update.person.profile?.spouseEducation,
+          update.person.profile?.spouseInterests,
+        ]
+          .filter((value): value is string => Boolean(value?.trim()))
+          .join("\n") || undefined,
+      relationshipHint: `spouse of ${update.contactName}`,
+      recordAs: "connection",
+      connectionAnchorName: update.contactName,
+      profile: {
+        firstName: first,
+        ...(last ? { lastName: last } : {}),
+      },
+      sourceSnippets: {},
+    };
+
+    newConnections.push({
+      tempId: `connection-spouse-${update.contactId}`,
+      contactId: update.contactId,
+      contactName: update.contactName,
+      person,
+      summary: summarizeProposedContact(person),
+    });
+  }
+
   return { newContacts, existingUpdates, newConnections };
 }
 

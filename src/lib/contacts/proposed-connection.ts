@@ -52,10 +52,6 @@ export function shouldTreatPersonAsConnection(
   person: ParsedProposedPerson,
   anchor: Contact | undefined
 ): boolean {
-  if (person.recordAs === "contact") {
-    return false;
-  }
-
   if (!anchor) {
     return false;
   }
@@ -73,6 +69,18 @@ export function shouldTreatPersonAsConnection(
   return Boolean(
     person.connectionAnchorName?.trim() ||
       inferAnchorNameFromRelationshipHint(person.relationshipHint)
+  );
+}
+
+function looksLikeRelationshipOnly(
+  notes: string,
+  relationshipHint: string | undefined
+): boolean {
+  const normalized = notes.trim().toLowerCase();
+  const hint = relationshipHint?.trim().toLowerCase();
+  if (hint && normalized === hint) return true;
+  return /^(wife|husband|spouse|son|daughter|child|mother|father|assistant|colleague)(\s+of\s+.+)?$/i.test(
+    normalized
   );
 }
 
@@ -144,9 +152,17 @@ export function personToRelationshipEntry(
     "";
 
   const facts: string[] = [];
-  if (person.notes?.trim()) facts.push(person.notes.trim());
+  const notes = person.notes?.trim();
+  if (notes && !looksLikeRelationshipOnly(notes, person.relationshipHint)) {
+    for (const line of notes.split(/\n+/)) {
+      const trimmed = line.trim().replace(/^[-•]\s*/, "");
+      if (trimmed) facts.push(trimmed);
+    }
+  }
   if (person.role?.trim()) facts.push(`Role: ${person.role.trim()}`);
   if (person.company?.trim()) facts.push(`Company: ${person.company.trim()}`);
+  const birthday = profile.birthDate?.trim();
+  if (birthday) facts.push(`Birthday: ${birthday}`);
 
   let entry = createEmptyRelationshipEntry();
   entry = {
@@ -155,6 +171,7 @@ export function personToRelationshipEntry(
     lastName,
     company: person.company?.trim() || profile.companyName?.trim(),
     jobTitle: person.role?.trim(),
+    birthday: profile.birthDate?.trim() || undefined,
     facts: normalizeRelationshipFacts(facts),
   };
 
@@ -186,6 +203,12 @@ export function mergeConnectionFacts(
     ...entry,
     ...incoming,
     id: entry.id,
+    firstName: incoming.firstName || entry.firstName,
+    lastName: incoming.lastName || entry.lastName,
+    relationshipType:
+      entry.relationshipType && entry.relationshipType !== "other"
+        ? entry.relationshipType
+        : incoming.relationshipType,
     facts: mergedFacts.length > 0 ? mergedFacts : incoming.facts,
   };
 }
@@ -199,9 +222,7 @@ export function findDuplicateConnectionIndex(
 
   return entries.findIndex((entry) => {
     const name = getEntryDisplayName(entry).toLowerCase();
-    if (!name || name !== candidateName) return false;
-    if (!candidate.relationshipType || !entry.relationshipType) return true;
-    return entry.relationshipType === candidate.relationshipType;
+    return Boolean(name && name === candidateName);
   });
 }
 
