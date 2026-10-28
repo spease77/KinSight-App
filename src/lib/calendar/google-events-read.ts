@@ -33,6 +33,7 @@ type GoogleEvent = {
   extendedProperties?: { private?: Record<string, string> };
   location?: string;
   hangoutLink?: string;
+  htmlLink?: string;
   conferenceData?: {
     entryPoints?: Array<{ entryPointType?: string; uri?: string }>;
   };
@@ -238,6 +239,7 @@ function toInteraction(
       )
       .filter(Boolean),
     meetingUrl: resolveMeetingUrl(event),
+    htmlLink: event.htmlLink?.trim() || null,
   };
 }
 

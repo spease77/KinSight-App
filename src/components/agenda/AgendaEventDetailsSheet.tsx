@@ -6,6 +6,7 @@ import {
   ArrowLeft,
   CalendarClock,
   ExternalLink,
+  Lock,
   MapPin,
   NotebookText,
   Pencil,
@@ -13,6 +14,7 @@ import {
   Users,
   X,
 } from "lucide-react";
+import { CalendarSourceBadge } from "@/components/calendar/CalendarSourceBadge";
 import {
   behavioralTagPillClass,
   formatBehavioralTagLabel,
@@ -22,9 +24,18 @@ import {
   formatAgendaDateHeader,
   formatAgendaEventTime,
 } from "@/lib/agenda/time-frame";
+import { readApiJson } from "@/lib/api/read-json";
+import {
+  datetimeLocalToIso,
+  defaultMeetingEndLocal,
+  isoToDatetimeLocal,
+} from "@/lib/calendar/datetime-local";
+import { showErrorToast, showSuccessToast } from "@/lib/ui/toast";
 import { parseMeetingNotes } from "@/types/agenda-meeting";
 import {
-  INTERACTION_SOURCE_LABELS,
+  calendarSourceLabel,
+  externalCalendarUrl,
+  isExternalCalendarEvent,
   isReadOnlyInteraction,
   type ScheduledInteraction,
 } from "@/types/scheduled-interaction";
@@ -33,7 +44,7 @@ interface AgendaEventDetailsSheetProps {
   /** One event, or every event on a tapped day (month view). */
   interactions: ScheduledInteraction[] | null;
   onClose: () => void;
-  onEdit: (interaction: ScheduledInteraction) => void;
+  onApplyLocalUpdate: (interaction: ScheduledInteraction) => void;
 }
 
 const ALL_DAY_PATTERN = /^\d{4}-\d{2}-\d{2}T00:00:00$/;
@@ -109,6 +120,16 @@ function resolveDetails(interaction: ScheduledInteraction) {
   };
 }
 
+function endLocalFromInteraction(interaction: ScheduledInteraction): string {
+  const start = isoToDatetimeLocal(interaction.scheduledAt);
+  if (!interaction.durationMinutes) return defaultMeetingEndLocal(start);
+  const end = new Date(
+    new Date(interaction.scheduledAt).getTime() +
+      interaction.durationMinutes * 60_000
+  );
+  return isoToDatetimeLocal(end.toISOString());
+}
+
 function DetailRow({
   icon,
   label,
@@ -138,11 +159,39 @@ function EventDetails({ interaction }: { interaction: ScheduledInteraction }) {
   const duration = formatDuration(interaction.durationMinutes);
   const details = resolveDetails(interaction);
   const readOnly = isReadOnlyInteraction(interaction);
-  const hasContactLink = !readOnly && interaction.contactName;
+  const hasContactLink =
+    !isExternalCalendarEvent(interaction) && interaction.contactName;
   const attendees = interaction.attendees ?? [];
+  const providerLabel = calendarSourceLabel(interaction.source);
+  const calendarUrl = externalCalendarUrl(interaction);
 
   return (
     <div className="divide-y divide-border">
+      {readOnly && interaction.source !== "kinsight" ? (
+        <div className="flex items-start gap-2 py-3">
+          <Lock className="mt-0.5 h-4 w-4 shrink-0 text-muted" strokeWidth={2} />
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-medium text-foreground">
+              Read-Only: Invited via {providerLabel}
+            </p>
+            <p className="mt-0.5 text-xs text-muted">
+              Time, title, and guests can only be changed by the organizer.
+            </p>
+            {calendarUrl ? (
+              <a
+                href={calendarUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground"
+              >
+                <ExternalLink className="h-3.5 w-3.5" strokeWidth={2} />
+                Open in External Calendar
+              </a>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
+
       <DetailRow icon={<CalendarClock className="h-4 w-4" />} label="When">
         <p>{when.date}</p>
         <p className="text-muted">
@@ -216,13 +265,101 @@ function EventDetails({ interaction }: { interaction: ScheduledInteraction }) {
   );
 }
 
+function EventEditForm({
+  title,
+  startAt,
+  endAt,
+  location,
+  notes,
+  disabled,
+  onTitleChange,
+  onStartAtChange,
+  onEndAtChange,
+  onLocationChange,
+  onNotesChange,
+}: {
+  title: string;
+  startAt: string;
+  endAt: string;
+  location: string;
+  notes: string;
+  disabled: boolean;
+  onTitleChange: (value: string) => void;
+  onStartAtChange: (value: string) => void;
+  onEndAtChange: (value: string) => void;
+  onLocationChange: (value: string) => void;
+  onNotesChange: (value: string) => void;
+}) {
+  return (
+    <div className="flex flex-col gap-3 py-3">
+      <label className="flex flex-col gap-1">
+        <span className="type-meta">Title</span>
+        <input
+          type="text"
+          value={title}
+          onChange={(event) => onTitleChange(event.target.value)}
+          disabled={disabled}
+          className="ui-input w-full px-3 py-2.5 text-sm"
+        />
+      </label>
+      <label className="flex flex-col gap-1">
+        <span className="type-meta">Starts</span>
+        <input
+          type="datetime-local"
+          value={startAt}
+          onChange={(event) => onStartAtChange(event.target.value)}
+          disabled={disabled}
+          className="ui-input w-full px-3 py-2.5 text-sm"
+        />
+      </label>
+      <label className="flex flex-col gap-1">
+        <span className="type-meta">Ends</span>
+        <input
+          type="datetime-local"
+          value={endAt}
+          onChange={(event) => onEndAtChange(event.target.value)}
+          disabled={disabled}
+          className="ui-input w-full px-3 py-2.5 text-sm"
+        />
+      </label>
+      <label className="flex flex-col gap-1">
+        <span className="type-meta">Location</span>
+        <input
+          type="text"
+          value={location}
+          onChange={(event) => onLocationChange(event.target.value)}
+          disabled={disabled}
+          className="ui-input w-full px-3 py-2.5 text-sm"
+        />
+      </label>
+      <label className="flex flex-col gap-1">
+        <span className="type-meta">Description</span>
+        <textarea
+          value={notes}
+          onChange={(event) => onNotesChange(event.target.value)}
+          disabled={disabled}
+          rows={4}
+          className="ui-input w-full resize-y px-3 py-2.5 text-sm"
+        />
+      </label>
+    </div>
+  );
+}
+
 export function AgendaEventDetailsSheet({
   interactions,
   onClose,
-  onEdit,
+  onApplyLocalUpdate,
 }: AgendaEventDetailsSheetProps) {
   const [focusedId, setFocusedId] = useState<string | null>(null);
   const [entered, setEntered] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [title, setTitle] = useState("");
+  const [startAt, setStartAt] = useState("");
+  const [endAt, setEndAt] = useState("");
+  const [location, setLocation] = useState("");
+  const [notes, setNotes] = useState("");
 
   const open = interactions !== null && interactions.length > 0;
   const identity = useMemo(
@@ -233,34 +370,152 @@ export function AgendaEventDetailsSheet({
   useEffect(() => {
     if (!open) {
       setEntered(false);
+      setEditing(false);
       return;
     }
     setFocusedId(interactions && interactions.length === 1 ? interactions[0].id : null);
+    setEditing(false);
     const frame = requestAnimationFrame(() => setEntered(true));
     return () => cancelAnimationFrame(frame);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, identity]);
 
+  const focused =
+    interactions?.find((item) => item.id === focusedId) ??
+    (interactions && interactions.length === 1 ? interactions[0] : null);
+
   useEffect(() => {
     if (!open) return;
     const handleKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
+      if (event.key !== "Escape") return;
+      if (editing) {
+        setEditing(false);
+        return;
+      }
+      onClose();
     };
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
-  }, [open, onClose]);
+  }, [open, editing, onClose]);
 
   if (!open || !interactions) return null;
 
   const isList = interactions.length > 1;
-  const focused =
-    interactions.find((item) => item.id === focusedId) ??
-    (interactions.length === 1 ? interactions[0] : null);
   const showingList = isList && !focused;
+  const writable = focused ? !isReadOnlyInteraction(focused) : false;
 
-  const title = showingList
+  const heading = showingList
     ? toTitleCase(formatAgendaDateHeader(new Date(interactions[0].scheduledAt)))
-    : (focused?.title ?? "");
+    : editing
+      ? "Edit Event"
+      : (focused?.title ?? "");
+
+  const beginEdit = () => {
+    if (!focused || !writable) return;
+    const details = resolveDetails(focused);
+    setTitle(focused.title);
+    setStartAt(isoToDatetimeLocal(focused.scheduledAt));
+    setEndAt(endLocalFromInteraction(focused));
+    setLocation(details.location);
+    setNotes(details.notes);
+    setEditing(true);
+  };
+
+  const handleSave = async () => {
+    if (!focused || isSaving) return;
+    const trimmedTitle = title.trim();
+    if (!trimmedTitle) {
+      showErrorToast("Enter a title.");
+      return;
+    }
+
+    let scheduledAt: string;
+    let scheduledEndAt: string;
+    try {
+      scheduledAt = datetimeLocalToIso(startAt);
+      scheduledEndAt = datetimeLocalToIso(endAt);
+    } catch {
+      showErrorToast("Enter a valid date and time.");
+      return;
+    }
+
+    if (new Date(scheduledEndAt) <= new Date(scheduledAt)) {
+      showErrorToast("End time must be after the start time.");
+      return;
+    }
+
+    const durationMinutes = Math.max(
+      1,
+      Math.round(
+        (new Date(scheduledEndAt).getTime() - new Date(scheduledAt).getTime()) /
+          60_000
+      )
+    );
+    const previous = focused;
+    const next: ScheduledInteraction = {
+      ...focused,
+      title: trimmedTitle,
+      scheduledAt,
+      durationMinutes,
+      location: location.trim() || null,
+      notes: notes.trim() || null,
+    };
+
+    onApplyLocalUpdate(next);
+    setIsSaving(true);
+
+    try {
+      const res = await fetch("/api/calendar/update", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: focused.id,
+          source: focused.source,
+          externalEventId: focused.externalEventId,
+          calendarId: focused.calendarId ?? null,
+          title: trimmedTitle,
+          scheduledAt,
+          scheduledEndAt,
+          location: location.trim() || null,
+          notes: notes.trim() || null,
+        }),
+      });
+      const data = await readApiJson<{
+        ok?: boolean;
+        updatedIn?: string;
+        error?: string;
+        needsReauth?: boolean;
+        interaction?: ScheduledInteraction | null;
+      }>(res);
+
+      if (!res.ok || data.error) {
+        onApplyLocalUpdate(previous);
+        const provider = calendarSourceLabel(focused.source);
+        showErrorToast(
+          data.needsReauth || res.status === 401
+            ? `Couldn't update this event. Reconnect ${provider} in Settings and try again.`
+            : data.error ??
+                `Couldn't update this event. Reconnect ${provider} in Settings and try again.`
+        );
+        return;
+      }
+
+      if (data.interaction) {
+        onApplyLocalUpdate(data.interaction);
+      }
+      showSuccessToast(
+        `Event updated in ${data.updatedIn ?? calendarSourceLabel(focused.source)}.`
+      );
+      setEditing(false);
+    } catch {
+      onApplyLocalUpdate(previous);
+      showErrorToast(
+        `Couldn't update this event. Reconnect ${calendarSourceLabel(focused.source)} in Settings and try again.`
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   return (
     <div
@@ -283,7 +538,10 @@ export function AgendaEventDetailsSheet({
           {isList && focused ? (
             <button
               type="button"
-              onClick={() => setFocusedId(null)}
+              onClick={() => {
+                setEditing(false);
+                setFocusedId(null);
+              }}
               className="-ml-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-icon transition-colors hover:bg-card-hover hover:text-foreground"
               aria-label="Back to the day's events"
             >
@@ -293,18 +551,14 @@ export function AgendaEventDetailsSheet({
 
           <div className="min-w-0 flex-1">
             <h2 className="break-words font-sans text-base font-medium text-foreground">
-              {title}
+              {heading}
             </h2>
             {focused ? (
               <div className="mt-1 flex flex-wrap items-center gap-2">
+                <CalendarSourceBadge source={focused.source} />
                 {resolveDetails(focused).kind ? (
                   <span className="ui-badge-green px-2.5 py-1 text-xs">
                     {resolveDetails(focused).kind}
-                  </span>
-                ) : null}
-                {focused.source !== "kinsight" ? (
-                  <span className="rounded-full border border-border-green/50 bg-elevated px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted">
-                    {INTERACTION_SOURCE_LABELS[focused.source]}
                   </span>
                 ) : null}
               </div>
@@ -353,25 +607,61 @@ export function AgendaEventDetailsSheet({
                         </span>
                       ) : null}
                     </span>
+                    <CalendarSourceBadge source={item.source} compact />
                   </button>
                 </li>
               ))}
             </ul>
+          ) : focused && editing ? (
+            <EventEditForm
+              title={title}
+              startAt={startAt}
+              endAt={endAt}
+              location={location}
+              notes={notes}
+              disabled={isSaving}
+              onTitleChange={setTitle}
+              onStartAtChange={setStartAt}
+              onEndAtChange={setEndAt}
+              onLocationChange={setLocation}
+              onNotesChange={setNotes}
+            />
           ) : focused ? (
             <EventDetails interaction={focused} />
           ) : null}
         </div>
 
-        {focused && !isReadOnlyInteraction(focused) ? (
-          <footer className="shrink-0 border-t border-border px-4 py-3">
-            <button
-              type="button"
-              onClick={() => onEdit(focused)}
-              className="ui-btn-secondary flex w-full items-center justify-center gap-2 px-4 py-2.5 text-sm"
-            >
-              <Pencil className="h-4 w-4" strokeWidth={2} />
-              Edit meeting
-            </button>
+        {focused && writable ? (
+          <footer className="flex shrink-0 flex-col gap-2 border-t border-border px-4 py-3">
+            {editing ? (
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setEditing(false)}
+                  disabled={isSaving}
+                  className="ui-btn-secondary flex-1 px-4 py-2.5 text-sm"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void handleSave()}
+                  disabled={isSaving}
+                  className="ui-btn-green flex-1 px-4 py-2.5 text-sm"
+                >
+                  {isSaving ? "Saving…" : "Save"}
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={beginEdit}
+                className="ui-btn-secondary flex w-full items-center justify-center gap-2 px-4 py-2.5 text-sm"
+              >
+                <Pencil className="h-4 w-4" strokeWidth={2} />
+                Edit Event
+              </button>
+            )}
           </footer>
         ) : null}
       </div>

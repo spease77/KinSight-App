@@ -26,16 +26,52 @@ export const INTERACTION_SOURCE_LABELS: Record<InteractionSource, string> = {
   outlook: "Outlook",
 };
 
-/** Demo rows and events read from an external calendar have no KinSight contact to open or edit. */
-export function isReadOnlyInteraction(
-  interaction: Pick<ScheduledInteraction, "contactId" | "isReadOnly">
+/** Demo rows and live Google/Outlook events are not KinSight contacts. */
+export function isExternalCalendarEvent(
+  interaction: Pick<ScheduledInteraction, "contactId">
 ): boolean {
-  if (interaction.isReadOnly) return true;
   return (
     interaction.contactId.startsWith("mock-") ||
     interaction.contactId.startsWith("google-") ||
     interaction.contactId.startsWith("outlook-")
   );
+}
+
+/**
+ * Locked when the provider marked the event read-only, or the user is not
+ * the organizer. Mock demo rows are always locked.
+ */
+export function isReadOnlyInteraction(
+  interaction: Pick<
+    ScheduledInteraction,
+    "contactId" | "isReadOnly" | "isOrganizer"
+  >
+): boolean {
+  if (interaction.contactId.startsWith("mock-")) return true;
+  if (interaction.isReadOnly === true) return true;
+  if (interaction.isOrganizer === false) return true;
+  return false;
+}
+
+export function calendarSourceLabel(
+  source: InteractionSource
+): "Google Calendar" | "Outlook" | "KinSight" {
+  if (source === "google") return "Google Calendar";
+  if (source === "outlook") return "Outlook";
+  return "KinSight";
+}
+
+export function externalCalendarUrl(
+  interaction: Pick<ScheduledInteraction, "source" | "htmlLink">
+): string | null {
+  if (interaction.htmlLink?.trim()) return interaction.htmlLink.trim();
+  if (interaction.source === "google") {
+    return "https://calendar.google.com/calendar/u/0/r";
+  }
+  if (interaction.source === "outlook") {
+    return "https://outlook.live.com/calendar/";
+  }
+  return null;
 }
 
 export type ScheduledInteraction = {
@@ -59,4 +95,6 @@ export type ScheduledInteraction = {
   location?: string | null;
   attendees?: string[];
   meetingUrl?: string | null;
+  /** Provider page for this event (Google htmlLink / Outlook webLink). */
+  htmlLink?: string | null;
 };

@@ -7,9 +7,9 @@ import {
 } from "@/lib/psychological-profile";
 import { formatAgendaEventTime } from "@/lib/agenda/time-frame";
 import { AGENDA_ITEM_SELECTED_CLASS } from "@/components/agenda/agenda-panel-styles";
+import { CalendarSourceBadge } from "@/components/calendar/CalendarSourceBadge";
 import {
-  INTERACTION_SOURCE_LABELS,
-  isReadOnlyInteraction,
+  isExternalCalendarEvent,
   type ScheduledInteraction,
 } from "@/types/scheduled-interaction";
 
@@ -25,8 +25,7 @@ export function AgendaBriefingCard({
   onEdit,
 }: AgendaBriefingCardProps) {
   const eventTime = formatAgendaEventTime(interaction.scheduledAt);
-  const isMockContact = isReadOnlyInteraction(interaction);
-  const showSourceBadge = interaction.source !== "kinsight";
+  const isExternalContact = isExternalCalendarEvent(interaction);
 
   return (
     <article
@@ -57,7 +56,7 @@ export function AgendaBriefingCard({
         </time>
 
         <div className="min-w-0 flex-1">
-          {isMockContact ? (
+          {isExternalContact ? (
             <p className="block truncate font-sans text-base font-medium text-foreground">
               {interaction.contactName}
             </p>
@@ -74,11 +73,7 @@ export function AgendaBriefingCard({
             <h3 className="truncate font-sans text-sm text-muted">
               {interaction.title}
             </h3>
-            {showSourceBadge && (
-              <span className="shrink-0 rounded-full border border-border-green/50 bg-elevated px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted">
-                {INTERACTION_SOURCE_LABELS[interaction.source]}
-              </span>
-            )}
+            <CalendarSourceBadge source={interaction.source} />
           </div>
         </div>
       </div>

@@ -63,13 +63,15 @@ function buildEventBody(
 async function googleCalendarRequest(input: {
   accessToken: string;
   method: "POST" | "PATCH";
+  calendarId?: string | null;
   eventId?: string;
   body: unknown;
   sendUpdates: "all" | "none";
-}): Promise<{ id?: string; error?: string }> {
+}): Promise<{ id?: string; error?: string; status?: number; needsReauth?: boolean }> {
+  const calendarId = encodeURIComponent(input.calendarId?.trim() || "primary");
   const path = input.eventId
-    ? `https://www.googleapis.com/calendar/v3/calendars/primary/events/${encodeURIComponent(input.eventId)}`
-    : "https://www.googleapis.com/calendar/v3/calendars/primary/events";
+    ? `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events/${encodeURIComponent(input.eventId)}`
+    : `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events`;
 
   const url = new URL(path);
   url.searchParams.set("sendUpdates", input.sendUpdates);
@@ -91,13 +93,15 @@ async function googleCalendarRequest(input: {
 
   if (!res.ok || !data.id) {
     return {
+      status: res.status,
+      needsReauth: res.status === 401,
       error:
         data.error?.message ??
         `Google Calendar ${input.method} failed (${res.status}).`,
     };
   }
 
-  return { id: data.id };
+  return { id: data.id, status: res.status };
 }
 
 async function rememberSyncedEvent(
@@ -159,6 +163,62 @@ export async function upsertGoogleCalendarEvent(
 
   await rememberSyncedEvent(payload.userId, payload.interactionId, result.id);
   return { eventId: result.id };
+}
+
+export async function patchGoogleCalendarEvent(input: {
+  userId: string;
+  eventId: string;
+  calendarId?: string | null;
+  title: string;
+  scheduledAt: string;
+  scheduledEndAt?: string;
+  location?: string | null;
+  notes?: string | null;
+}): Promise<{ error?: string; needsReauth?: boolean }> {
+  const token = await getValidGoogleAccessToken(input.userId);
+
+  if (token.needsReauth || !token.connected) {
+    return {
+      needsReauth: true,
+      error: token.error ?? "Google Calendar is not connected.",
+    };
+  }
+
+  if (!token.accessToken) {
+    return {
+      needsReauth: true,
+      error: token.error ?? "Google Calendar is not connected.",
+    };
+  }
+
+  const start = new Date(input.scheduledAt);
+  const end = input.scheduledEndAt
+    ? new Date(input.scheduledEndAt)
+    : new Date(start.getTime() + 60 * 60 * 1000);
+
+  const result = await googleCalendarRequest({
+    accessToken: token.accessToken,
+    method: "PATCH",
+    calendarId: input.calendarId,
+    eventId: input.eventId,
+    sendUpdates: "none",
+    body: {
+      summary: input.title,
+      description: input.notes?.trim() || "",
+      location: input.location?.trim() || "",
+      start: { dateTime: start.toISOString() },
+      end: { dateTime: end.toISOString() },
+    },
+  });
+
+  if (result.error) {
+    return {
+      error: result.error,
+      needsReauth: result.needsReauth,
+    };
+  }
+
+  return {};
 }
 
 async function readExistingGoogleEventId(

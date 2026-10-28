@@ -33,7 +33,6 @@ import {
 } from "@/lib/agenda/view-preference";
 import {
   DEFAULT_AGENDA_TIME_FRAME,
-  isReadOnlyInteraction,
   type AgendaTimeFrame,
   type ScheduledInteraction,
 } from "@/types/scheduled-interaction";
@@ -326,13 +325,14 @@ export function AgendaPage() {
     setEditingInteraction(null);
   }, []);
 
-  const handleInteractionEdit = useCallback(
-    (interaction: ScheduledInteraction) => {
-      if (isReadOnlyInteraction(interaction)) return;
-      setEditingInteraction(interaction);
-    },
-    []
-  );
+  const applyLocalUpdate = useCallback((updated: ScheduledInteraction) => {
+    const patch = (list: ScheduledInteraction[]) =>
+      list.map((item) => (item.id === updated.id ? { ...item, ...updated } : item));
+    setInteractions(patch);
+    setGoogleInteractions(patch);
+    setOutlookInteractions(patch);
+    setDetailsInteractions((current) => (current ? patch(current) : current));
+  }, []);
 
   const handleDateHeaderSelect = useCallback((dateKey: string) => {
     handleSelectedDateChange(dateFromKey(dateKey));
@@ -453,10 +453,7 @@ export function AgendaPage() {
       <AgendaEventDetailsSheet
         interactions={detailsInteractions}
         onClose={closeDetails}
-        onEdit={(interaction) => {
-          setDetailsInteractions(null);
-          handleInteractionEdit(interaction);
-        }}
+        onApplyLocalUpdate={applyLocalUpdate}
       />
 
       <AddMeetingModal

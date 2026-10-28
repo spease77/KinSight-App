@@ -178,6 +178,7 @@ type ValidAccessToken = {
   error?: string;
   setupRequired?: boolean;
   connected: boolean;
+  needsReauth?: boolean;
 };
 
 export async function getValidGoogleAccessToken(
@@ -240,6 +241,7 @@ async function getValidProviderAccessToken(
   if (!connection.refresh_token) {
     return {
       connected: true,
+      needsReauth: true,
       error: `${label} needs to be reconnected — the saved session has no refresh token.`,
     };
   }
@@ -273,6 +275,7 @@ async function getValidProviderAccessToken(
   } catch (err) {
     return {
       connected: true,
+      needsReauth: true,
       error:
         err instanceof Error
           ? err.message

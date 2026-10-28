@@ -67,7 +67,12 @@ async function outlookCalendarRequest(input: {
   method: "POST" | "PATCH";
   eventId?: string;
   body: unknown;
-}): Promise<{ id?: string; error?: string }> {
+}): Promise<{
+  id?: string;
+  error?: string;
+  status?: number;
+  needsReauth?: boolean;
+}> {
   const url = input.eventId
     ? `${GRAPH_EVENTS}/${encodeURIComponent(input.eventId)}`
     : GRAPH_EVENTS;
@@ -89,13 +94,15 @@ async function outlookCalendarRequest(input: {
 
   if (!res.ok || !data.id) {
     return {
+      status: res.status,
+      needsReauth: res.status === 401,
       error:
         data.error?.message ??
         `Outlook Calendar ${input.method} failed (${res.status}).`,
     };
   }
 
-  return { id: data.id };
+  return { id: data.id, status: res.status };
 }
 
 export async function upsertOutlookCalendarEvent(
@@ -145,6 +152,57 @@ export async function upsertOutlookCalendarEvent(
   });
 
   return { eventId: result.id };
+}
+
+export async function patchOutlookCalendarEvent(input: {
+  userId: string;
+  eventId: string;
+  title: string;
+  scheduledAt: string;
+  scheduledEndAt?: string;
+  location?: string | null;
+  notes?: string | null;
+}): Promise<{ error?: string; needsReauth?: boolean }> {
+  const token = await getValidOutlookAccessToken(input.userId);
+
+  if (token.needsReauth || !token.connected || !token.accessToken) {
+    return {
+      needsReauth: true,
+      error: token.error ?? "Outlook Calendar is not connected.",
+    };
+  }
+
+  const start = new Date(input.scheduledAt);
+  const end = input.scheduledEndAt
+    ? new Date(input.scheduledEndAt)
+    : new Date(start.getTime() + 60 * 60 * 1000);
+
+  const result = await outlookCalendarRequest({
+    accessToken: token.accessToken,
+    method: "PATCH",
+    eventId: input.eventId,
+    body: {
+      subject: input.title,
+      body: {
+        contentType: "text",
+        content: input.notes?.trim() || "",
+      },
+      location: {
+        displayName: input.location?.trim() || "",
+      },
+      start: graphDateTime(start.toISOString()),
+      end: graphDateTime(end.toISOString()),
+    },
+  });
+
+  if (result.error) {
+    return {
+      error: result.error,
+      needsReauth: result.needsReauth,
+    };
+  }
+
+  return {};
 }
 
 async function readExistingOutlookEventId(

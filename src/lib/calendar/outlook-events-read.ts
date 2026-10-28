@@ -205,7 +205,8 @@ function toInteraction(
         return name && email ? `${name} (${email})` : name || email;
       })
       .filter(Boolean),
-    meetingUrl: event.onlineMeeting?.joinUrl ?? event.webLink ?? null,
+    meetingUrl: event.onlineMeeting?.joinUrl ?? null,
+    htmlLink: event.webLink?.trim() || null,
   };
 }
 
