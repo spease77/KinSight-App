@@ -787,7 +787,8 @@ export function Dashboard({ homeSession: _homeSession = 0 }: DashboardProps) {
           error={intelError}
           onAddToContact={() => {
             const item = ambiguousIntel[0];
-            if (!item?.contactId) {
+            const contactId = item?.contactId;
+            if (!item || !contactId) {
               shiftAmbiguousIntel();
               return;
             }
@@ -795,7 +796,7 @@ export function Dashboard({ homeSession: _homeSession = 0 }: DashboardProps) {
             setIntelError(null);
             void (async () => {
               try {
-                const res = await fetch(`/api/contacts/${item.contactId}`);
+                const res = await fetch(`/api/contacts/${contactId}`);
                 const data = await readApiJson<{
                   contact?: ContactDetail;
                   error?: string;
@@ -809,7 +810,7 @@ export function Dashboard({ homeSession: _homeSession = 0 }: DashboardProps) {
                   { kind: "contact-fact" }
                 );
                 const saved = await persistContactProfile(
-                  item.contactId,
+                  contactId,
                   nextProfile
                 );
                 if (saved.error || !saved.contact) {

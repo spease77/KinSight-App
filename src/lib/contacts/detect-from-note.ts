@@ -9,7 +9,6 @@ import {
   extractNamedConnectionsFromText,
   extractedConnectionToPerson,
 } from "@/lib/contacts/extract-named-connections";
-import { relationshipTreeFromProfile } from "@/lib/contacts/relationship-tree";
 import { findExistingContactByName } from "@/lib/contacts/match-existing";
 import {
   personToRelationshipEntry,
@@ -155,10 +154,11 @@ export async function detectContactsFromNote(
   const ambiguousIntel: AmbiguousIntelItem[] = [];
   const seenAmbiguous = new Set<string>();
   for (const update of existingUpdates) {
-    const contact = contacts.find((item) => item.id === update.contactId);
     const extracted = extractContactIntelFromText(transcript, {
       contactName: update.contactName,
-      connections: relationshipTreeFromProfile(contact?.profile),
+      connections: newConnections
+        .filter((item) => item.contactId === update.contactId)
+        .map((item) => personToRelationshipEntry(item.person)),
     });
     for (const item of extracted.ambiguous) {
       const key = item.text.toLowerCase();
