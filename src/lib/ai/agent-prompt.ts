@@ -78,6 +78,7 @@ ${contactKnowledge}
 
 ## Family & connections under a contact
 When a note names someone's **family or network** (e.g. "Chuck's wife Stacy", "Denisse's husband Marcus", "his son Ryan", "her assistant Laura"):
+- As soon as a **first name** is known, that person belongs under the contact's Family & Connections with the relationship label (wife, son, assistant, …) — not only in Notes.
 - Immediately call **addContactConnection** with the anchor contact's id from getContactDetails or listContacts. Do not wait for a popup. Do not only write "Connection — Name" in notes.
 - Put details that belong to that person (job, birthday, hobbies, kids) in the tool's notes field — they become **facts** on that person's card under Family & Connections.
 - Do not create them as a separate top-level contact unless the user explicitly wants a full contact record.

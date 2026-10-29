@@ -1,6 +1,10 @@
 import { parseMultiContactNote } from "@/lib/ai/parse-multi-contact";
 import type { ParsedProposedPerson } from "@/lib/ai/parse-multi-contact";
 import type { AiRequestContext } from "@/lib/ai/request-context";
+import {
+  extractNamedConnectionsFromText,
+  extractedConnectionToPerson,
+} from "@/lib/contacts/extract-named-connections";
 import { findExistingContactByName } from "@/lib/contacts/match-existing";
 import {
   personToRelationshipEntry,
@@ -92,42 +96,54 @@ export async function detectContactsFromNote(
     newConnections.map((item) => item.person.displayName.trim().toLowerCase())
   );
 
+  const addExtracted = (
+    contactId: string,
+    contactName: string,
+    people: ReturnType<typeof extractNamedConnectionsFromText>
+  ) => {
+    for (const extracted of people) {
+      const key = [extracted.firstName, extracted.lastName]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      const firstKey = extracted.firstName.toLowerCase();
+      if (named.has(key) || named.has(firstKey)) continue;
+      named.add(key);
+      named.add(firstKey);
+
+      const person = extractedConnectionToPerson(extracted, contactName);
+      newConnections.push({
+        tempId: `connection-${contactId}-${firstKey}`,
+        contactId,
+        contactName,
+        person,
+        summary: summarizeProposedContact(person),
+      });
+    }
+  };
+
   for (const update of existingUpdates) {
-    const first = update.person.profile?.spouseFirstName?.trim();
-    if (!first) continue;
-    const last = update.person.profile?.spouseLastName?.trim() || "";
-    const displayName = [first, last].filter(Boolean).join(" ");
-    if (named.has(displayName.toLowerCase())) continue;
-    named.add(displayName.toLowerCase());
-
-    const person: ParsedProposedPerson = {
-      displayName,
-      firstName: first,
-      lastName: last || undefined,
-      notes:
+    addExtracted(
+      update.contactId,
+      update.contactName,
+      extractNamedConnectionsFromText(
         [
-          update.person.profile?.spouseEducation,
-          update.person.profile?.spouseInterests,
+          transcript,
+          update.person.notes,
+          update.person.profile?.spouseFirstName
+            ? `married to ${[
+                update.person.profile.spouseFirstName,
+                update.person.profile.spouseLastName,
+              ]
+                .filter(Boolean)
+                .join(" ")}`
+            : "",
         ]
-          .filter((value): value is string => Boolean(value?.trim()))
-          .join("\n") || undefined,
-      relationshipHint: `spouse of ${update.contactName}`,
-      recordAs: "connection",
-      connectionAnchorName: update.contactName,
-      profile: {
-        firstName: first,
-        ...(last ? { lastName: last } : {}),
-      },
-      sourceSnippets: {},
-    };
-
-    newConnections.push({
-      tempId: `connection-spouse-${update.contactId}`,
-      contactId: update.contactId,
-      contactName: update.contactName,
-      person,
-      summary: summarizeProposedContact(person),
-    });
+          .filter(Boolean)
+          .join("\n"),
+        { contactName: update.contactName }
+      )
+    );
   }
 
   return { newContacts, existingUpdates, newConnections };

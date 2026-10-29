@@ -217,12 +217,16 @@ export function findDuplicateConnectionIndex(
   entries: RelationshipTreeEntry[],
   candidate: RelationshipTreeEntry
 ): number {
-  const candidateName = getEntryDisplayName(candidate).toLowerCase();
-  if (!candidateName) return -1;
+  const candidateFirst = candidate.firstName.trim().toLowerCase();
+  if (!candidateFirst) return -1;
+  const candidateLast = candidate.lastName.trim().toLowerCase();
 
   return entries.findIndex((entry) => {
-    const name = getEntryDisplayName(entry).toLowerCase();
-    return Boolean(name && name === candidateName);
+    const first = entry.firstName.trim().toLowerCase();
+    if (!first || first !== candidateFirst) return false;
+    const last = entry.lastName.trim().toLowerCase();
+    if (!candidateLast || !last) return true;
+    return last === candidateLast;
   });
 }
 

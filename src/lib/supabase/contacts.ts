@@ -60,6 +60,7 @@ import {
   readContactRelationship,
   relationshipToType,
 } from "@/lib/contacts/contact-relationship";
+import { applyNamedConnectionsToProfile } from "@/lib/contacts/extract-named-connections";
 import {
   findDuplicateConnectionIndex,
   mergeConnectionFacts,
@@ -577,13 +578,43 @@ function reconcileRowAge(row: ContactRow): {
   });
 }
 
+function withNamedConnections(
+  contactName: string,
+  profile: ContactProfile,
+  notesLog?: ContactNoteEntry[],
+  extraText?: string
+): ContactProfile {
+  return applyNamedConnectionsToProfile({
+    contactName,
+    profile,
+    notesLog,
+    extraText,
+  }).profile;
+}
+
+function reconcileRowDerivedProfile(row: ContactRow): {
+  profile: ContactProfile;
+  changed: boolean;
+} {
+  const age = reconcileRowAge(row);
+  const family = applyNamedConnectionsToProfile({
+    contactName: row.name,
+    profile: age.profile,
+    notesLog: resolveRowNotesLog(row),
+  });
+  return {
+    profile: family.profile,
+    changed: age.changed || family.changed,
+  };
+}
+
 /**
  * Writes refreshed ages back so every device (and the AI) sees them, not just
  * whichever screen happened to compute them. Failures never block a read.
  */
 async function persistAgeUpdates(rows: ContactRow[]): Promise<ContactRow[]> {
   const pending = rows
-    .map((row) => ({ row, result: reconcileRowAge(row) }))
+    .map((row) => ({ row, result: reconcileRowDerivedProfile(row) }))
     .filter(({ result }) => result.changed);
 
   if (pending.length === 0) return rows;
@@ -618,7 +649,7 @@ async function persistAgeUpdates(rows: ContactRow[]): Promise<ContactRow[]> {
 function rowToContactDetail(row: ContactRow): ContactDetail {
   const notesLog = resolveRowNotesLog(row);
   const base = rowToContact(row);
-  const ageProfile = reconcileRowAge(row).profile;
+  const ageProfile = reconcileRowDerivedProfile(row).profile;
 
   return {
     ...base,
@@ -735,7 +766,11 @@ export async function updateContactProfile(
 
   const supabase = createServerSupabase();
   const before = sanitizeContactProfile(existing.profile ?? {});
-  const cleaned = sanitizeContactProfile(profile);
+  const cleaned = withNamedConnections(
+    existing.name,
+    sanitizeContactProfile(profile),
+    resolveRowNotesLog(existing)
+  );
   const changeContent = buildProfileChangeNote(before, cleaned);
   const notePatch = changeContent
     ? withAppendedNote(existing, changeContent)
@@ -827,10 +862,17 @@ export async function importContactNotesLog(
     `Imported ${imported.length} note${imported.length === 1 ? "" : "s"} from file (${mode === "replace" ? "replaced log" : "merged"}).`
   );
 
+  const nextProfile = withNamedConnections(
+    existing.name,
+    sanitizeContactProfile(existing.profile ?? {}),
+    audit
+  );
+
   const supabase = createServerSupabase();
   const { data, error } = await updateContactRow(supabase, contactId, {
     notes_log: audit,
     notes: serializeNotesLog(audit),
+    profile: nextProfile,
     updated_at: new Date().toISOString(),
   });
 
@@ -867,18 +909,23 @@ export async function appendContactNote(
         notes: existing.notes,
       };
 
-  const mergedProfile = profilePatch
-    ? mergeProfileFromVoice(
-        sanitizeContactProfile(existing.profile ?? {}),
-        profilePatch
-      )
-    : undefined;
+  const mergedProfile = withNamedConnections(
+    existing.name,
+    profilePatch
+      ? mergeProfileFromVoice(
+          sanitizeContactProfile(existing.profile ?? {}),
+          profilePatch
+        )
+      : sanitizeContactProfile(existing.profile ?? {}),
+    notePatch.notes_log,
+    trimmed
+  );
 
   const supabase = createServerSupabase();
   const { data, error } = await updateContactRow(supabase, contactId, {
     notes_log: notePatch.notes_log,
     notes: notePatch.notes,
-    ...(mergedProfile ? { profile: mergedProfile } : {}),
+    profile: mergedProfile,
     updated_at: new Date().toISOString(),
   });
 
@@ -1347,6 +1394,12 @@ export async function updateContactFromVoice(
     noteContent,
     resolveRecordedAt(ctx)
   );
+  mergedProfile = withNamedConnections(
+    resolvedName,
+    mergedProfile,
+    notePatch.notes_log,
+    transcript
+  );
   const contactTypeFields = resolveContactTypeFields(
     parsed,
     transcript,
@@ -1441,7 +1494,7 @@ export async function createContactFromVoice(
     existingSources: {},
   });
 
-  const cleanedProfile = ensureProfileNameFromContact(
+  const namedProfile = ensureProfileNameFromContact(
     sanitizeContactProfile(profileFields),
     composeContactName(profileFields, parsed.name ?? undefined) ||
       parsed.name ||
@@ -1453,6 +1506,15 @@ export async function createContactFromVoice(
     [],
     noteContent,
     resolveRecordedAt(ctx)
+  );
+  const resolvedCreateName =
+    composeContactName(namedProfile, parsed.name ?? undefined) ||
+    "Unknown Contact";
+  const cleanedProfile = withNamedConnections(
+    resolvedCreateName,
+    namedProfile,
+    initialLog,
+    transcript
   );
   const contactTypeFields = resolveContactTypeFields(parsed, transcript);
 
@@ -1533,7 +1595,7 @@ export async function createContactFromProposed(
     existingSources: {},
   });
 
-  const cleanedProfile = ensureProfileNameFromContact(
+  const namedProfile = ensureProfileNameFromContact(
     sanitizeContactProfile(profileFields),
     composeContactName(profileFields, parsed.name ?? undefined) ||
       parsed.name ||
@@ -1545,6 +1607,12 @@ export async function createContactFromProposed(
     [],
     noteContent,
     resolveRecordedAt(ctx)
+  );
+  const cleanedProfile = withNamedConnections(
+    parsed.name?.trim() || person.displayName,
+    namedProfile,
+    initialLog,
+    transcript
   );
   const contactTypeFields = resolveContactTypeFields(parsed, transcript);
 
@@ -1623,6 +1691,12 @@ export async function updateContactFromProposed(
     existing,
     noteContent,
     resolveRecordedAt(ctx)
+  );
+  mergedProfile = withNamedConnections(
+    resolvedName,
+    mergedProfile,
+    notePatch.notes_log,
+    transcript
   );
   const contactTypeFields = resolveContactTypeFields(
     parsed,
@@ -1777,6 +1851,12 @@ export async function createContactManual(
 
   const manualNote = input.notes?.trim() || "Contact added manually.";
   const initialLog = appendNoteEntry([], manualNote, new Date().toISOString());
+  const profileWithFamily = withNamedConnections(
+    name,
+    profile,
+    initialLog,
+    input.notes
+  );
 
   const insert = {
     name,
@@ -1790,7 +1870,7 @@ export async function createContactManual(
     last_contact: input.lastContact?.trim() || "Added manually",
     next_steps: input.nextSteps?.trim() || null,
     topics: input.topics?.length ? input.topics : null,
-    profile,
+    profile: profileWithFamily,
     updated_at: new Date().toISOString(),
   };
 
