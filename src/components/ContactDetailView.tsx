@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Mic } from "lucide-react";
 import type { ContactDetail } from "@/types/contact";
 import { ContactQuickActions } from "@/components/ContactQuickActions";
 import { ContactPhotoUpload } from "@/components/ContactPhotoUpload";
@@ -8,6 +9,10 @@ import { ContactDetailIntelSection } from "@/components/ContactDetailIntelSectio
 import { ContactAnchorQuickAdd } from "@/components/ContactAnchorQuickAdd";
 import { ContactTimeLogSection } from "@/components/ContactTimeLogSection";
 import { ContactDetailNavBar } from "@/components/ContactDetailNavBar";
+import { VoiceCaptureModal } from "@/components/VoiceCaptureModal";
+import { MicPermissionModal } from "@/components/MicPermissionModal";
+import { useVoiceDebrief } from "@/hooks/useVoiceDebrief";
+import { readApiJson } from "@/lib/api/read-json";
 import {
   formatContactDisplayName,
   loadContactSortPreference,
@@ -27,6 +32,7 @@ export function ContactDetailView({
   const [sortBy, setSortBy] = useState<ContactSortField>("first");
   const [timeRefreshToken, setTimeRefreshToken] = useState(0);
   const { totalMinutes } = useContactTimeTotal(contact.id, timeRefreshToken);
+  const debrief = useVoiceDebrief();
 
   useEffect(() => {
     setSortBy(loadContactSortPreference());
@@ -64,6 +70,15 @@ export function ContactDetailView({
           <ContactQuickActions profile={contact.profile} />
         </div>
 
+        <button
+          type="button"
+          onClick={debrief.start}
+          className="ui-btn-outline-green flex w-full max-w-xs items-center justify-center gap-2 px-4 py-2.5 text-sm"
+        >
+          <Mic className="h-4 w-4" strokeWidth={2} />
+          Record debrief
+        </button>
+
         <ContactAnchorQuickAdd
           contact={contact}
           variant="detail"
@@ -76,6 +91,27 @@ export function ContactDetailView({
         onContactUpdate={onContactUpdate}
       />
       </div>
+
+      {debrief.failure ? (
+        <MicPermissionModal
+          failure={debrief.failure}
+          onDismiss={debrief.clearFailure}
+        />
+      ) : null}
+
+      <VoiceCaptureModal
+        open={debrief.open}
+        stream={debrief.stream}
+        contactId={contact.id}
+        onClose={debrief.close}
+        onComplete={() => {
+          void (async () => {
+            const res = await fetch(`/api/contacts/${contact.id}`);
+            const data = await readApiJson<{ contact?: ContactDetail }>(res);
+            if (data.contact) onContactUpdate?.(data.contact);
+          })();
+        }}
+      />
     </div>
   );
 }

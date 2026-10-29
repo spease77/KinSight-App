@@ -902,7 +902,8 @@ export async function importContactNotesLog(
 export async function appendContactNote(
   contactId: string,
   content: string,
-  profilePatch?: Partial<Record<string, string>>
+  profilePatch?: Partial<Record<string, string>>,
+  options?: { skipVoiceLog?: boolean }
 ): Promise<{ contact: ContactDetail | null; error?: string }> {
   const existing = await getContactRowById(contactId);
   if (!existing) {
@@ -946,7 +947,7 @@ export async function appendContactNote(
     return { contact: null, error: error.message };
   }
 
-  if (trimmed) {
+  if (trimmed && !options?.skipVoiceLog) {
     void recordVoiceLog({ contactId, transcript: trimmed });
   }
 

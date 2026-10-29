@@ -27,7 +27,8 @@ export function openAiTranscribeErrorMessage(err: unknown): string {
 
 export async function transcribeAudioBuffer(
   buffer: Buffer,
-  mimeType: string
+  mimeType: string,
+  options?: { model?: string }
 ): Promise<string> {
   if (!process.env.OPENAI_API_KEY) {
     throw new Error("OPENAI_API_KEY is missing from .env.local");
@@ -39,7 +40,7 @@ export async function transcribeAudioBuffer(
 
   const transcription = await openai.audio.transcriptions.create({
     file,
-    model: MODELS.transcription,
+    model: options?.model ?? MODELS.transcription,
     language: "en",
     response_format: "json",
   });

@@ -8,12 +8,16 @@ import {
   ExternalLink,
   Lock,
   MapPin,
+  Mic,
   NotebookText,
   Pencil,
   UserRound,
   Users,
   X,
 } from "lucide-react";
+import { VoiceCaptureModal } from "@/components/VoiceCaptureModal";
+import { MicPermissionModal } from "@/components/MicPermissionModal";
+import { useVoiceDebrief } from "@/hooks/useVoiceDebrief";
 import { CalendarSourceBadge } from "@/components/calendar/CalendarSourceBadge";
 import {
   behavioralTagPillClass,
@@ -360,6 +364,7 @@ export function AgendaEventDetailsSheet({
   const [endAt, setEndAt] = useState("");
   const [location, setLocation] = useState("");
   const [notes, setNotes] = useState("");
+  const debrief = useVoiceDebrief();
 
   const open = interactions !== null && interactions.length > 0;
   const identity = useMemo(
@@ -631,7 +636,7 @@ export function AgendaEventDetailsSheet({
           ) : null}
         </div>
 
-        {focused && writable ? (
+        {focused && !showingList ? (
           <footer className="flex shrink-0 flex-col gap-2 border-t border-border px-4 py-3">
             {editing ? (
               <div className="flex gap-2">
@@ -653,18 +658,54 @@ export function AgendaEventDetailsSheet({
                 </button>
               </div>
             ) : (
-              <button
-                type="button"
-                onClick={beginEdit}
-                className="ui-btn-secondary flex w-full items-center justify-center gap-2 px-4 py-2.5 text-sm"
-              >
-                <Pencil className="h-4 w-4" strokeWidth={2} />
-                Edit Event
-              </button>
+              <>
+                <button
+                  type="button"
+                  onClick={debrief.start}
+                  className="ui-btn-orange flex w-full items-center justify-center gap-2 px-4 py-2.5 text-sm"
+                >
+                  <Mic className="h-4 w-4" strokeWidth={2} />
+                  Record Quick Debrief
+                </button>
+                {writable ? (
+                  <button
+                    type="button"
+                    onClick={beginEdit}
+                    className="ui-btn-secondary flex w-full items-center justify-center gap-2 px-4 py-2.5 text-sm"
+                  >
+                    <Pencil className="h-4 w-4" strokeWidth={2} />
+                    Edit Event
+                  </button>
+                ) : null}
+              </>
             )}
           </footer>
         ) : null}
       </div>
+
+      {debrief.failure ? (
+        <MicPermissionModal
+          failure={debrief.failure}
+          onDismiss={debrief.clearFailure}
+        />
+      ) : null}
+
+      <VoiceCaptureModal
+        open={debrief.open}
+        stream={debrief.stream}
+        contactId={
+          focused && isLinkedContactId(focused.contactId)
+            ? focused.contactId
+            : undefined
+        }
+        externalEventId={focused?.externalEventId}
+        provider={focused?.source}
+        eventTitle={focused?.title}
+        calendarEventId={
+          focused && isLinkedContactId(focused.id) ? focused.id : undefined
+        }
+        onClose={debrief.close}
+      />
     </div>
   );
 }

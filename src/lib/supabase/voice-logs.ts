@@ -5,6 +5,16 @@ export type VoiceLogActionItem = {
   done?: boolean;
 };
 
+export type VoiceLogRecord = {
+  id: string;
+  contact_id: string;
+  calendar_event_id: string | null;
+  transcript: string;
+  ai_summary: string | null;
+  action_items: VoiceLogActionItem[];
+  created_at: string;
+};
+
 export type RecordVoiceLogInput = {
   contactId: string;
   transcript: string;
@@ -33,7 +43,7 @@ function summarizeTranscript(transcript: string): string | null {
 
 export async function recordVoiceLog(
   input: RecordVoiceLogInput
-): Promise<{ id?: string; error?: string }> {
+): Promise<{ id?: string; voice_log?: VoiceLogRecord; error?: string }> {
   const transcript = input.transcript.trim();
   const contactId = input.contactId.trim();
   if (!contactId || !transcript) return {};
@@ -51,7 +61,9 @@ export async function recordVoiceLog(
     const { data, error } = await supabase
       .from("voice_logs")
       .insert(row as never)
-      .select("id")
+      .select(
+        "id, contact_id, calendar_event_id, transcript, ai_summary, action_items, created_at"
+      )
       .single();
 
     if (error) {
@@ -65,7 +77,8 @@ export async function recordVoiceLog(
       return { error: error.message };
     }
 
-    return { id: (data as { id?: string } | null)?.id };
+    const voice_log = data as VoiceLogRecord | null;
+    return { id: voice_log?.id, voice_log: voice_log ?? undefined };
   } catch (err) {
     console.error("[voice-logs] Could not insert:", err);
     return {
