@@ -35,7 +35,7 @@ import { parseMeetingNotes } from "@/types/agenda-meeting";
 import {
   calendarSourceLabel,
   externalCalendarUrl,
-  isExternalCalendarEvent,
+  isLinkedContactId,
   isReadOnlyInteraction,
   type ScheduledInteraction,
 } from "@/types/scheduled-interaction";
@@ -160,7 +160,7 @@ function EventDetails({ interaction }: { interaction: ScheduledInteraction }) {
   const details = resolveDetails(interaction);
   const readOnly = isReadOnlyInteraction(interaction);
   const hasContactLink =
-    !isExternalCalendarEvent(interaction) && interaction.contactName;
+    isLinkedContactId(interaction.contactId) && interaction.contactName;
   const attendees = interaction.attendees ?? [];
   const providerLabel = calendarSourceLabel(interaction.source);
   const calendarUrl = externalCalendarUrl(interaction);

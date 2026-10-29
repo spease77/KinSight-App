@@ -16,6 +16,11 @@ import {
   shouldTreatPersonAsConnection,
 } from "@/lib/contacts/proposed-connection";
 import { summarizeProposedContact } from "@/lib/contacts/proposed-contact-summary";
+import {
+  loadContactResolutionRecords,
+  resolveContact,
+  type ResolveContactCandidate,
+} from "@/lib/services/contactResolver";
 import { fetchContacts } from "@/lib/supabase/contacts";
 
 export type ProposedContactForReview = {
@@ -40,28 +45,48 @@ export type ProposedConnectionForReview = {
   summary: ReturnType<typeof summarizeProposedContact>;
 };
 
+export type PendingContactResolution = {
+  spokenName: string;
+  person: ParsedProposedPerson;
+  summary: ReturnType<typeof summarizeProposedContact>;
+  candidates: ResolveContactCandidate[];
+};
+
 export type DetectContactsResult = {
   newContacts: ProposedContactForReview[];
   existingUpdates: ExistingContactUpdate[];
   newConnections: ProposedConnectionForReview[];
   ambiguousIntel: AmbiguousIntelItem[];
+  pendingResolutions: PendingContactResolution[];
 };
+
+function personEmail(person: ParsedProposedPerson): string | undefined {
+  return (
+    person.profile.businessEmail?.trim() ||
+    person.profile.personalEmail?.trim() ||
+    person.profile.otherEmail?.trim() ||
+    undefined
+  );
+}
 
 export async function detectContactsFromNote(
   transcript: string,
   requestContext: AiRequestContext
 ): Promise<DetectContactsResult> {
-  const [{ contacts }, people] = await Promise.all([
+  const [{ contacts }, people, records] = await Promise.all([
     fetchContacts(),
     parseMultiContactNote(transcript, requestContext),
+    loadContactResolutionRecords(),
   ]);
 
   const newContacts: ProposedContactForReview[] = [];
   const existingUpdates: ExistingContactUpdate[] = [];
   const newConnections: ProposedConnectionForReview[] = [];
+  const pendingResolutions: PendingContactResolution[] = [];
+  const contactsById = new Map(contacts.map((contact) => [contact.id, contact]));
 
-  people.forEach((person, index) => {
-    if (!person.displayName.trim()) return;
+  for (const [index, person] of people.entries()) {
+    if (!person.displayName.trim()) continue;
 
     const anchor = resolveConnectionAnchorContact(person, contacts);
     if (shouldTreatPersonAsConnection(person, anchor) && anchor) {
@@ -73,21 +98,53 @@ export async function detectContactsFromNote(
         person,
         summary,
       });
-      return;
+      continue;
     }
 
-    const existing = findExistingContactByName(person.displayName, contacts);
     const summary = summarizeProposedContact(person);
+    const resolved = await resolveContact(
+      {
+        name: person.displayName,
+        email: personEmail(person),
+        contextCompany: person.company || person.profile.companyName,
+      },
+      { records, allowLlm: true }
+    );
+    const matched = resolved.contact_id
+      ? contactsById.get(resolved.contact_id)
+      : undefined;
 
-    if (existing) {
+    if (matched && !resolved.needs_confirmation) {
       existingUpdates.push({
-        contactId: existing.id,
-        contactName: existing.name,
-        existingCompany: existing.company,
+        contactId: matched.id,
+        contactName: matched.name,
+        existingCompany: matched.company,
         person,
         summary,
       });
-      return;
+      continue;
+    }
+
+    if (resolved.needs_confirmation && resolved.candidates.length > 0) {
+      pendingResolutions.push({
+        spokenName: person.displayName,
+        person,
+        summary,
+        candidates: resolved.candidates,
+      });
+      continue;
+    }
+
+    const fallback = findExistingContactByName(person.displayName, contacts);
+    if (fallback) {
+      existingUpdates.push({
+        contactId: fallback.id,
+        contactName: fallback.name,
+        existingCompany: fallback.company,
+        person,
+        summary,
+      });
+      continue;
     }
 
     newContacts.push({
@@ -95,7 +152,7 @@ export async function detectContactsFromNote(
       person,
       summary,
     });
-  });
+  }
 
   const named = new Set(
     newConnections.map((item) => item.person.displayName.trim().toLowerCase())
@@ -177,7 +234,13 @@ export async function detectContactsFromNote(
     }
   }
 
-  return { newContacts, existingUpdates, newConnections, ambiguousIntel };
+  return {
+    newContacts,
+    existingUpdates,
+    newConnections,
+    ambiguousIntel,
+    pendingResolutions,
+  };
 }
 
 export { personToRelationshipEntry };

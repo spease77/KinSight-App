@@ -11,6 +11,21 @@ export type RememberExternalCalendarEventInput = {
   isOrganizer?: boolean;
   isReadOnly?: boolean;
   syncStatus?: CalendarSyncStatus;
+  contactId?: string | null;
+  title?: string | null;
+  startTime?: string | null;
+};
+
+export type RememberResolvedCalendarEventInput = {
+  userId: string;
+  provider: Exclude<CalendarEventProvider, "kinsight">;
+  externalEventId: string;
+  calendarId?: string | null;
+  contactId?: string | null;
+  title?: string | null;
+  startTime?: string | null;
+  isOrganizer?: boolean;
+  isReadOnly?: boolean;
 };
 
 export async function rememberExternalCalendarEvent(
@@ -92,6 +107,9 @@ export async function rememberExternalCalendarEvent(
       sync_status: syncStatus,
       last_synced_at: lastSyncedAt,
       updated_at: lastSyncedAt,
+      ...(input.contactId ? { contact_id: input.contactId } : {}),
+      ...(input.title?.trim() ? { title: input.title.trim() } : {}),
+      ...(input.startTime ? { start_time: input.startTime } : {}),
     };
 
     if (existing && (existing as { id?: string }).id) {
@@ -119,6 +137,94 @@ export async function rememberExternalCalendarEvent(
     }
   } catch (err) {
     console.error("[calendar-sync] Could not store calendar event:", err);
+  }
+}
+
+function isMissingColumnError(message: string): boolean {
+  const lower = message.toLowerCase();
+  return (
+    lower.includes("schema cache") ||
+    (lower.includes("could not find") && lower.includes("column"))
+  );
+}
+
+export async function rememberResolvedCalendarEvent(
+  input: RememberResolvedCalendarEventInput
+): Promise<void> {
+  if (!input.contactId && !input.title && !input.startTime) return;
+
+  try {
+    const supabase = createServerSupabase();
+    const lastSyncedAt = new Date().toISOString();
+    const calendarId = input.calendarId?.trim() || "primary";
+
+    const { data: existing, error: lookupError } = await supabase
+      .from("calendar_events")
+      .select("id")
+      .eq("user_id", input.userId)
+      .eq("provider", input.provider)
+      .eq("external_event_id", input.externalEventId)
+      .maybeSingle();
+
+    if (lookupError) {
+      if (isCalendarEventsTableMissing(lookupError.message)) return;
+      console.error(
+        "[calendar-sync] Could not look up resolved calendar_events:",
+        lookupError.message
+      );
+      return;
+    }
+
+    const row: Record<string, unknown> = {
+      user_id: input.userId,
+      provider: input.provider,
+      external_event_id: input.externalEventId,
+      calendar_id: calendarId,
+      is_organizer: input.isOrganizer ?? true,
+      is_read_only: input.isReadOnly ?? false,
+      sync_status: "synced",
+      last_synced_at: lastSyncedAt,
+      updated_at: lastSyncedAt,
+    };
+    if (input.contactId) row.contact_id = input.contactId;
+    if (input.title?.trim()) row.title = input.title.trim();
+    if (input.startTime) row.start_time = input.startTime;
+
+    const existingId = (existing as { id?: string } | null)?.id;
+    const write = existingId
+      ? supabase.from("calendar_events").update(row as never).eq("id", existingId)
+      : supabase
+          .from("calendar_events")
+          .insert({ ...row, created_at: lastSyncedAt } as never);
+
+    const { error } = await write;
+    if (error && isMissingColumnError(error.message)) {
+      delete row.contact_id;
+      delete row.title;
+      delete row.start_time;
+      const retry = existingId
+        ? supabase.from("calendar_events").update(row as never).eq("id", existingId)
+        : supabase
+            .from("calendar_events")
+            .insert({ ...row, created_at: lastSyncedAt } as never);
+      const retried = await retry;
+      if (retried.error) {
+        console.error(
+          "[calendar-sync] Could not store resolved calendar event:",
+          retried.error.message
+        );
+      }
+      return;
+    }
+
+    if (error) {
+      console.error(
+        "[calendar-sync] Could not store resolved calendar event:",
+        error.message
+      );
+    }
+  } catch (err) {
+    console.error("[calendar-sync] Could not store resolved calendar event:", err);
   }
 }
 

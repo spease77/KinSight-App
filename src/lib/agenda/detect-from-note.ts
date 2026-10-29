@@ -4,7 +4,10 @@ import { generateObject } from "ai";
 import { MODELS } from "@/lib/ai/models";
 import type { AiRequestContext } from "@/lib/ai/request-context";
 import { buildSharedModelInstructions } from "@/lib/ai/shared-model-instructions";
-import { resolveContactByName } from "@/lib/contacts/resolve-contact-by-name";
+import {
+  loadContactResolutionRecords,
+  resolveContact,
+} from "@/lib/services/contactResolver";
 import { fetchContacts } from "@/lib/supabase/contacts";
 
 const agendaDetectionSchema = z.object({
@@ -58,8 +61,12 @@ ${transcript.trim()}
     },
   });
 
-  const { contacts } = await fetchContacts();
+  const [{ contacts }, records] = await Promise.all([
+    fetchContacts(),
+    loadContactResolutionRecords(),
+  ]);
   const results: DetectedAgendaItem[] = [];
+  const contactsById = new Map(contacts.map((contact) => [contact.id, contact]));
 
   for (const item of object.items) {
     const contactName = item.contact_name.trim();
@@ -68,7 +75,12 @@ ${transcript.trim()}
     const scheduledAt = item.scheduled_at.trim();
     if (!scheduledAt || Number.isNaN(new Date(scheduledAt).getTime())) continue;
 
-    const { contact } = resolveContactByName(contactName, contacts);
+    const resolved = await resolveContact(
+      { name: contactName },
+      { records, allowLlm: true }
+    );
+    if (!resolved.contact_id || resolved.needs_confirmation) continue;
+    const contact = contactsById.get(resolved.contact_id);
     if (!contact) continue;
 
     results.push({

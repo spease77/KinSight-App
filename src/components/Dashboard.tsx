@@ -18,6 +18,7 @@ import { MicrophoneButton } from "@/components/MicrophoneButton";
 import { KinSightConversationPanel } from "@/components/KinSightConversationPanel";
 import { ProposedContactModal } from "@/components/ProposedContactModal";
 import { IntelAttributionModal } from "@/components/IntelAttributionModal";
+import { ContactPickerModal } from "@/components/ContactPickerModal";
 import { persistContactProfile } from "@/lib/contacts/contact-quick-add-persist";
 import { applyAmbiguousIntelChoice } from "@/lib/contacts/extract-contact-intel";
 import { readApiJson } from "@/lib/api/read-json";
@@ -151,6 +152,9 @@ export function Dashboard({ homeSession: _homeSession = 0 }: DashboardProps) {
     hasQueue,
     confirmCurrent,
     skipCurrent,
+    pendingResolutions,
+    confirmResolution,
+    skipResolution,
     ambiguousIntel,
     shiftAmbiguousIntel,
   } = useProposedContactQueue();
@@ -767,7 +771,19 @@ export function Dashboard({ homeSession: _homeSession = 0 }: DashboardProps) {
         />
       ) : null}
 
-      {currentItem && (
+      {pendingResolutions[0] ? (
+        <ContactPickerModal
+          spokenName={pendingResolutions[0].spokenName}
+          candidates={pendingResolutions[0].candidates}
+          remaining={pendingResolutions.length}
+          isSaving={isSaving}
+          error={contactQueueError}
+          onSelect={(contactId) => void confirmResolution(contactId)}
+          onSkip={skipResolution}
+        />
+      ) : null}
+
+      {!pendingResolutions[0] && currentItem && (
         <ProposedContactModal
           item={currentItem}
           index={queueIndex}
@@ -779,7 +795,7 @@ export function Dashboard({ homeSession: _homeSession = 0 }: DashboardProps) {
         />
       )}
 
-      {!currentItem && ambiguousIntel[0] ? (
+      {!pendingResolutions[0] && !currentItem && ambiguousIntel[0] ? (
         <IntelAttributionModal
           item={ambiguousIntel[0]}
           remaining={ambiguousIntel.length}

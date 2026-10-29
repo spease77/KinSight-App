@@ -48,6 +48,7 @@ export async function POST(req: Request) {
       existingUpdates: [],
       newConnections: [],
       ambiguousIntel: [],
+      pendingResolutions: [],
       transcript: "",
       recordingId: null,
       requestContext: buildRequestContext("manual"),

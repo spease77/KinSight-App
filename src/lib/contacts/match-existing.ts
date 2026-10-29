@@ -35,5 +35,12 @@ export function findExistingContactByName(
   const trimmed = displayName.trim();
   if (!trimmed) return undefined;
 
-  return contacts.find((contact) => contactNamesMatch(contact.name, trimmed));
+  const byName = contacts.find((contact) =>
+    contactNamesMatch(contact.name, trimmed)
+  );
+  if (byName) return byName;
+
+  return contacts.find((contact) =>
+    (contact.aliases ?? []).some((alias) => contactNamesMatch(alias, trimmed))
+  );
 }

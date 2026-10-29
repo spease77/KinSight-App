@@ -7,6 +7,7 @@ import { buildRequestContext } from "@/lib/ai/request-context";
 import type {
   DetectContactsResult,
   ExistingContactUpdate,
+  PendingContactResolution,
   ProposedConnectionForReview,
   ProposedContactForReview,
 } from "@/lib/contacts/detect-from-note";
@@ -34,11 +35,15 @@ export function useProposedContactQueue() {
   const [ambiguousIntel, setAmbiguousIntel] = useState<AmbiguousIntelItem[]>(
     []
   );
+  const [pendingResolutions, setPendingResolutions] = useState<
+    PendingContactResolution[]
+  >([]);
   const noteContextRef = useRef<NoteContext | null>(null);
 
   const finishQueue = useCallback(() => {
     setQueue([]);
     setCurrentIndex(0);
+    setPendingResolutions([]);
     noteContextRef.current = null;
     router.refresh();
   }, [router]);
@@ -143,13 +148,10 @@ export function useProposedContactQueue() {
         );
 
         setAmbiguousIntel(data.ambiguousIntel ?? []);
+        setPendingResolutions(data.pendingResolutions ?? []);
 
         if (existingUpdates.length > 0 || newConnections.length > 0) {
           router.refresh();
-        }
-
-        if (items.length === 0) {
-          return;
         }
 
         setQueue(items);
@@ -242,6 +244,62 @@ export function useProposedContactQueue() {
 
   const currentItem = queue[currentIndex] ?? null;
 
+  const confirmResolution = useCallback(
+    async (contactId: string) => {
+      const ctx = noteContextRef.current;
+      const pending = pendingResolutions[0];
+      if (!ctx || !pending) return;
+
+      setIsSaving(true);
+      setError(null);
+
+      try {
+        const aliasRes = await fetch("/api/contacts/resolve/confirm", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contactId,
+            spokenName: pending.spokenName,
+          }),
+        });
+        const aliasData = (await aliasRes.json()) as { error?: string };
+        if (!aliasRes.ok) {
+          throw new Error(aliasData.error ?? "Could not save name");
+        }
+
+        const res = await fetch("/api/contacts/confirm", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "update",
+            contactId,
+            person: pending.person,
+            transcript: ctx.transcript,
+            recordingId: ctx.recordingId,
+            requestContext: ctx.requestContext,
+          }),
+        });
+        const data = (await res.json()) as { error?: string };
+        if (!res.ok) {
+          throw new Error(data.error ?? "Could not save contact");
+        }
+
+        router.refresh();
+        setPendingResolutions((items) => items.slice(1));
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Could not save contact");
+      } finally {
+        setIsSaving(false);
+      }
+    },
+    [pendingResolutions, router]
+  );
+
+  const skipResolution = useCallback(() => {
+    setError(null);
+    setPendingResolutions((items) => items.slice(1));
+  }, []);
+
   return {
     analyzeNote,
     currentItem,
@@ -250,9 +308,12 @@ export function useProposedContactQueue() {
     isDetecting,
     isSaving,
     error,
-    hasQueue: queue.length > 0,
+    hasQueue: queue.length > 0 || pendingResolutions.length > 0,
     confirmCurrent,
     skipCurrent,
+    pendingResolutions,
+    confirmResolution,
+    skipResolution,
     ambiguousIntel,
     shiftAmbiguousIntel: () =>
       setAmbiguousIntel((items) => items.slice(1)),

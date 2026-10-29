@@ -26,14 +26,27 @@ export const INTERACTION_SOURCE_LABELS: Record<InteractionSource, string> = {
   outlook: "Outlook",
 };
 
-/** Demo rows and live Google/Outlook events are not KinSight contacts. */
+const CONTACT_UUID =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+export function isLinkedContactId(contactId: string | null | undefined): boolean {
+  return Boolean(contactId && CONTACT_UUID.test(contactId));
+}
+
+/** Demo rows and live Google/Outlook events are not KinSight-native meetings. */
 export function isExternalCalendarEvent(
-  interaction: Pick<ScheduledInteraction, "contactId">
+  interaction: Pick<ScheduledInteraction, "contactId" | "id" | "source">
 ): boolean {
+  if (interaction.source === "google" || interaction.source === "outlook") {
+    return true;
+  }
   return (
     interaction.contactId.startsWith("mock-") ||
     interaction.contactId.startsWith("google-") ||
-    interaction.contactId.startsWith("outlook-")
+    interaction.contactId.startsWith("outlook-") ||
+    interaction.id.startsWith("google-") ||
+    interaction.id.startsWith("outlook-") ||
+    interaction.id.startsWith("mock-")
   );
 }
 

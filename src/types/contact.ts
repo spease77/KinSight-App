@@ -9,6 +9,8 @@ export interface Contact {
   name: string;
   company: string;
   role: string;
+  email?: string;
+  aliases?: string[];
   lastContact: string;
   lastMeetingDate?: string;
   contactType?: ContactType | null;

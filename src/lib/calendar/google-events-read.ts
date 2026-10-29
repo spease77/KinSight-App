@@ -1,4 +1,12 @@
 import { getValidGoogleAccessToken } from "@/lib/calendar/connections";
+import {
+  attachResolvedContactToEvent,
+  persistMatchedCalendarEvents,
+} from "@/lib/calendar/resolve-event-contact";
+import {
+  loadContactResolutionRecords,
+  type ContactResolutionRecord,
+} from "@/lib/services/contactResolver";
 import type { ScheduledInteraction } from "@/types/scheduled-interaction";
 
 const API_BASE = "https://www.googleapis.com/calendar/v3";
@@ -162,7 +170,8 @@ function displayNameFromEmail(email: string): string {
 function toInteraction(
   event: GoogleEvent,
   calendar: GoogleCalendarListEntry,
-  syncedAt: string
+  syncedAt: string,
+  records: ContactResolutionRecord[]
 ): ScheduledInteraction | null {
   if (!event.id || event.status === "cancelled") return null;
 
@@ -209,7 +218,7 @@ function toInteraction(
   const calendarName =
     calendar.summaryOverride?.trim() || calendar.summary?.trim() || "Google Calendar";
 
-  return {
+  const mapped: ScheduledInteraction = {
     id: `google-${calendar.id}-${event.id}`,
     contactId: "google-event",
     contactName: guestName ?? calendarName,
@@ -241,6 +250,11 @@ function toInteraction(
     meetingUrl: resolveMeetingUrl(event),
     htmlLink: event.htmlLink?.trim() || null,
   };
+
+  return attachResolvedContactToEvent(mapped, records, {
+    name: guestName,
+    email: guest?.email,
+  });
 }
 
 export async function fetchGoogleAgendaInteractions(
@@ -263,7 +277,10 @@ export async function fetchGoogleAgendaInteractions(
   const syncedAt = new Date(now).toISOString();
 
   try {
-    const calendars = await listCalendars(token.accessToken);
+    const [calendars, records] = await Promise.all([
+      listCalendars(token.accessToken),
+      loadContactResolutionRecords(),
+    ]);
     const perCalendar = await Promise.all(
       calendars.map(async (calendar) => {
         const events = await listCalendarEvents(
@@ -273,7 +290,7 @@ export async function fetchGoogleAgendaInteractions(
           timeMax
         );
         return events
-          .map((event) => toInteraction(event, calendar, syncedAt))
+          .map((event) => toInteraction(event, calendar, syncedAt, records))
           .filter((item): item is ScheduledInteraction => item !== null);
       })
     );
@@ -284,6 +301,8 @@ export async function fetchGoogleAgendaInteractions(
         (a, b) =>
           new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime()
       );
+
+    void persistMatchedCalendarEvents(userId, "google", interactions);
 
     return { connected: true, interactions };
   } catch (err) {

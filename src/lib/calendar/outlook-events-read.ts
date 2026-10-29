@@ -1,4 +1,12 @@
 import { getValidOutlookAccessToken } from "@/lib/calendar/connections";
+import {
+  attachResolvedContactToEvent,
+  persistMatchedCalendarEvents,
+} from "@/lib/calendar/resolve-event-contact";
+import {
+  loadContactResolutionRecords,
+  type ContactResolutionRecord,
+} from "@/lib/services/contactResolver";
 import type { ScheduledInteraction } from "@/types/scheduled-interaction";
 
 const GRAPH = "https://graph.microsoft.com/v1.0";
@@ -144,7 +152,8 @@ function toIso(value: OutlookDateTime | undefined): string | null {
 function toInteraction(
   event: OutlookEvent,
   calendar: OutlookCalendar,
-  syncedAt: string
+  syncedAt: string,
+  records: ContactResolutionRecord[]
 ): ScheduledInteraction | null {
   if (!event.id || event.isCancelled) return null;
 
@@ -180,7 +189,7 @@ function toInteraction(
   const isOrganizer = event.isOrganizer !== false;
   const isReadOnly = calendar.canEdit === false || !isOrganizer;
 
-  return {
+  const mapped: ScheduledInteraction = {
     id: `outlook-${calendar.id}-${event.id}`,
     contactId: "outlook-event",
     contactName: guestName ?? calendarName,
@@ -208,6 +217,11 @@ function toInteraction(
     meetingUrl: event.onlineMeeting?.joinUrl ?? null,
     htmlLink: event.webLink?.trim() || null,
   };
+
+  return attachResolvedContactToEvent(mapped, records, {
+    name: guestName,
+    email: guest?.emailAddress?.address,
+  });
 }
 
 export async function fetchOutlookAgendaInteractions(
@@ -230,7 +244,10 @@ export async function fetchOutlookAgendaInteractions(
   const syncedAt = new Date(now).toISOString();
 
   try {
-    const calendars = await listCalendars(token.accessToken);
+    const [calendars, records] = await Promise.all([
+      listCalendars(token.accessToken),
+      loadContactResolutionRecords(),
+    ]);
     const perCalendar = await Promise.all(
       calendars.map(async (calendar) => {
         const events = await listCalendarEvents(
@@ -240,7 +257,7 @@ export async function fetchOutlookAgendaInteractions(
           timeMax
         );
         return events
-          .map((event) => toInteraction(event, calendar, syncedAt))
+          .map((event) => toInteraction(event, calendar, syncedAt, records))
           .filter((item): item is ScheduledInteraction => item !== null);
       })
     );
@@ -251,6 +268,8 @@ export async function fetchOutlookAgendaInteractions(
         (a, b) =>
           new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime()
       );
+
+    void persistMatchedCalendarEvents(userId, "outlook", interactions);
 
     return { connected: true, interactions };
   } catch (err) {

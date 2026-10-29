@@ -12,6 +12,8 @@ export interface Database {
           name: string;
           company: string | null;
           role: string | null;
+          email: string | null;
+          aliases: string[];
           status: ContactStatus;
           contact_type: ContactType | null;
           contact_type_needs_confirmation: boolean;
@@ -35,6 +37,8 @@ export interface Database {
           name: string;
           company?: string | null;
           role?: string | null;
+          email?: string | null;
+          aliases?: string[];
           status?: ContactStatus;
           contact_type?: ContactType | null;
           contact_type_needs_confirmation?: boolean;
@@ -58,6 +62,8 @@ export interface Database {
           name?: string;
           company?: string | null;
           role?: string | null;
+          email?: string | null;
+          aliases?: string[];
           status?: ContactStatus;
           contact_type?: ContactType | null;
           contact_type_needs_confirmation?: boolean;
@@ -270,6 +276,9 @@ export interface Database {
           is_read_only: boolean;
           sync_status: string;
           last_synced_at: string | null;
+          contact_id: string | null;
+          title: string | null;
+          start_time: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -284,6 +293,9 @@ export interface Database {
           is_read_only?: boolean;
           sync_status?: string;
           last_synced_at?: string | null;
+          contact_id?: string | null;
+          title?: string | null;
+          start_time?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -297,7 +309,37 @@ export interface Database {
           is_read_only?: boolean;
           sync_status?: string;
           last_synced_at?: string | null;
+          contact_id?: string | null;
+          title?: string | null;
+          start_time?: string | null;
           updated_at?: string;
+        };
+      };
+      voice_logs: {
+        Row: {
+          id: string;
+          contact_id: string;
+          calendar_event_id: string | null;
+          transcript: string;
+          ai_summary: string | null;
+          action_items: unknown;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          contact_id: string;
+          calendar_event_id?: string | null;
+          transcript?: string;
+          ai_summary?: string | null;
+          action_items?: unknown;
+          created_at?: string;
+        };
+        Update: {
+          contact_id?: string;
+          calendar_event_id?: string | null;
+          transcript?: string;
+          ai_summary?: string | null;
+          action_items?: unknown;
         };
       };
     };

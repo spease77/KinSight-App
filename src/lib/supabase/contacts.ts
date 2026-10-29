@@ -60,7 +60,15 @@ import {
   readContactRelationship,
   relationshipToType,
 } from "@/lib/contacts/contact-relationship";
+import {
+  mergeAliasLists,
+  readProfileAliases,
+  seedAliasesFromName,
+  writeProfileAliases,
+} from "@/lib/contacts/contact-aliases";
+import { emailsFromProfileFields } from "@/lib/contacts/contact-resolution";
 import { applyDerivedContactIntel } from "@/lib/contacts/extract-contact-intel";
+import { recordVoiceLog } from "@/lib/supabase/voice-logs";
 import {
   findDuplicateConnectionIndex,
   mergeConnectionFacts,
@@ -99,6 +107,8 @@ type ContactRow = {
   name: string;
   company: string | null;
   role: string | null;
+  email?: string | null;
+  aliases?: string[] | null;
   status: ContactStatus;
   contact_type?: ContactType | null;
   contact_type_needs_confirmation?: boolean;
@@ -177,6 +187,8 @@ function rowToContact(row: ContactRow): Contact {
     name: row.name,
     company: row.company ?? "",
     role: row.role ?? "",
+    email: row.email ?? undefined,
+    aliases: row.aliases ?? undefined,
     lastContact: formatLastContactDisplay(row),
     lastMeetingDate: row.last_meeting_date ?? undefined,
     contactType: contactTypeFields.contactType,
@@ -934,6 +946,10 @@ export async function appendContactNote(
     return { contact: null, error: error.message };
   }
 
+  if (trimmed) {
+    void recordVoiceLog({ contactId, transcript: trimmed });
+  }
+
   return { contact: rowToContactDetail(data) };
 }
 
@@ -1438,6 +1454,10 @@ export async function updateContactFromVoice(
     await linkRecordingToContact(recordingId, contactId);
   }
 
+  if (transcript.trim()) {
+    void recordVoiceLog({ contactId, transcript });
+  }
+
   return { contact: rowToContact(data) };
 }
 
@@ -1608,18 +1628,26 @@ export async function createContactFromProposed(
     noteContent,
     resolveRecordedAt(ctx)
   );
+  const contactName = parsed.name?.trim() || person.displayName;
   const cleanedProfile = withNamedConnections(
-    parsed.name?.trim() || person.displayName,
+    contactName,
     namedProfile,
     initialLog,
     transcript
   );
+  const aliases = seedAliasesFromName(contactName, [
+    person.nickname,
+    person.profile.nickname,
+  ]);
+  const profileWithAliases = writeProfileAliases(cleanedProfile, aliases);
   const contactTypeFields = resolveContactTypeFields(parsed, transcript);
 
   const insert = {
-    name: parsed.name?.trim() || person.displayName,
-    company: parsed.company ?? cleanedProfile.companyName ?? null,
+    name: contactName,
+    company: parsed.company ?? profileWithAliases.companyName ?? null,
     role: parsed.role,
+    email: emailsFromProfileFields(profileWithAliases)[0] ?? null,
+    aliases,
     status: "warm" as ContactStatus,
     ...contactTypeFields,
     notes: initialLog.length > 0 ? serializeNotesLog(initialLog) : null,
@@ -1628,7 +1656,7 @@ export async function createContactFromProposed(
     last_meeting_date: resolveMeetingDate(parsed.last_meeting_date),
     next_steps: parsed.next_steps,
     topics: parsed.topics,
-    profile: cleanedProfile,
+    profile: profileWithAliases,
     source_metadata: sourceMetadata,
     updated_at: new Date().toISOString(),
   };
@@ -1644,6 +1672,10 @@ export async function createContactFromProposed(
 
   if (recordingId && inserted?.id) {
     await linkRecordingToContact(recordingId, inserted.id);
+  }
+
+  if (inserted?.id && transcript.trim()) {
+    void recordVoiceLog({ contactId: inserted.id, transcript });
   }
 
   return { contact: rowToContact(inserted!) };
@@ -1698,6 +1730,16 @@ export async function updateContactFromProposed(
     notePatch.notes_log,
     transcript
   );
+  const aliases = mergeAliasLists(
+    existing.aliases,
+    readProfileAliases(mergedProfile),
+    seedAliasesFromName(resolvedName, [
+      person.nickname,
+      person.profile.nickname,
+      person.displayName,
+    ])
+  );
+  mergedProfile = writeProfileAliases(mergedProfile, aliases);
   const contactTypeFields = resolveContactTypeFields(
     parsed,
     transcript,
@@ -1708,6 +1750,9 @@ export async function updateContactFromProposed(
     name: resolvedName,
     company: parsed.company ?? mergedProfile.companyName ?? existing.company,
     role: parsed.role ?? existing.role,
+    email:
+      emailsFromProfileFields(mergedProfile)[0] ?? existing.email ?? null,
+    aliases,
     status: existing.status,
     ...contactTypeFields,
     notes: notePatch.notes,
@@ -1733,6 +1778,10 @@ export async function updateContactFromProposed(
 
   if (recordingId) {
     await linkRecordingToContact(recordingId, contactId);
+  }
+
+  if (transcript.trim()) {
+    void recordVoiceLog({ contactId, transcript });
   }
 
   return { contact: rowToContact(data) };

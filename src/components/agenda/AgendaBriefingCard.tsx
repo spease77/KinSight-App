@@ -9,7 +9,7 @@ import { formatAgendaEventTime } from "@/lib/agenda/time-frame";
 import { AGENDA_ITEM_SELECTED_CLASS } from "@/components/agenda/agenda-panel-styles";
 import { CalendarSourceBadge } from "@/components/calendar/CalendarSourceBadge";
 import {
-  isExternalCalendarEvent,
+  isLinkedContactId,
   type ScheduledInteraction,
 } from "@/types/scheduled-interaction";
 
@@ -25,7 +25,7 @@ export function AgendaBriefingCard({
   onEdit,
 }: AgendaBriefingCardProps) {
   const eventTime = formatAgendaEventTime(interaction.scheduledAt);
-  const isExternalContact = isExternalCalendarEvent(interaction);
+  const hasContactLink = isLinkedContactId(interaction.contactId);
 
   return (
     <article
@@ -56,11 +56,7 @@ export function AgendaBriefingCard({
         </time>
 
         <div className="min-w-0 flex-1">
-          {isExternalContact ? (
-            <p className="block truncate font-sans text-base font-medium text-foreground">
-              {interaction.contactName}
-            </p>
-          ) : (
+          {hasContactLink ? (
             <Link
               href={`/contacts/${interaction.contactId}`}
               className="block truncate font-sans text-base font-medium text-foreground transition-colors hover:text-accent-green"
@@ -68,6 +64,10 @@ export function AgendaBriefingCard({
             >
               {interaction.contactName}
             </Link>
+          ) : (
+            <p className="block truncate font-sans text-base font-medium text-foreground">
+              {interaction.contactName}
+            </p>
           )}
           <div className="mt-1 flex min-w-0 items-center gap-2">
             <h3 className="truncate font-sans text-sm text-muted">
