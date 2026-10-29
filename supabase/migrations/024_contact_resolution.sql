@@ -1,6 +1,7 @@
 -- Contact-first identity so voice notes and calendar events attach to profiles.
 -- `contacts.name` remains the full name (do not rename; the app writes `name`).
 -- Canonical `email` is a lookup column; labeled emails still live on profile.
+-- Creates `calendar_events` if migration 021 was never run on this database.
 
 create extension if not exists pg_trgm;
 
@@ -46,6 +47,49 @@ set email = ranked.email_candidate
 from ranked
 where c.id = ranked.id
   and ranked.rn = 1;
+
+create table if not exists public.calendar_events (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null,
+  scheduled_interaction_id uuid references public.scheduled_interactions(id)
+    on delete set null,
+  provider text not null check (provider in ('google', 'outlook', 'kinsight')),
+  external_event_id text,
+  calendar_id text,
+  is_organizer boolean not null default true,
+  is_read_only boolean not null default false,
+  sync_status text not null default 'pending'
+    check (sync_status in ('synced', 'pending', 'error')),
+  last_synced_at timestamptz,
+  contact_id uuid references public.contacts(id) on delete set null,
+  title text,
+  start_time timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create unique index if not exists calendar_events_provider_external_unique
+  on public.calendar_events (user_id, provider, external_event_id)
+  where external_event_id is not null;
+
+create unique index if not exists calendar_events_interaction_provider_unique
+  on public.calendar_events (scheduled_interaction_id, provider)
+  where scheduled_interaction_id is not null;
+
+create index if not exists calendar_events_user_id_idx
+  on public.calendar_events (user_id);
+
+create index if not exists calendar_events_sync_status_idx
+  on public.calendar_events (sync_status);
+
+alter table public.calendar_events enable row level security;
+
+drop policy if exists "calendar_events_server" on public.calendar_events;
+
+create policy "calendar_events_server"
+  on public.calendar_events for all
+  using (true)
+  with check (true);
 
 alter table public.calendar_events
   add column if not exists contact_id uuid references public.contacts(id)
