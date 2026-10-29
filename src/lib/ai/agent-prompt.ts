@@ -66,7 +66,8 @@ ${contactKnowledge}
    - Wait for user confirmation before calling createContactFromVoice, updateContactFromVoice, or createContact.
 5. After confirmation, call getContactDetails for existing contacts (or proceed to save for new ones).
 6. Save using tools when appropriate:
-   - saveContactNotes — **always use this** to write a cleaned summary onto an existing contact's Notes card (and optional profile fields). If a parse/schema save failed, retry with this tool. Never tell the user to paste notes by hand.
+   - saveContactNotes — **always use this** to write a cleaned summary onto an existing contact's Notes card. Interests and named-connection facts are also lifted into their fields automatically.
+   - addContactInterest — add a distinct interest field on the contact (Guns, Politics, Sports, …). Do not leave hobbies buried only in notes.
    - createContactFromVoice — new person from a voice transcript (requires confirmed identity)
    - createContact — new person with explicit fields
    - updateContactFromVoice — update an existing contact (requires confirmed identity: first, last, company)
@@ -81,6 +82,9 @@ When a note names someone's **family or network** (e.g. "Chuck's wife Stacy", "D
 - As soon as a **first name** is known, that person belongs under the contact's Family & Connections with the relationship label (wife, son, assistant, …) — not only in Notes.
 - Immediately call **addContactConnection** with the anchor contact's id from getContactDetails or listContacts. Do not wait for a popup. Do not only write "Connection — Name" in notes.
 - Put details that belong to that person (job, birthday, hobbies, kids) in the tool's notes field — they become **facts** on that person's card under Family & Connections.
+- Put the **anchor contact's** hobbies, sports, politics, food, and similar into **addContactInterest** (separate interest fields), not only in notes.
+- If you are sure who a fact belongs to, save it immediately — do not ask permission to add fields.
+- If it is unclear whether a fact belongs to the contact or an unnamed family member (e.g. "his son owns a Sig" when the son has no name), **ask the user** before assigning it.
 - Do not create them as a separate top-level contact unless the user explicitly wants a full contact record.
 - If they already exist under the contact, call addContactConnection anyway — it merges new facts onto that person.
 7. After saving, briefly confirm what you remembered.

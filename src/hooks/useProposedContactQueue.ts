@@ -10,6 +10,7 @@ import type {
   ProposedConnectionForReview,
   ProposedContactForReview,
 } from "@/lib/contacts/detect-from-note";
+import type { AmbiguousIntelItem } from "@/lib/contacts/extract-contact-intel";
 
 type NoteContext = {
   transcript: string;
@@ -30,6 +31,9 @@ export function useProposedContactQueue() {
   const [isDetecting, setIsDetecting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [ambiguousIntel, setAmbiguousIntel] = useState<AmbiguousIntelItem[]>(
+    []
+  );
   const noteContextRef = useRef<NoteContext | null>(null);
 
   const finishQueue = useCallback(() => {
@@ -137,6 +141,8 @@ export function useProposedContactQueue() {
         const items: ContactReviewItem[] = (data.newContacts ?? []).map(
           (proposal): ContactReviewItem => ({ kind: "create", proposal })
         );
+
+        setAmbiguousIntel(data.ambiguousIntel ?? []);
 
         if (existingUpdates.length > 0 || newConnections.length > 0) {
           router.refresh();
@@ -247,5 +253,8 @@ export function useProposedContactQueue() {
     hasQueue: queue.length > 0,
     confirmCurrent,
     skipCurrent,
+    ambiguousIntel,
+    shiftAmbiguousIntel: () =>
+      setAmbiguousIntel((items) => items.slice(1)),
   };
 }

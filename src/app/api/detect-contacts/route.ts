@@ -47,6 +47,7 @@ export async function POST(req: Request) {
       newContacts: [],
       existingUpdates: [],
       newConnections: [],
+      ambiguousIntel: [],
       transcript: "",
       recordingId: null,
       requestContext: buildRequestContext("manual"),

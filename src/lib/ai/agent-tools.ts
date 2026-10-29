@@ -13,7 +13,9 @@ import {
   updateContactName,
   addConnectionFromProposed,
   appendContactNote,
+  updateContactProfile,
 } from "@/lib/supabase/contacts";
+import { upsertLabeledInterest } from "@/lib/contacts/labeled-contact-fields";
 import { createAgendaItem } from "@/lib/supabase/scheduled-interactions";
 import { buildAgendaSuccessMessage } from "@/lib/agenda/format-schedule-phrase";
 import { resolveContactByName } from "@/lib/contacts/resolve-contact-by-name";
@@ -158,7 +160,7 @@ export function createAgentTools(ctx: AgentToolsContext) {
 
     saveContactNotes: tool({
       description:
-        "Save cleaned, summarized notes onto an existing contact's Notes section. Call this whenever the user shares facts about someone who is already in KinSight — hobbies, family, politics, gear, licensing, opinions, etc. Do not ask them to paste into Edit. Do not skip this because another save path failed.",
+        "Save cleaned, summarized notes onto an existing contact. Interests and named-connection facts are lifted onto the right fields automatically. Call this whenever the user shares facts about someone who is already in KinSight. Do not ask them to paste into Edit.",
       inputSchema: z.object({
         contactId: z.string().uuid().describe("The contact's UUID"),
         notes: z
@@ -307,6 +309,42 @@ export function createAgentTools(ctx: AgentToolsContext) {
         }
 
         return { success: true, contactId: contact.id, contact };
+      },
+    }),
+
+    addContactInterest: tool({
+      description:
+        "Add a distinct interest on a contact's profile (hobby, sports, food/drink, politics, etc.). Use this instead of burying interests in notes. Call as soon as an interest is clearly about that contact — do not wait for confirmation.",
+      inputSchema: z.object({
+        contactId: z.string().uuid(),
+        label: z
+          .string()
+          .describe("Short interest label such as Guns, Politics, Sports, Food/Drink, Hobby"),
+        value: z
+          .string()
+          .describe("The interest details to store on that labeled field"),
+      }),
+      execute: async ({ contactId, label, value }) => {
+        const existing = await fetchContactById(contactId);
+        if (existing.error || !existing.contact) {
+          return {
+            success: false,
+            error: existing.error ?? "Contact not found",
+          };
+        }
+
+        const nextProfile = upsertLabeledInterest(existing.contact.profile ?? {}, {
+          label,
+          value,
+        });
+        const { contact, error } = await updateContactProfile(
+          contactId,
+          nextProfile
+        );
+        if (error || !contact) {
+          return { success: false, error: error ?? "Could not save interest" };
+        }
+        return { success: true, contactId: contact.id, label, value };
       },
     }),
 

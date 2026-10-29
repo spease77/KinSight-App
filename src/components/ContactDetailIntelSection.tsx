@@ -3,8 +3,10 @@
 import { useMemo } from "react";
 import type { ContactDetail } from "@/types/contact";
 import {
+  buildContactFactRows,
   buildContactInfoRows,
-  buildInterestsDatesRows,
+  buildDatesReligionRows,
+  buildLabeledInterestRows,
   buildRelationshipCompanyRows,
   getContactIntelMemoKey,
   hasProfileNotes,
@@ -36,8 +38,16 @@ export function ContactDetailIntelSection({
     () => buildContactInfoRows(contact),
     [intelMemoKey]
   );
-  const interestsDatesRows = useMemo(
-    () => buildInterestsDatesRows(contact),
+  const interestRows = useMemo(
+    () => buildLabeledInterestRows(contact),
+    [intelMemoKey]
+  );
+  const datesReligionRows = useMemo(
+    () => buildDatesReligionRows(contact),
+    [intelMemoKey]
+  );
+  const factRows = useMemo(
+    () => buildContactFactRows(contact),
     [intelMemoKey]
   );
 
@@ -53,7 +63,9 @@ export function ContactDetailIntelSection({
   const showEmptyState =
     relationshipCompanyRows.length === 0 &&
     contactInfoRows.length === 0 &&
-    interestsDatesRows.length === 0 &&
+    interestRows.length === 0 &&
+    datesReligionRows.length === 0 &&
+    factRows.length === 0 &&
     !hasPersonNetwork &&
     !hasNotes;
 
@@ -72,7 +84,21 @@ export function ContactDetailIntelSection({
       />
 
       <ContactDetailInsetSection
-        rows={interestsDatesRows}
+        title="Interests"
+        rows={interestRows}
+        contactId={contact.id}
+        sourceMetadata={contact.sourceMetadata}
+      />
+
+      <ContactDetailInsetSection
+        rows={datesReligionRows}
+        contactId={contact.id}
+        sourceMetadata={contact.sourceMetadata}
+      />
+
+      <ContactDetailInsetSection
+        title="Facts"
+        rows={factRows}
         contactId={contact.id}
         sourceMetadata={contact.sourceMetadata}
       />

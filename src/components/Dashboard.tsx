@@ -17,6 +17,11 @@ import { HomeVoiceCapture } from "@/components/HomeVoiceCapture";
 import { MicrophoneButton } from "@/components/MicrophoneButton";
 import { KinSightConversationPanel } from "@/components/KinSightConversationPanel";
 import { ProposedContactModal } from "@/components/ProposedContactModal";
+import { IntelAttributionModal } from "@/components/IntelAttributionModal";
+import { persistContactProfile } from "@/lib/contacts/contact-quick-add-persist";
+import { applyAmbiguousIntelChoice } from "@/lib/contacts/extract-contact-intel";
+import { readApiJson } from "@/lib/api/read-json";
+import type { ContactDetail } from "@/types/contact";
 import { MicPermissionModal } from "@/components/MicPermissionModal";
 import { unlockSpeechSynthesis, stopSpeaking } from "@/lib/audio/speech";
 import type { MicrophoneAccessFailure } from "@/lib/audio/voice-support";
@@ -146,7 +151,11 @@ export function Dashboard({ homeSession: _homeSession = 0 }: DashboardProps) {
     hasQueue,
     confirmCurrent,
     skipCurrent,
+    ambiguousIntel,
+    shiftAmbiguousIntel,
   } = useProposedContactQueue();
+  const [intelError, setIntelError] = useState<string | null>(null);
+  const [intelSaving, setIntelSaving] = useState(false);
 
   const processNote = useCallback(
     (
@@ -769,6 +778,59 @@ export function Dashboard({ homeSession: _homeSession = 0 }: DashboardProps) {
           onSkip={() => void skipCurrent()}
         />
       )}
+
+      {!currentItem && ambiguousIntel[0] ? (
+        <IntelAttributionModal
+          item={ambiguousIntel[0]}
+          remaining={ambiguousIntel.length}
+          isSaving={intelSaving}
+          error={intelError}
+          onAddToContact={() => {
+            const item = ambiguousIntel[0];
+            if (!item?.contactId) {
+              shiftAmbiguousIntel();
+              return;
+            }
+            setIntelSaving(true);
+            setIntelError(null);
+            void (async () => {
+              try {
+                const res = await fetch(`/api/contacts/${item.contactId}`);
+                const data = await readApiJson<{
+                  contact?: ContactDetail;
+                  error?: string;
+                }>(res);
+                if (!res.ok || !data.contact) {
+                  throw new Error(data.error ?? "Could not load contact");
+                }
+                const nextProfile = applyAmbiguousIntelChoice(
+                  data.contact.profile ?? {},
+                  item,
+                  { kind: "contact-fact" }
+                );
+                const saved = await persistContactProfile(
+                  item.contactId,
+                  nextProfile
+                );
+                if (saved.error || !saved.contact) {
+                  throw new Error(saved.error ?? "Could not save");
+                }
+                shiftAmbiguousIntel();
+              } catch (err) {
+                setIntelError(
+                  err instanceof Error ? err.message : "Could not save"
+                );
+              } finally {
+                setIntelSaving(false);
+              }
+            })();
+          }}
+          onSkip={() => {
+            setIntelError(null);
+            shiftAmbiguousIntel();
+          }}
+        />
+      ) : null}
 
       <ConversationHistorySheet
         open={historyOpen}

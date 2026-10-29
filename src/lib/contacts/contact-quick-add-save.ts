@@ -1,10 +1,8 @@
 import type { ContactDetail } from "@/types/contact";
 import type { ContactProfile } from "@/types/contact-profile";
-import {
-  sanitizeContactProfile,
-  mergeProfileSectionForSave,
-} from "@/types/contact-profile";
+import { sanitizeContactProfile } from "@/types/contact-profile";
 import { persistContactProfile } from "@/lib/contacts/contact-quick-add-persist";
+import { upsertLabeledInterest } from "@/lib/contacts/labeled-contact-fields";
 import {
   type DateSubtype,
   type InterestSubtype,
@@ -81,56 +79,36 @@ export async function saveQuickAddPerson(
   return persistContactProfile(contact.id, nextProfile);
 }
 
-function appendProfileValue(
-  existing: string | undefined,
-  label: string,
-  value: string,
-  prefixValue?: boolean
-): string {
-  const line = prefixValue ? `${label}: ${value}` : value;
-  const prior = existing?.trim();
-  if (!prior) return line;
-  if (prior.includes(line)) return prior;
-  return `${prior}\n${line}`;
-}
-
 export async function saveQuickAddInterest(
   contact: ContactDetail,
   subtype: InterestSubtype,
   value: string,
   customLabel?: string,
-  options?: { prefixValue?: boolean }
+  _options?: { prefixValue?: boolean }
 ): Promise<{ contact?: ContactDetail; error?: string }> {
   const trimmed = value.trim();
   if (!trimmed) {
     return { error: "Enter a value before saving." };
   }
 
-  const label = customLabel?.trim() || subtype.label;
-  const savedProfile = contact.profile ?? {};
-  const fieldKey = subtype.fieldKey;
-  const prefixValue =
-    options?.prefixValue ??
-    (customLabel ? true : subtype.prefixValue ?? false);
-  const mergedValue = appendProfileValue(
-    savedProfile[fieldKey],
+  const label =
+    customLabel?.trim() ||
+    (subtype.id === "favorite_food"
+      ? "Food/Drink"
+      : subtype.id === "sports_team"
+        ? "Sports"
+        : subtype.id === "current_goal"
+          ? "Goal"
+          : subtype.id === "hobby"
+            ? "Hobby"
+            : "Interest");
+
+  const nextProfile = upsertLabeledInterest(contact.profile ?? {}, {
     label,
-    trimmed,
-    prefixValue
-  );
+    value: trimmed,
+  });
 
-  const draft: ContactProfile = {
-    ...savedProfile,
-    [fieldKey]: mergedValue,
-  };
-
-  const merged = mergeProfileSectionForSave(
-    savedProfile,
-    draft,
-    subtype.sectionId
-  );
-
-  return persistContactProfile(contact.id, merged);
+  return persistContactProfile(contact.id, nextProfile);
 }
 
 export async function saveQuickAddDate(

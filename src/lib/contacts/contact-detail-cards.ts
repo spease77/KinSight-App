@@ -36,6 +36,14 @@ import {
   getLatestUserAuthoredNote,
   resolveUserAuthoredNoteDisplay,
 } from "@/lib/contacts/notes-log";
+import {
+  KINSIGHT_CONTACT_FACTS_KEY,
+  readContactFacts,
+} from "@/lib/contacts/contact-facts";
+import {
+  KINSIGHT_LABELED_INTERESTS_KEY,
+  readLabeledInterests,
+} from "@/lib/contacts/labeled-contact-fields";
 
 export type ContactDetailCardRow = {
   id: string;
@@ -232,21 +240,59 @@ function withSubtleLabels(rows: ContactDetailCardRow[]): ContactDetailCardRow[] 
   return rows.map((row) => ({ ...row, labelStyle: "subtle" }));
 }
 
-function buildInterestsOverviewRow(
-  profile: ReturnType<typeof sanitizeContactProfile>
-): ContactDetailCardRow | null {
+function formatInterestLabel(label: string): string {
+  const trimmed = label.trim();
+  if (!trimmed) return "Interest";
+  return trimmed
+    .split(/[/_]/)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join("/");
+}
+
+export function buildLabeledInterestRows(
+  contact: ContactDetail
+): ContactDetailCardRow[] {
+  const profile = sanitizeContactProfile(contact.profile);
+  const labeled = readLabeledInterests(profile).filter((entry) =>
+    entry.value.trim()
+  );
+
+  if (labeled.length > 0) {
+    return labeled.map((entry) => ({
+      id: `interest-${entry.id}`,
+      label: formatInterestLabel(entry.label),
+      value: entry.value.trim(),
+      fieldKey: "hobbiesRecreation",
+      labelStyle: "subtle" as const,
+    }));
+  }
+
   const values = INTERESTS_FIELD_KEYS.map((key) => profile[key]?.trim()).filter(
     Boolean
   ) as string[];
 
-  if (values.length === 0) return null;
+  if (values.length === 0) return [];
 
-  return {
-    id: "interests",
-    label: "Interests",
-    value: values.join(", "),
-    labelStyle: "subtle",
-  };
+  return [
+    {
+      id: "interests",
+      label: "Interests",
+      value: values.join(", "),
+      labelStyle: "subtle",
+    },
+  ];
+}
+
+export function buildContactFactRows(
+  contact: ContactDetail
+): ContactDetailCardRow[] {
+  const facts = readContactFacts(sanitizeContactProfile(contact.profile));
+  return facts.map((fact, index) => ({
+    id: `fact-${index}`,
+    label: "Fact",
+    value: fact,
+    labelStyle: "subtle" as const,
+  }));
 }
 
 
@@ -364,17 +410,36 @@ export function buildInterestsDatesRows(
   contact: ContactDetail
 ): ContactDetailCardRow[] {
   const profile = sanitizeContactProfile(contact.profile);
-  const rows: ContactDetailCardRow[] = [];
-
-  const interestsRow = buildInterestsOverviewRow(profile);
-  if (interestsRow) {
-    rows.push(interestsRow);
-  }
+  const rows: ContactDetailCardRow[] = [
+    ...buildLabeledInterestRows(contact),
+  ];
 
   rows.push(
     ...withSubtleLabels(
       buildRowsFromFieldKeys(profile, PROFILE_OVERVIEW_DATE_KEYS)
     )
+  );
+
+  const religion = profile.religion?.trim();
+  if (religion) {
+    rows.push({
+      id: "religion",
+      label: "Religion",
+      value: religion,
+      fieldKey: "religion",
+      labelStyle: "subtle",
+    });
+  }
+
+  return rows;
+}
+
+export function buildDatesReligionRows(
+  contact: ContactDetail
+): ContactDetailCardRow[] {
+  const profile = sanitizeContactProfile(contact.profile);
+  const rows = withSubtleLabels(
+    buildRowsFromFieldKeys(profile, PROFILE_OVERVIEW_DATE_KEYS)
   );
 
   const religion = profile.religion?.trim();
@@ -480,6 +545,8 @@ const CONTACT_INTEL_PROFILE_KEYS: Array<keyof ContactProfile | string> = [
   ...CONTACT_INFO_FIELD_KEYS,
   KINSIGHT_SOCIAL_MEDIA_KEY,
   KINSIGHT_RELATIONSHIP_TREE_KEY,
+  KINSIGHT_LABELED_INTERESTS_KEY,
+  KINSIGHT_CONTACT_FACTS_KEY,
   "homeAddressLine1",
   "homeAddressLine2",
   "homeCity",

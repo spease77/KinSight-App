@@ -133,6 +133,67 @@ function serializeLabeledEntries(entries: LabeledValueEntry[]): string {
   );
 }
 
+function normalizeComparable(value: string): string {
+  return value.trim().toLowerCase().replace(/\s+/g, " ");
+}
+
+export function upsertLabeledInterest(
+  profile: ContactProfile,
+  input: { label: string; value: string }
+): ContactProfile {
+  const value = input.value.trim();
+  if (!value) return profile;
+
+  const label = input.label.trim() || "interest";
+  const current = readLabeledInterests(profile);
+  const incomingKey = normalizeComparable(value);
+  const labelKey = normalizeComparable(label);
+
+  const existingIndex = current.findIndex((entry) => {
+    const existingValue = normalizeComparable(entry.value);
+    const existingLabel = normalizeComparable(entry.label);
+    if (!existingValue) return false;
+    if (existingValue === incomingKey) return true;
+    if (existingLabel !== labelKey) return false;
+    return (
+      existingValue.includes(incomingKey) || incomingKey.includes(existingValue)
+    );
+  });
+
+  let next: LabeledValueEntry[];
+  if (existingIndex >= 0) {
+    const existing = current[existingIndex];
+    const existingValue = normalizeComparable(existing.value);
+    const mergedValue = existingValue.includes(incomingKey)
+      ? existing.value
+      : incomingKey.includes(existingValue)
+        ? value
+        : `${existing.value.trim()}; ${value}`;
+    next = current.map((entry, index) =>
+      index === existingIndex
+        ? { ...entry, label: existing.label || label, value: mergedValue }
+        : entry
+    );
+  } else {
+    next = [...current, createLabeledEntry(label, value)];
+  }
+
+  return writeLabeledInterests(profile, next);
+}
+
+export function writeLabeledInterests(
+  profile: ContactProfile,
+  entries: LabeledValueEntry[]
+): ContactProfile {
+  return syncLegacyInterests(
+    {
+      ...profile,
+      [KINSIGHT_LABELED_INTERESTS_KEY]: serializeLabeledEntries(entries),
+    },
+    entries
+  );
+}
+
 function legacyPhoneEntries(profile: ContactProfile): LabeledValueEntry[] {
   const entries: LabeledValueEntry[] = [];
   for (const item of PHONE_LEGACY) {
@@ -350,6 +411,11 @@ function syncLegacyInterests(
     } else if (label.includes("sport") && !next.spectatorSports) {
       next.spectatorSports = value;
     }
+  }
+
+  if (!next.hobbiesRecreation) {
+    const first = entries.find((entry) => entry.value.trim());
+    if (first) next.hobbiesRecreation = first.value.trim();
   }
 
   return next;

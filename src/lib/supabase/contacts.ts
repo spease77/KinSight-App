@@ -60,7 +60,7 @@ import {
   readContactRelationship,
   relationshipToType,
 } from "@/lib/contacts/contact-relationship";
-import { applyNamedConnectionsToProfile } from "@/lib/contacts/extract-named-connections";
+import { applyDerivedContactIntel } from "@/lib/contacts/extract-contact-intel";
 import {
   findDuplicateConnectionIndex,
   mergeConnectionFacts,
@@ -584,7 +584,7 @@ function withNamedConnections(
   notesLog?: ContactNoteEntry[],
   extraText?: string
 ): ContactProfile {
-  return applyNamedConnectionsToProfile({
+  return applyDerivedContactIntel({
     contactName,
     profile,
     notesLog,
@@ -597,14 +597,14 @@ function reconcileRowDerivedProfile(row: ContactRow): {
   changed: boolean;
 } {
   const age = reconcileRowAge(row);
-  const family = applyNamedConnectionsToProfile({
+  const intel = applyDerivedContactIntel({
     contactName: row.name,
     profile: age.profile,
     notesLog: resolveRowNotesLog(row),
   });
   return {
-    profile: family.profile,
-    changed: age.changed || family.changed,
+    profile: intel.profile,
+    changed: age.changed || intel.changed,
   };
 }
 

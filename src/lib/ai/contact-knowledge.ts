@@ -5,6 +5,8 @@ import {
   relationshipTreeExportLines,
   relationshipTreeFromProfile,
 } from "@/lib/contacts/relationship-tree";
+import { readLabeledInterests } from "@/lib/contacts/labeled-contact-fields";
+import { readContactFacts } from "@/lib/contacts/contact-facts";
 import type { ContactDetail } from "@/types/contact";
 import {
   CONTACT_PROFILE_SECTIONS,
@@ -61,6 +63,24 @@ export function buildContactKnowledgeSummary(contact: ContactDetail): string {
   }
   if (contact.topics?.length) {
     lines.push(`  Topics: ${contact.topics.join(", ")}`);
+  }
+
+  const interests = readLabeledInterests(contact.profile ?? {}).filter((entry) =>
+    entry.value.trim()
+  );
+  if (interests.length > 0) {
+    lines.push("  Interests:");
+    for (const entry of interests) {
+      lines.push(`    ${entry.label}: ${entry.value}`);
+    }
+  }
+
+  const facts = readContactFacts(contact.profile ?? {});
+  if (facts.length > 0) {
+    lines.push("  Facts:");
+    for (const fact of facts) {
+      lines.push(`    - ${fact}`);
+    }
   }
 
   const treeLines = relationshipTreeExportLines(

@@ -778,6 +778,10 @@ export function relationshipTreeExportLines(
         lines.push(`  Best Time to Call: ${entry.bestTimeToCall}`);
       if (entry.notes?.trim()) lines.push(`  Notes: ${entry.notes}`);
     }
+
+    for (const fact of getRelationshipEntryFacts(entry)) {
+      lines.push(`  Fact: ${fact}`);
+    }
   }
 
   return lines;

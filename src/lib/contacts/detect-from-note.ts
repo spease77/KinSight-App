@@ -2,9 +2,14 @@ import { parseMultiContactNote } from "@/lib/ai/parse-multi-contact";
 import type { ParsedProposedPerson } from "@/lib/ai/parse-multi-contact";
 import type { AiRequestContext } from "@/lib/ai/request-context";
 import {
+  extractContactIntelFromText,
+  type AmbiguousIntelItem,
+} from "@/lib/contacts/extract-contact-intel";
+import {
   extractNamedConnectionsFromText,
   extractedConnectionToPerson,
 } from "@/lib/contacts/extract-named-connections";
+import { relationshipTreeFromProfile } from "@/lib/contacts/relationship-tree";
 import { findExistingContactByName } from "@/lib/contacts/match-existing";
 import {
   personToRelationshipEntry,
@@ -40,6 +45,7 @@ export type DetectContactsResult = {
   newContacts: ProposedContactForReview[];
   existingUpdates: ExistingContactUpdate[];
   newConnections: ProposedConnectionForReview[];
+  ambiguousIntel: AmbiguousIntelItem[];
 };
 
 export async function detectContactsFromNote(
@@ -146,7 +152,32 @@ export async function detectContactsFromNote(
     );
   }
 
-  return { newContacts, existingUpdates, newConnections };
+  const ambiguousIntel: AmbiguousIntelItem[] = [];
+  const seenAmbiguous = new Set<string>();
+  for (const update of existingUpdates) {
+    const contact = contacts.find((item) => item.id === update.contactId);
+    const extracted = extractContactIntelFromText(transcript, {
+      contactName: update.contactName,
+      connections: relationshipTreeFromProfile(contact?.profile),
+    });
+    for (const item of extracted.ambiguous) {
+      const key = item.text.toLowerCase();
+      if (seenAmbiguous.has(key)) continue;
+      seenAmbiguous.add(key);
+      ambiguousIntel.push({
+        ...item,
+        contactId: update.contactId,
+        contactName: update.contactName,
+        candidates: item.candidates.map((candidate) =>
+          candidate.kind === "contact"
+            ? { ...candidate, name: update.contactName }
+            : candidate
+        ),
+      });
+    }
+  }
+
+  return { newContacts, existingUpdates, newConnections, ambiguousIntel };
 }
 
 export { personToRelationshipEntry };

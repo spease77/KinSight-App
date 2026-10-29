@@ -29,6 +29,42 @@ export function serializeContactFacts(facts: string[]): string | undefined {
   return JSON.stringify(cleaned);
 }
 
+export function upsertContactFacts(
+  profile: ContactProfile,
+  facts: string[]
+): ContactProfile {
+  const incoming = normalizeRelationshipFacts(facts);
+  if (incoming.length === 0) return profile;
+
+  const current = readContactFacts(profile);
+  const seen = new Set(current.map((fact) => fact.trim().toLowerCase()));
+  const merged = [...current];
+  for (const fact of incoming) {
+    const key = fact.trim().toLowerCase();
+    if (!key || seen.has(key)) continue;
+    const covered = merged.some(
+      (existing) =>
+        existing.toLowerCase().includes(key) ||
+        key.includes(existing.toLowerCase())
+    );
+    if (covered) continue;
+    seen.add(key);
+    merged.push(fact);
+  }
+
+  const serialized = serializeContactFacts(merged);
+  if (!serialized) {
+    const next = { ...profile };
+    delete next[KINSIGHT_CONTACT_FACTS_KEY];
+    return next;
+  }
+
+  return {
+    ...profile,
+    [KINSIGHT_CONTACT_FACTS_KEY]: serialized,
+  };
+}
+
 export function formatFactWithCategory(
   category: ContactFactCategory | null,
   text: string
