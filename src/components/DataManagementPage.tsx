@@ -13,6 +13,7 @@ import { Header } from "@/components/Header";
 import { PageBody } from "@/components/PageBody";
 import { PageHeader } from "@/components/PageHeader";
 import { ContactAvatar } from "@/components/ContactAvatar";
+import { resolveDisplayAvatarUrl } from "@/lib/contacts/contact-avatar-display";
 import { filterContacts } from "@/lib/contacts/filter-contacts";
 import { formatContactDisplayName } from "@/lib/contacts/sort-contacts";
 import { readApiJson } from "@/lib/api/read-json";
@@ -217,7 +218,7 @@ export function DataManagementPage() {
                       />
                       <ContactAvatar
                         name={contact.name}
-                        avatarUrl={contact.avatarUrl}
+                        avatarUrl={resolveDisplayAvatarUrl(contact)}
                         size="sm"
                         className="!h-10 !w-10 !text-sm"
                       />

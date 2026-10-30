@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import {
-  getContactInitial,
   getContactInitials,
   type ContactSortField,
 } from "@/lib/contacts/sort-contacts";
@@ -29,7 +28,7 @@ const IMAGE_SIZES: Record<ContactAvatarSize, string> = {
   xl: "(max-width: 640px) 176px, 208px",
 };
 
-const IOS_INITIALS_SIZES = new Set<ContactAvatarSize>(["hero", "detail"]);
+const HERO_INITIALS_SIZES = new Set<ContactAvatarSize>(["hero", "detail", "xl"]);
 
 interface ContactAvatarProps {
   name: string;
@@ -73,7 +72,6 @@ function ContactAvatarSilhouette({
 
 export function ContactAvatar({
   name,
-  sortBy = "first",
   firstName,
   lastName,
   avatarUrl,
@@ -84,7 +82,7 @@ export function ContactAvatar({
   const sizeClass = SIZE_CLASSES[size];
   const trimmedAvatarUrl = avatarUrl?.trim() ?? "";
   const [imageFailed, setImageFailed] = useState(false);
-  const useIosInitials = IOS_INITIALS_SIZES.has(size);
+  const useHeroInitials = HERO_INITIALS_SIZES.has(size);
 
   useEffect(() => {
     setImageFailed(false);
@@ -121,27 +119,16 @@ export function ContactAvatar({
     );
   }
 
-  if (useIosInitials) {
-    const initials = getContactInitials(name, firstName, lastName);
-
-    return (
-      <div
-        className={`contact-avatar-initials contact-avatar-initials--hero flex shrink-0 items-center justify-center rounded-full font-sans font-medium tracking-tight text-white/95 ${sizeClass} ${className}`}
-        aria-label={`${name} initials`}
-      >
-        {initials}
-      </div>
-    );
-  }
-
-  const initial = getContactInitial(name, sortBy);
+  const initials = getContactInitials(name, firstName, lastName);
 
   return (
     <div
-      className={`avatar-ring-contact flex shrink-0 items-center justify-center rounded-full font-sans font-normal text-foreground ${sizeClass} ${className}`}
+      className={`contact-avatar-initials ${
+        useHeroInitials ? "contact-avatar-initials--hero" : ""
+      } flex shrink-0 items-center justify-center rounded-full font-sans font-medium tracking-tight ${sizeClass} ${className}`}
       aria-label={`${name} initials`}
     >
-      {initial}
+      {initials}
     </div>
   );
 }

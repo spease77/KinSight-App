@@ -7,6 +7,7 @@ import type { Contact } from "@/types/contact";
 import { filterContacts } from "@/lib/contacts/filter-contacts";
 import { formatContactDisplayName } from "@/lib/contacts/sort-contacts";
 import { ContactAvatar } from "@/components/ContactAvatar";
+import { resolveDisplayAvatarUrl } from "@/lib/contacts/contact-avatar-display";
 import { useContacts } from "@/hooks/useContacts";
 
 interface MeetingContactSearchFieldProps {
@@ -58,7 +59,7 @@ function ContactSearchList({
             >
               <ContactAvatar
                 name={contact.name}
-                avatarUrl={contact.avatarUrl}
+                avatarUrl={resolveDisplayAvatarUrl(contact)}
                 size="sm"
                 className="!h-9 !w-9 !text-sm"
               />
@@ -227,7 +228,7 @@ export function MeetingContactSearchField({
         <div className="flex min-w-0 items-center gap-3">
           <ContactAvatar
             name={selectedContact.name}
-            avatarUrl={selectedContact.avatarUrl}
+            avatarUrl={resolveDisplayAvatarUrl(selectedContact)}
             size="sm"
             className="!h-10 !w-10 !text-base"
           />
@@ -301,7 +302,7 @@ export function MeetingContactSearchField({
                 >
                   <ContactAvatar
                     name={contact.name}
-                    avatarUrl={contact.avatarUrl}
+                    avatarUrl={resolveDisplayAvatarUrl(contact)}
                     size="sm"
                     className="!h-9 !w-9 !text-sm"
                   />

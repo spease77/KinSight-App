@@ -4,7 +4,11 @@ import {
   isUsingServerSecretKey,
 } from "@/lib/supabase/server";
 
+/** Live bucket created in 010_contact_avatar.sql (spec name: contact-avatars). */
 export const CONTACT_PHOTOS_BUCKET = "contact-photos";
+export const CONTACT_AVATARS_BUCKET = CONTACT_PHOTOS_BUCKET;
+
+const MAX_REMOTE_AVATAR_BYTES = 5 * 1024 * 1024;
 
 const SIGNED_URL_TTL_SEC = 60 * 60 * 24 * 7;
 
@@ -217,6 +221,107 @@ export async function uploadContactAvatar(input: {
   }
 
   return { storagePath, avatarUrl };
+}
+
+function isBlockedAvatarHost(hostname: string): boolean {
+  const host = hostname.trim().toLowerCase();
+  if (
+    host === "localhost" ||
+    host === "127.0.0.1" ||
+    host === "0.0.0.0" ||
+    host === "::1" ||
+    host.endsWith(".local")
+  ) {
+    return true;
+  }
+
+  return /^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.|169\.254\.)/.test(host);
+}
+
+export function assertSafeRemoteAvatarUrl(rawUrl: string): URL {
+  let parsed: URL;
+  try {
+    parsed = new URL(rawUrl.trim());
+  } catch {
+    throw new Error("Enter a valid image URL.");
+  }
+
+  if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
+    throw new Error("Image URL must start with https://");
+  }
+
+  if (isBlockedAvatarHost(parsed.hostname)) {
+    throw new Error("That image URL is not allowed.");
+  }
+
+  return parsed;
+}
+
+export async function downloadRemoteAvatarImage(rawUrl: string): Promise<{
+  buffer: Buffer;
+  mimeType: string;
+} | { error: string }> {
+  let parsed: URL;
+  try {
+    parsed = assertSafeRemoteAvatarUrl(rawUrl);
+  } catch (err) {
+    return {
+      error: err instanceof Error ? err.message : "Enter a valid image URL.",
+    };
+  }
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 8_000);
+
+  try {
+    const response = await fetch(parsed.toString(), {
+      method: "GET",
+      redirect: "follow",
+      signal: controller.signal,
+      headers: { Accept: "image/*" },
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      return { error: "Could not download that image. Try another URL." };
+    }
+
+    const contentType = (response.headers.get("content-type") ?? "")
+      .split(";")[0]
+      ?.trim()
+      .toLowerCase();
+    const rawMime = contentType?.startsWith("image/")
+      ? contentType
+      : "image/jpeg";
+    const mimeType = rawMime === "image/jpg" ? "image/jpeg" : rawMime;
+
+    if (!isAllowedContactPhotoMimeType(mimeType)) {
+      return { error: "That URL is not a JPEG, PNG, WebP, or GIF image." };
+    }
+
+    const lengthHeader = response.headers.get("content-length");
+    if (lengthHeader && Number(lengthHeader) > MAX_REMOTE_AVATAR_BYTES) {
+      return { error: "Image must be 5 MB or smaller." };
+    }
+
+    const buffer = Buffer.from(await response.arrayBuffer());
+    if (buffer.byteLength > MAX_REMOTE_AVATAR_BYTES) {
+      return { error: "Image must be 5 MB or smaller." };
+    }
+
+    if (buffer.byteLength < 32) {
+      return { error: "That URL did not return an image." };
+    }
+
+    return { buffer, mimeType };
+  } catch (err) {
+    if (err instanceof Error && err.name === "AbortError") {
+      return { error: "Timed out downloading that image." };
+    }
+    return { error: "Could not download that image. Try another URL." };
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 export async function deleteContactAvatarFile(storagePath: string): Promise<void> {

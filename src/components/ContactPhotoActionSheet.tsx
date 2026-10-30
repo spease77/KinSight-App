@@ -8,6 +8,7 @@ interface ContactPhotoActionSheetProps {
   canPasteFromClipboard: boolean;
   onClose: () => void;
   onPasteFromClipboard: () => void;
+  onPasteImageUrl: () => void;
   onChoosePhoto: () => void;
   onRemovePhoto: () => void;
 }
@@ -18,6 +19,7 @@ export function ContactPhotoActionSheet({
   canPasteFromClipboard,
   onClose,
   onPasteFromClipboard,
+  onPasteImageUrl,
   onChoosePhoto,
   onRemovePhoto,
 }: ContactPhotoActionSheetProps) {
@@ -61,6 +63,13 @@ export function ContactPhotoActionSheet({
               Paste Image from Clipboard
             </button>
           )}
+          <button
+            type="button"
+            className="contact-photo-action-sheet__option"
+            onClick={onPasteImageUrl}
+          >
+            Paste Image URL
+          </button>
           <button
             type="button"
             className="contact-photo-action-sheet__option"

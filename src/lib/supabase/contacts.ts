@@ -38,7 +38,17 @@ import {
   resolveContactAvatarUrl,
   uploadContactAvatar,
   deleteContactAvatarFile,
+  downloadRemoteAvatarImage,
 } from "@/lib/supabase/contact-photos";
+import { collectContactEmails, inferCompanyDomain } from "@/lib/contacts/contact-avatar-inputs";
+import {
+  ENRICHED_AVATAR_CACHE_KEY,
+  getContactAvatar,
+  isEnrichedAvatarCacheFresh,
+  parseEnrichedAvatarCache,
+  serializeEnrichedAvatarCache,
+  type EnrichedAvatarCache,
+} from "@/lib/services/avatarService";
 import {
   OperationTimeoutError,
   withTimeout,
@@ -168,13 +178,104 @@ function resolveRowContactType(row: ContactRow): {
   };
 }
 
+async function persistEnrichedAvatarCache(
+  contactId: string,
+  cache: EnrichedAvatarCache
+): Promise<void> {
+  try {
+    const latest = await getContactRowById(contactId);
+    if (!latest) return;
+
+    const supabase = createServerSupabase();
+    const nextProfile: ContactProfile = {
+      ...(latest.profile ?? {}),
+      __kinsightEnrichedAvatar: serializeEnrichedAvatarCache(cache),
+    };
+    const { error } = await supabase
+      .from("contacts")
+      .update({ profile: nextProfile } as never)
+      .eq("id", contactId);
+
+    if (error) {
+      console.error("persistEnrichedAvatarCache error:", error.message);
+    }
+  } catch (err) {
+    console.error(
+      "persistEnrichedAvatarCache error:",
+      err instanceof Error ? err.message : err
+    );
+  }
+}
+
+async function lookupEnrichedAvatarUrl(row: ContactRow): Promise<string | undefined> {
+  const emails = collectContactEmails({
+    email: row.email,
+    profile: row.profile,
+  });
+  const email = emails[0] ?? "";
+  const companyDomain = inferCompanyDomain({
+    email,
+    emails,
+    company: row.company,
+  });
+
+  const cached = parseEnrichedAvatarCache(
+    row.profile?.[ENRICHED_AVATAR_CACHE_KEY]
+  );
+  if (cached && isEnrichedAvatarCacheFresh(cached, { email, companyDomain })) {
+    return cached.url ?? undefined;
+  }
+
+  let url: string | null = null;
+  try {
+    url = await withTimeout(
+      (async () => {
+        for (const candidate of emails) {
+          const found = await getContactAvatar({
+            email: candidate,
+            companyDomain,
+          });
+          if (found) return found;
+        }
+        return getContactAvatar({ email, companyDomain });
+      })(),
+      4_000,
+      "Avatar enrichment timed out"
+    );
+  } catch (err) {
+    if (!(err instanceof OperationTimeoutError)) {
+      console.error("lookupEnrichedAvatarUrl error:", err);
+    }
+  }
+
+  const cache: EnrichedAvatarCache = {
+    url,
+    source: url?.includes("gravatar.com")
+      ? "gravatar"
+      : url
+        ? "logo"
+        : "none",
+    at: new Date().toISOString(),
+    email: email || undefined,
+    domain: companyDomain ?? undefined,
+  };
+
+  void persistEnrichedAvatarCache(row.id, cache);
+  return url ?? undefined;
+}
+
 async function enrichContactWithAvatar<T extends Contact>(
   contact: T,
   row: ContactRow
 ): Promise<T> {
   const avatarUrl = await resolveContactAvatarUrl(row);
-  if (!avatarUrl) return contact;
-  return { ...contact, avatarUrl };
+  if (avatarUrl) {
+    return { ...contact, avatarUrl };
+  }
+
+  const enrichedAvatarUrl = await lookupEnrichedAvatarUrl(row);
+  if (!enrichedAvatarUrl) return contact;
+  return { ...contact, enrichedAvatarUrl };
 }
 
 function rowToContact(row: ContactRow): Contact {
@@ -1173,6 +1274,31 @@ export async function updateContactAvatar(
     data
   );
   return { contact };
+}
+
+export async function setContactAvatarFromRemoteUrl(
+  contactId: string,
+  imageUrl: string
+): Promise<{ contact: ContactDetail | null; error?: string }> {
+  const existing = await getContactRowById(contactId);
+  if (!existing) {
+    return { contact: null, error: "Contact not found" };
+  }
+
+  const downloaded = await downloadRemoteAvatarImage(imageUrl);
+  if ("error" in downloaded) {
+    return { contact: null, error: downloaded.error };
+  }
+
+  if (existing.avatar_storage_path?.trim()) {
+    await deleteContactAvatarFile(existing.avatar_storage_path.trim());
+  }
+
+  return updateContactAvatar(
+    contactId,
+    downloaded.buffer,
+    downloaded.mimeType
+  );
 }
 
 export async function removeContactAvatar(

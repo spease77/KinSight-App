@@ -5,6 +5,7 @@ import { ContactAvatar } from "@/components/ContactAvatar";
 import { ContactAvatarCropModal } from "@/components/ContactAvatarCropModal";
 import { ContactPhotoActionSheet } from "@/components/ContactPhotoActionSheet";
 import { readClipboardImageBlob } from "@/lib/contacts/avatar-crop";
+import { fetchRemoteAvatarBlob } from "@/lib/contacts/contact-avatar-client";
 import type { ContactSortField } from "@/lib/contacts/sort-contacts";
 import { composeContactName } from "@/types/contact-profile";
 
@@ -42,6 +43,9 @@ export function AddContactPhotoSection({
   const [canPasteFromClipboard, setCanPasteFromClipboard] = useState(false);
   const [cropState, setCropState] = useState<CropState | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isUrlSheetOpen, setIsUrlSheetOpen] = useState(false);
+  const [imageUrl, setImageUrl] = useState("");
+  const [isLoadingUrl, setIsLoadingUrl] = useState(false);
 
   const displayName =
     composeContactName({ firstName, lastName }) || "New contact";
@@ -153,6 +157,32 @@ export function AddContactPhotoSection({
     openCropWithBlob(file);
   };
 
+  const handleSaveImageUrl = async () => {
+    const trimmed = imageUrl.trim();
+    if (!trimmed) {
+      setError("Paste an image URL first.");
+      return;
+    }
+
+    setIsLoadingUrl(true);
+    setError(null);
+
+    try {
+      const result = await fetchRemoteAvatarBlob(trimmed);
+      if (!result.blob) {
+        setError(result.error ?? "Could not download that image URL.");
+        return;
+      }
+      setImageUrl("");
+      setIsUrlSheetOpen(false);
+      openCropWithBlob(result.blob);
+    } catch {
+      setError("Could not download that image URL.");
+    } finally {
+      setIsLoadingUrl(false);
+    }
+  };
+
   const handleRemovePhoto = () => {
     setIsActionSheetOpen(false);
     clearPendingPhoto();
@@ -203,12 +233,62 @@ export function AddContactPhotoSection({
         canPasteFromClipboard={canPasteFromClipboard}
         onClose={() => setIsActionSheetOpen(false)}
         onPasteFromClipboard={() => void handlePasteFromClipboard()}
+        onPasteImageUrl={() => {
+          setIsActionSheetOpen(false);
+          setError(null);
+          setIsUrlSheetOpen(true);
+        }}
         onChoosePhoto={() => {
           setIsActionSheetOpen(false);
           inputRef.current?.click();
         }}
         onRemovePhoto={handleRemovePhoto}
       />
+
+      {isUrlSheetOpen ? (
+        <div
+          className="contact-photo-action-sheet__overlay contact-photo-action-sheet__overlay--open"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Paste image URL"
+          onClick={() => !isLoadingUrl && setIsUrlSheetOpen(false)}
+        >
+          <div
+            className="contact-photo-url-sheet"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <p className="contact-photo-url-sheet__title">Paste image URL</p>
+            <input
+              type="url"
+              inputMode="url"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
+              value={imageUrl}
+              onChange={(event) => setImageUrl(event.target.value)}
+              placeholder="https://…"
+              className="contact-photo-url-sheet__input"
+              disabled={isLoadingUrl}
+            />
+            <button
+              type="button"
+              className="contact-photo-url-sheet__save"
+              onClick={() => void handleSaveImageUrl()}
+              disabled={isLoadingUrl}
+            >
+              {isLoadingUrl ? "Loading…" : "Use this photo"}
+            </button>
+            <button
+              type="button"
+              className="contact-photo-action-sheet__cancel"
+              onClick={() => setIsUrlSheetOpen(false)}
+              disabled={isLoadingUrl}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      ) : null}
 
       {cropState && (
         <ContactAvatarCropModal

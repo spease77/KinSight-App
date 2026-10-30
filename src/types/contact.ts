@@ -20,6 +20,8 @@ export interface Contact {
   relationshipType?: RelationshipType;
   relationshipLabel?: string;
   avatarUrl?: string;
+  /** Gravatar or company logo when the contact has no uploaded headshot. */
+  enrichedAvatarUrl?: string;
   notes?: string;
   nextSteps?: string;
   topics?: string[];

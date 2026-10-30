@@ -2048,6 +2048,48 @@ html.keyboard-composer-active .home-composer-dock {
   background-color: color-mix(in srgb, var(--bg-card-hover) 65%, transparent);
 }
 
+.contact-photo-url-sheet {
+  width: 100%;
+  max-width: 28rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  padding: 1rem 0.875rem 0.25rem;
+  border-radius: 0.875rem;
+  border: 1px solid color-mix(in srgb, var(--border-subtle) 80%, transparent);
+  background-color: color-mix(in srgb, var(--bg-main) 94%, #1e293b);
+}
+
+.contact-photo-url-sheet__title {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--text-muted, #a1a1aa);
+  text-align: center;
+}
+
+.contact-photo-url-sheet__input {
+  width: 100%;
+  padding: 0.75rem 0.875rem;
+  border-radius: 0.625rem;
+  border: 1px solid color-mix(in srgb, var(--border-subtle) 80%, transparent);
+  background-color: color-mix(in srgb, var(--bg-card) 90%, transparent);
+  color: var(--text-primary);
+  font-size: 1rem;
+}
+
+.contact-photo-url-sheet__save {
+  width: 100%;
+  padding: 0.9375rem 1rem;
+  border: none;
+  border-radius: 0.875rem;
+  background-color: color-mix(in srgb, var(--accent-green, #22c55e) 85%, #14532d);
+  font-size: 1rem;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+}
+
 .contact-avatar-crop__overlay {
   position: fixed;
   inset: 0;
@@ -3849,10 +3891,14 @@ html.scroll-chrome-hidden:not(.keyboard-composer-active)
   color: var(--text-primary);
 }
 
-.contact-avatar-initials--hero {
+.contact-avatar-initials {
   border: 1px solid color-mix(in srgb, #ffffff 10%, transparent);
   background-color: color-mix(in srgb, #334155 92%, #1e293b);
   color: color-mix(in srgb, #ffffff 94%, transparent);
+  letter-spacing: 0.02em;
+}
+
+.contact-avatar-initials--hero {
   box-shadow:
     0 1px 0 color-mix(in srgb, #ffffff 6%, transparent) inset,
     0 8px 24px rgba(0, 0, 0, 0.22);

@@ -129,6 +129,8 @@ export type KinSightProfileMeta = {
   __kinsightLabeledInterests?: string;
   __kinsightContactFacts?: string;
   __kinsightAliases?: string;
+  /** Cached Gravatar / company-logo lookup: `{ url, source, at, email, domain }`. */
+  __kinsightEnrichedAvatar?: string;
   /** `YYYY-MM-DD:<age>` — when the stored age was entered, so it can be kept current. */
   __kinsightAgeRecordedAt?: string;
 };
@@ -147,6 +149,7 @@ const KINSIGHT_PROFILE_META_KEYS: (keyof KinSightProfileMeta)[] = [
   "__kinsightLabeledInterests",
   "__kinsightContactFacts",
   "__kinsightAliases",
+  "__kinsightEnrichedAvatar",
   "__kinsightAgeRecordedAt",
 ];
 

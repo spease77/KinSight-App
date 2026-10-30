@@ -1,8 +1,29 @@
 import {
   fetchContactById,
   updateContactAvatar,
+  setContactAvatarFromRemoteUrl,
   removeContactAvatar,
 } from "@/lib/supabase/contacts";
+
+async function saveAvatarFromUrl(contactId: string, rawUrl: unknown) {
+  if (typeof rawUrl !== "string" || !rawUrl.trim()) {
+    return Response.json({ error: "No image URL provided" }, { status: 400 });
+  }
+
+  const { contact, error } = await setContactAvatarFromRemoteUrl(
+    contactId,
+    rawUrl.trim()
+  );
+
+  if (error || !contact) {
+    return Response.json(
+      { error: error ?? "Could not save profile photo" },
+      { status: 400 }
+    );
+  }
+
+  return Response.json({ contact });
+}
 
 export async function POST(
   req: Request,
@@ -11,7 +32,19 @@ export async function POST(
   const { id } = await params;
 
   try {
+    const contentType = req.headers.get("content-type") ?? "";
+
+    if (contentType.includes("application/json")) {
+      const body = (await req.json()) as { url?: unknown };
+      return saveAvatarFromUrl(id, body.url);
+    }
+
     const formData = await req.formData();
+    const urlField = formData.get("url");
+    if (typeof urlField === "string" && urlField.trim()) {
+      return saveAvatarFromUrl(id, urlField);
+    }
+
     const photo = formData.get("photo");
 
     if (!photo || !(photo instanceof Blob)) {
