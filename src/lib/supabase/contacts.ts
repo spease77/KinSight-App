@@ -124,6 +124,7 @@ type ContactRow = {
   contact_type_needs_confirmation?: boolean;
   avatar_storage_path?: string | null;
   avatar_url?: string | null;
+  company_news?: unknown;
   notes: string | null;
   last_contact: string | null;
   last_meeting_date: string | null;

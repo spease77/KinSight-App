@@ -16,6 +16,7 @@ import {
   X,
 } from "lucide-react";
 import { VoiceCaptureModal } from "@/components/VoiceCaptureModal";
+import { PreMeetingBriefing } from "@/components/PreMeetingBriefing";
 import { MicPermissionModal } from "@/components/MicPermissionModal";
 import { useVoiceDebrief } from "@/hooks/useVoiceDebrief";
 import { CalendarSourceBadge } from "@/components/calendar/CalendarSourceBadge";
@@ -264,6 +265,10 @@ function EventDetails({ interaction }: { interaction: ScheduledInteraction }) {
             ))}
           </ul>
         </div>
+      ) : null}
+
+      {hasContactLink ? (
+        <PreMeetingBriefing contactId={interaction.contactId} />
       ) : null}
     </div>
   );

@@ -31,6 +31,7 @@ export interface Database {
           created_at: string;
           updated_at: string;
           is_tracking_paused: boolean;
+          company_news: Record<string, unknown> | null;
         };
         Insert: {
           id?: string;
@@ -56,6 +57,7 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
           is_tracking_paused?: boolean;
+          company_news?: Record<string, unknown> | null;
         };
         Update: {
           id?: string;
@@ -80,6 +82,7 @@ export interface Database {
           source_metadata?: Record<string, unknown>;
           updated_at?: string;
           is_tracking_paused?: boolean;
+          company_news?: Record<string, unknown> | null;
         };
       };
       user_settings: {

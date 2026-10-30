@@ -8,6 +8,7 @@ import { ContactPhotoUpload } from "@/components/ContactPhotoUpload";
 import { ContactDetailIntelSection } from "@/components/ContactDetailIntelSection";
 import { ContactAnchorQuickAdd } from "@/components/ContactAnchorQuickAdd";
 import { ContactTimeLogSection } from "@/components/ContactTimeLogSection";
+import { PreMeetingBriefing } from "@/components/PreMeetingBriefing";
 import { ContactDetailNavBar } from "@/components/ContactDetailNavBar";
 import { VoiceCaptureModal } from "@/components/VoiceCaptureModal";
 import { MicPermissionModal } from "@/components/MicPermissionModal";
@@ -85,6 +86,8 @@ export function ContactDetailView({
           onContactUpdate={onContactUpdate}
         />
       </div>
+
+      <PreMeetingBriefing contactId={contact.id} />
 
       <ContactDetailIntelSection
         contact={contact}
