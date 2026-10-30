@@ -1,10 +1,10 @@
-import { createHash } from "node:crypto";
 import {
   extractEmailDomain,
   inferCompanyDomain,
   isConsumerEmailDomain,
   normalizeHostname,
 } from "@/lib/contacts/contact-avatar-inputs";
+import { md5Hex } from "@/lib/crypto/md5";
 
 export const ENRICHED_AVATAR_CACHE_KEY = "__kinsightEnrichedAvatar";
 export const ENRICHED_AVATAR_CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
@@ -23,7 +23,7 @@ const IMAGE_PROBE_TIMEOUT_MS = 1_800;
 
 export function gravatarHashForEmail(email: string): string {
   const normalized = email.trim().toLowerCase();
-  return createHash("md5").update(normalized).digest("hex");
+  return md5Hex(normalized);
 }
 
 export function gravatarAvatarUrl(email: string, size = 256): string {

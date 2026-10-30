@@ -37,7 +37,6 @@ type CropState = {
 export function ContactPhotoUpload({
   contact,
   sortBy,
-  variant: _variant = "detail",
   onContactUpdate,
   onEditReady,
 }: ContactPhotoUploadProps) {
