@@ -81,10 +81,11 @@ export function PhoneContactSyncSheet({
 
         <div className="flex flex-col gap-3 px-5 py-4 text-sm leading-relaxed text-muted">
           <p className="text-foreground">
-            The shortcut is not in KinSight — it lives in Apple&apos;s Shortcuts
-            app. Create it once, named exactly{" "}
-            <span className="font-medium">{KINSIGHT_CONTACTS_SHORTCUT_NAME}</span>
-            . Then two taps: Sync, then Allow.
+            Apple does not let a Home Screen app read Contacts or install a
+            shortcut for you. You create{" "}
+            <span className="font-medium">{KINSIGHT_CONTACTS_SHORTCUT_NAME}</span>{" "}
+            once in the Shortcuts app. After that, <span className="font-medium">Sync</span>{" "}
+            is one tap.
           </p>
           <ol className="list-decimal space-y-2 pl-5 text-foreground">
             <li>

@@ -15,6 +15,9 @@ import {
   KINSIGHT_CONTACTS_SHORTCUT_NAME,
   contactsShortcutCreateUrl,
   contactsShortcutRunUrl,
+  isContactsShortcutReady,
+  isIosDevice,
+  setContactsShortcutReady,
 } from "@/lib/contacts/ios-shortcut";
 import { showErrorToast, showSuccessToast } from "@/lib/ui/toast";
 
@@ -114,6 +117,10 @@ export function usePhoneContactSync(onComplete?: () => void) {
     setLastResult(null);
 
     if (!pickerSupported) {
+      if (isIosDevice() && isContactsShortcutReady()) {
+        window.location.href = contactsShortcutRunUrl(window.location.origin);
+        return;
+      }
       setSheetOpen(true);
       return;
     }
@@ -178,6 +185,7 @@ export function usePhoneContactSync(onComplete?: () => void) {
   }, []);
 
   const runIosShortcut = useCallback(() => {
+    setContactsShortcutReady(true);
     setSheetOpen(false);
     window.location.href = contactsShortcutRunUrl(window.location.origin);
   }, []);
@@ -186,6 +194,9 @@ export function usePhoneContactSync(onComplete?: () => void) {
     setError(null);
     setLastResult(null);
   }, []);
+
+  const openSheet = useCallback(() => setSheetOpen(true), []);
+  const closeSheet = useCallback(() => setSheetOpen(false), []);
 
   return {
     pickerSupported,
@@ -199,7 +210,8 @@ export function usePhoneContactSync(onComplete?: () => void) {
     importFiles,
     createIosShortcut,
     runIosShortcut,
-    closeSheet: () => setSheetOpen(false),
+    closeSheet,
+    openSheet,
     clearStatus,
   };
 }

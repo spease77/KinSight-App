@@ -10,6 +10,7 @@ import { DatabaseSetupNotice } from "@/components/DatabaseSetupNotice";
 import { useContacts } from "@/hooks/useContacts";
 import { PhoneContactSyncSheet } from "@/components/PhoneContactSyncSheet";
 import { usePhoneContactSync } from "@/hooks/usePhoneContactSync";
+import { setContactsShortcutReady } from "@/lib/contacts/ios-shortcut";
 import { showErrorToast, showSuccessToast } from "@/lib/ui/toast";
 import { Loader2, RefreshCw, UserPlus } from "lucide-react";
 
@@ -26,6 +27,7 @@ export function ContactsPage() {
     createIosShortcut,
     runIosShortcut,
     closeSheet,
+    openSheet,
     clearStatus,
   } = usePhoneContactSync(reload);
 
@@ -36,13 +38,16 @@ export function ContactsPage() {
     if (!synced && !missing) return;
 
     if (synced) {
+      setContactsShortcutReady(true);
       showSuccessToast("iPhone contacts synced.");
       void reload();
     }
     if (missing) {
+      setContactsShortcutReady(false);
       showErrorToast(
-        "Create the shortcut named KinSight Contacts first, then tap I’ve added it."
+        "Apple will not let KinSight install the shortcut. Create “KinSight Contacts” once, then Sync is one tap."
       );
+      openSheet();
     }
 
     params.delete("contactsSynced");
@@ -53,7 +58,7 @@ export function ContactsPage() {
       "",
       next ? `${window.location.pathname}?${next}` : window.location.pathname
     );
-  }, [reload]);
+  }, [openSheet, reload]);
 
   const statusMessage = syncError;
 
