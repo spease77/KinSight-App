@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
 import { Header } from "@/components/Header";
 import { PageBody } from "@/components/PageBody";
@@ -9,6 +10,7 @@ import { DatabaseSetupNotice } from "@/components/DatabaseSetupNotice";
 import { useContacts } from "@/hooks/useContacts";
 import { PhoneContactSyncSheet } from "@/components/PhoneContactSyncSheet";
 import { usePhoneContactSync } from "@/hooks/usePhoneContactSync";
+import { showSuccessToast } from "@/lib/ui/toast";
 import { Loader2, RefreshCw, UserPlus } from "lucide-react";
 
 export function ContactsPage() {
@@ -21,9 +23,24 @@ export function ContactsPage() {
     accept,
     syncContacts,
     importFiles,
+    runIosShortcut,
     closeSheet,
     clearStatus,
   } = usePhoneContactSync(reload);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("contactsSynced") !== "1") return;
+    showSuccessToast("iPhone contacts synced.");
+    void reload();
+    params.delete("contactsSynced");
+    const next = params.toString();
+    window.history.replaceState(
+      null,
+      "",
+      next ? `${window.location.pathname}?${next}` : window.location.pathname
+    );
+  }, [reload]);
 
   const statusMessage = syncError;
 
@@ -113,6 +130,7 @@ export function ContactsPage() {
         onFiles={(files) => {
           void importFiles(files);
         }}
+        onRunShortcut={runIosShortcut}
       />
     </>
   );

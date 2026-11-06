@@ -110,6 +110,15 @@ export function parseVCardText(text: string): PhoneContactImport[] {
   return contacts;
 }
 
+function detectCsvDelimiter(header: string): string {
+  const tabs = (header.match(/\t/g) ?? []).length;
+  const semis = (header.match(/;/g) ?? []).length;
+  const commas = (header.match(/,/g) ?? []).length;
+  if (tabs > 0 && tabs >= semis && tabs >= commas) return "\t";
+  if (semis > commas) return ";";
+  return ",";
+}
+
 function parseCsvLine(line: string, delimiter: string): string[] {
   const cells: string[] = [];
   let current = "";
@@ -153,9 +162,7 @@ export function parseCsvContacts(text: string): PhoneContactImport[] {
     .filter((line) => line.trim());
   if (lines.length < 2) return [];
 
-  const delimiter = (lines[0].match(/;/g)?.length ?? 0) > (lines[0].match(/,/g)?.length ?? 0)
-    ? ";"
-    : ",";
+  const delimiter = detectCsvDelimiter(lines[0]);
   const headers = parseCsvLine(lines[0], delimiter).map((cell) =>
     cell.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim()
   );

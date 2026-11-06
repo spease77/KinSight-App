@@ -11,6 +11,7 @@ import {
   CONTACT_IMPORT_ACCEPT,
   parseContactImportFiles,
 } from "@/lib/contacts/parse-contact-file";
+import { contactsShortcutRunUrl } from "@/lib/contacts/ios-shortcut";
 import { showErrorToast, showSuccessToast } from "@/lib/ui/toast";
 
 const LOG_PREFIX = "[KinSight contact-sync]";
@@ -156,6 +157,11 @@ export function usePhoneContactSync(onComplete?: () => void) {
     [postContacts]
   );
 
+  const runIosShortcut = useCallback(() => {
+    setSheetOpen(false);
+    window.location.href = contactsShortcutRunUrl();
+  }, []);
+
   const clearStatus = useCallback(() => {
     setError(null);
     setLastResult(null);
@@ -171,6 +177,7 @@ export function usePhoneContactSync(onComplete?: () => void) {
     accept: CONTACT_IMPORT_ACCEPT,
     syncContacts,
     importFiles,
+    runIosShortcut,
     closeSheet: () => setSheetOpen(false),
     clearStatus,
   };
