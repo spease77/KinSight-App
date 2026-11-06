@@ -11,14 +11,6 @@ import {
   CONTACT_IMPORT_ACCEPT,
   parseContactImportFiles,
 } from "@/lib/contacts/parse-contact-file";
-import {
-  KINSIGHT_CONTACTS_SHORTCUT_NAME,
-  contactsShortcutCreateUrl,
-  contactsShortcutRunUrl,
-  isContactsShortcutReady,
-  isIosDevice,
-  setContactsShortcutReady,
-} from "@/lib/contacts/ios-shortcut";
 import { showErrorToast, showSuccessToast } from "@/lib/ui/toast";
 
 const LOG_PREFIX = "[KinSight contact-sync]";
@@ -117,10 +109,6 @@ export function usePhoneContactSync(onComplete?: () => void) {
     setLastResult(null);
 
     if (!pickerSupported) {
-      if (isIosDevice() && isContactsShortcutReady()) {
-        window.location.href = contactsShortcutRunUrl(window.location.origin);
-        return;
-      }
       setSheetOpen(true);
       return;
     }
@@ -168,35 +156,10 @@ export function usePhoneContactSync(onComplete?: () => void) {
     [postContacts]
   );
 
-  const createIosShortcut = useCallback(async () => {
-    try {
-      await navigator.clipboard.writeText(KINSIGHT_CONTACTS_SHORTCUT_NAME);
-      showSuccessToast(
-        `Name copied: ${KINSIGHT_CONTACTS_SHORTCUT_NAME}. Paste that as the shortcut name.`
-      );
-    } catch {
-      showSuccessToast(
-        `Name the shortcut exactly: ${KINSIGHT_CONTACTS_SHORTCUT_NAME}`
-      );
-    }
-    window.setTimeout(() => {
-      window.location.href = contactsShortcutCreateUrl();
-    }, 400);
-  }, []);
-
-  const runIosShortcut = useCallback(() => {
-    setContactsShortcutReady(true);
-    setSheetOpen(false);
-    window.location.href = contactsShortcutRunUrl(window.location.origin);
-  }, []);
-
   const clearStatus = useCallback(() => {
     setError(null);
     setLastResult(null);
   }, []);
-
-  const openSheet = useCallback(() => setSheetOpen(true), []);
-  const closeSheet = useCallback(() => setSheetOpen(false), []);
 
   return {
     pickerSupported,
@@ -208,10 +171,7 @@ export function usePhoneContactSync(onComplete?: () => void) {
     accept: CONTACT_IMPORT_ACCEPT,
     syncContacts,
     importFiles,
-    createIosShortcut,
-    runIosShortcut,
-    closeSheet,
-    openSheet,
+    closeSheet: () => setSheetOpen(false),
     clearStatus,
   };
 }

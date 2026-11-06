@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect } from "react";
 import Link from "next/link";
 import { Header } from "@/components/Header";
 import { PageBody } from "@/components/PageBody";
@@ -10,8 +9,6 @@ import { DatabaseSetupNotice } from "@/components/DatabaseSetupNotice";
 import { useContacts } from "@/hooks/useContacts";
 import { PhoneContactSyncSheet } from "@/components/PhoneContactSyncSheet";
 import { usePhoneContactSync } from "@/hooks/usePhoneContactSync";
-import { setContactsShortcutReady } from "@/lib/contacts/ios-shortcut";
-import { showErrorToast, showSuccessToast } from "@/lib/ui/toast";
 import { Loader2, RefreshCw, UserPlus } from "lucide-react";
 
 export function ContactsPage() {
@@ -24,41 +21,9 @@ export function ContactsPage() {
     accept,
     syncContacts,
     importFiles,
-    createIosShortcut,
-    runIosShortcut,
     closeSheet,
-    openSheet,
     clearStatus,
   } = usePhoneContactSync(reload);
-
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const synced = params.get("contactsSynced") === "1";
-    const missing = params.get("shortcutMissing") === "1";
-    if (!synced && !missing) return;
-
-    if (synced) {
-      setContactsShortcutReady(true);
-      showSuccessToast("iPhone contacts synced.");
-      void reload();
-    }
-    if (missing) {
-      setContactsShortcutReady(false);
-      showErrorToast(
-        "Apple will not let KinSight install the shortcut. Create “KinSight Contacts” once, then Sync is one tap."
-      );
-      openSheet();
-    }
-
-    params.delete("contactsSynced");
-    params.delete("shortcutMissing");
-    const next = params.toString();
-    window.history.replaceState(
-      null,
-      "",
-      next ? `${window.location.pathname}?${next}` : window.location.pathname
-    );
-  }, [openSheet, reload]);
 
   const statusMessage = syncError;
 
@@ -148,10 +113,6 @@ export function ContactsPage() {
         onFiles={(files) => {
           void importFiles(files);
         }}
-        onCreateShortcut={() => {
-          void createIosShortcut();
-        }}
-        onRunShortcut={runIosShortcut}
       />
     </>
   );
