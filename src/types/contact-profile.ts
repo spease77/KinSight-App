@@ -133,6 +133,8 @@ export type KinSightProfileMeta = {
   __kinsightEnrichedAvatar?: string;
   /** Cached domain-verified company news JSON. */
   __kinsightCompanyNews?: string;
+  /** Cached People Advisor intelligence_profile JSON. */
+  __kinsightIntelligenceProfile?: string;
   /** `YYYY-MM-DD:<age>` — when the stored age was entered, so it can be kept current. */
   __kinsightAgeRecordedAt?: string;
 };
@@ -153,6 +155,7 @@ const KINSIGHT_PROFILE_META_KEYS: (keyof KinSightProfileMeta)[] = [
   "__kinsightAliases",
   "__kinsightEnrichedAvatar",
   "__kinsightCompanyNews",
+  "__kinsightIntelligenceProfile",
   "__kinsightAgeRecordedAt",
 ];
 

@@ -41,6 +41,76 @@ function summarizeTranscript(transcript: string): string | null {
   return firstLine.length > 240 ? `${firstLine.slice(0, 237).trim()}…` : firstLine;
 }
 
+export async function getVoiceLogById(
+  id: string
+): Promise<VoiceLogRecord | null> {
+  const trimmed = id.trim();
+  if (!trimmed) return null;
+
+  try {
+    const supabase = createServerSupabase();
+    const { data, error } = await supabase
+      .from("voice_logs")
+      .select(
+        "id, contact_id, calendar_event_id, transcript, ai_summary, action_items, created_at"
+      )
+      .eq("id", trimmed)
+      .maybeSingle();
+
+    if (error || !data) return null;
+    return data as VoiceLogRecord;
+  } catch {
+    return null;
+  }
+}
+
+export async function listVoiceLogsForContact(
+  contactId: string,
+  limit = 8
+): Promise<VoiceLogRecord[]> {
+  const trimmed = contactId.trim();
+  if (!trimmed) return [];
+
+  try {
+    const supabase = createServerSupabase();
+    const { data, error } = await supabase
+      .from("voice_logs")
+      .select(
+        "id, contact_id, calendar_event_id, transcript, ai_summary, action_items, created_at"
+      )
+      .eq("contact_id", trimmed)
+      .order("created_at", { ascending: false })
+      .limit(limit);
+
+    if (error || !data) return [];
+    return data as VoiceLogRecord[];
+  } catch {
+    return [];
+  }
+}
+
+export async function updateVoiceLogTranscript(
+  id: string,
+  transcript: string
+): Promise<void> {
+  const trimmedId = id.trim();
+  const trimmedTranscript = transcript.trim();
+  if (!trimmedId || !trimmedTranscript) return;
+
+  try {
+    const supabase = createServerSupabase();
+    const { error } = await supabase
+      .from("voice_logs")
+      .update({ transcript: trimmedTranscript } as never)
+      .eq("id", trimmedId);
+    if (error) {
+      console.error("updateVoiceLogTranscript error:", error.message);
+    }
+  } catch (err) {
+    console.error("updateVoiceLogTranscript error:", err);
+  }
+}
+
 export async function recordVoiceLog(
   input: RecordVoiceLogInput
 ): Promise<{ id?: string; voice_log?: VoiceLogRecord; error?: string }> {

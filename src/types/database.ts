@@ -32,6 +32,7 @@ export interface Database {
           updated_at: string;
           is_tracking_paused: boolean;
           company_news: Record<string, unknown> | null;
+          intelligence_profile: Record<string, unknown> | null;
         };
         Insert: {
           id?: string;
@@ -58,6 +59,7 @@ export interface Database {
           updated_at?: string;
           is_tracking_paused?: boolean;
           company_news?: Record<string, unknown> | null;
+          intelligence_profile?: Record<string, unknown> | null;
         };
         Update: {
           id?: string;
@@ -83,6 +85,7 @@ export interface Database {
           updated_at?: string;
           is_tracking_paused?: boolean;
           company_news?: Record<string, unknown> | null;
+          intelligence_profile?: Record<string, unknown> | null;
         };
       };
       user_settings: {
@@ -282,6 +285,7 @@ export interface Database {
           contact_id: string | null;
           title: string | null;
           start_time: string | null;
+          pre_meeting_card: Record<string, unknown> | null;
           created_at: string;
           updated_at: string;
         };
@@ -299,6 +303,7 @@ export interface Database {
           contact_id?: string | null;
           title?: string | null;
           start_time?: string | null;
+          pre_meeting_card?: Record<string, unknown> | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -315,7 +320,38 @@ export interface Database {
           contact_id?: string | null;
           title?: string | null;
           start_time?: string | null;
+          pre_meeting_card?: Record<string, unknown> | null;
           updated_at?: string;
+        };
+      };
+      advisor_tasks: {
+        Row: {
+          id: string;
+          contact_id: string;
+          calendar_event_id: string | null;
+          voice_log_id: string | null;
+          title: string;
+          due_at: string | null;
+          status: "pending" | "done" | "cancelled";
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          contact_id: string;
+          calendar_event_id?: string | null;
+          voice_log_id?: string | null;
+          title: string;
+          due_at?: string | null;
+          status?: "pending" | "done" | "cancelled";
+          created_at?: string;
+        };
+        Update: {
+          contact_id?: string;
+          calendar_event_id?: string | null;
+          voice_log_id?: string | null;
+          title?: string;
+          due_at?: string | null;
+          status?: "pending" | "done" | "cancelled";
         };
       };
       voice_logs: {

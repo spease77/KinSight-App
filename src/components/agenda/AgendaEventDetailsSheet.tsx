@@ -268,7 +268,12 @@ function EventDetails({ interaction }: { interaction: ScheduledInteraction }) {
       ) : null}
 
       {hasContactLink ? (
-        <PreMeetingBriefing contactId={interaction.contactId} />
+        <PreMeetingBriefing
+          contactId={interaction.contactId}
+          eventId={interaction.id}
+          externalEventId={interaction.externalEventId}
+          provider={interaction.source}
+        />
       ) : null}
     </div>
   );

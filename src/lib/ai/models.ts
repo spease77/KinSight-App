@@ -12,6 +12,9 @@ export const MODELS = {
   agent:
     process.env.ANTHROPIC_AGENT_MODEL ??
     (speedMode ? "claude-haiku-4-5-20251001" : "claude-sonnet-4-6"),
+  /** People Advisor Engine — keep this on Sonnet, not Haiku. */
+  advisor:
+    process.env.ANTHROPIC_ADVISOR_MODEL ?? "claude-sonnet-4-6",
   /** tts-1 is faster than tts-1-hd */
   tts: process.env.OPENAI_TTS_MODEL ?? (speedMode ? "tts-1" : "tts-1-hd"),
 } as const;

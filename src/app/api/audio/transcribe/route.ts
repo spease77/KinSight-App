@@ -7,6 +7,7 @@ import {
 } from "@/lib/audio/transcribe-buffer";
 import { lookupCalendarEventId } from "@/lib/calendar/lookup-event";
 import { resolveContact } from "@/lib/services/contactResolver";
+import { processVoiceDebrief } from "@/lib/services/debriefProcessor";
 import { appendContactAlias } from "@/lib/supabase/contact-aliases";
 import { appendContactNote } from "@/lib/supabase/contacts";
 import {
@@ -266,6 +267,10 @@ export async function POST(req: Request) {
       undefined,
       { skipVoiceLog: true }
     );
+
+    void processVoiceDebrief({ voiceLogId: saved.voice_log.id }).catch((err) => {
+      console.error("processVoiceDebrief error:", err);
+    });
 
     return Response.json({
       voice_log: saved.voice_log as VoiceLogRecord,

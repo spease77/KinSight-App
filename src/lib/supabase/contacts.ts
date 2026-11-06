@@ -125,6 +125,7 @@ type ContactRow = {
   avatar_storage_path?: string | null;
   avatar_url?: string | null;
   company_news?: unknown;
+  intelligence_profile?: unknown;
   notes: string | null;
   last_contact: string | null;
   last_meeting_date: string | null;
