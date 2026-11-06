@@ -1,4 +1,4 @@
-import { getCalendarConnection } from "@/lib/calendar/connections";
+import { resolveCalendarConnection } from "@/lib/calendar/connections";
 import {
   getGoogleRedirectUri,
   isGoogleCalendarConfigured,
@@ -45,8 +45,8 @@ export async function GET(request: Request) {
   }
 
   const [google, outlook] = await Promise.all([
-    getCalendarConnection(userId, "google"),
-    getCalendarConnection(userId, "outlook"),
+    resolveCalendarConnection(userId, "google"),
+    resolveCalendarConnection(userId, "outlook"),
   ]);
 
   const body: CalendarStatusResponse = {

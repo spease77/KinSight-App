@@ -4,7 +4,7 @@ import {
   buildCalendarAttendeesFromEmails,
   type CalendarAttendee,
 } from "@/lib/calendar/calendar-attendees";
-import { getCalendarConnection } from "@/lib/calendar/connections";
+import { resolveCalendarConnection } from "@/lib/calendar/connections";
 import { upsertGoogleCalendarEvent } from "@/lib/calendar/google-events";
 import { upsertOutlookCalendarEvent } from "@/lib/calendar/outlook-events";
 
@@ -54,8 +54,8 @@ export async function syncMeetingToExternalCalendars(
     );
   } else {
     const [google, outlook] = await Promise.all([
-      getCalendarConnection(payload.userId, "google"),
-      getCalendarConnection(payload.userId, "outlook"),
+      resolveCalendarConnection(payload.userId, "google"),
+      resolveCalendarConnection(payload.userId, "outlook"),
     ]);
 
     if (google.connection) {

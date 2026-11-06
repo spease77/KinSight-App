@@ -94,6 +94,98 @@ export async function getCalendarConnection(
   }
 }
 
+/**
+ * Most recently updated mailbox for this provider. KinSight has no login UI,
+ * so a new device cookie (Safari vs Home Screen, or a fresh ?v= tab) would
+ * otherwise look disconnected even though Google/Outlook tokens are still
+ * in Supabase.
+ */
+export async function findLatestCalendarConnection(
+  provider: CalendarProvider
+): Promise<{
+  connection: CalendarConnectionRow | null;
+  error?: string;
+  setupRequired?: boolean;
+}> {
+  try {
+    const supabase = createServiceRoleSupabase();
+    const { data, error } = await supabase
+      .from("calendar_connections")
+      .select(CONNECTION_SELECT)
+      .eq("provider", provider)
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      if (isCalendarConnectionsTableMissing(error.message)) {
+        return {
+          connection: null,
+          setupRequired: true,
+          error:
+            "Calendar connections are not set up yet — run migration 019_calendar_connections.sql in the Supabase SQL editor.",
+        };
+      }
+
+      return {
+        connection: null,
+        error: humanizeSupabaseFetchError(error.message),
+      };
+    }
+
+    return { connection: (data as CalendarConnectionRow | null) ?? null };
+  } catch (err) {
+    return {
+      connection: null,
+      error: humanizeSupabaseFetchError(
+        err instanceof Error ? err.message : "Could not load calendar connection."
+      ),
+    };
+  }
+}
+
+/**
+ * Connection for this install, or the existing mailbox if this install has
+ * not connected yet (same KinSight database, new device id).
+ */
+export async function resolveCalendarConnection(
+  userId: string,
+  provider: CalendarProvider
+): Promise<{
+  connection: CalendarConnectionRow | null;
+  error?: string;
+  setupRequired?: boolean;
+}> {
+  const own = await getCalendarConnection(userId, provider);
+  if (own.connection || own.error || own.setupRequired) return own;
+
+  const latest = await findLatestCalendarConnection(provider);
+  if (!latest.connection || latest.connection.user_id === userId) {
+    return latest;
+  }
+
+  const adopted = await upsertCalendarConnection({
+    userId,
+    provider,
+    accountEmail: latest.connection.account_email,
+    providerAccountId: latest.connection.provider_account_id,
+    accessToken: latest.connection.access_token,
+    refreshToken: latest.connection.refresh_token ?? undefined,
+    expiresAt: latest.connection.token_expires_at,
+    scope: latest.connection.scope,
+  });
+
+  if (adopted.error || adopted.setupRequired) {
+    return {
+      connection: latest.connection,
+      error: adopted.error,
+      setupRequired: adopted.setupRequired,
+    };
+  }
+
+  return getCalendarConnection(userId, provider);
+}
+
 export async function findCalendarConnectionByAccount(input: {
   provider: CalendarProvider;
   providerAccountId?: string | null;
@@ -271,15 +363,17 @@ export async function upsertCalendarConnection(input: {
 }
 
 export async function deleteCalendarConnection(
-  userId: string,
+  _userId: string,
   provider: CalendarProvider
 ): Promise<{ error?: string; setupRequired?: boolean }> {
   try {
     const supabase = createServiceRoleSupabase();
+    // One KinSight database, one mailbox per provider. Delete every row for
+    // this provider so a leftover device-id row cannot "reconnect" after
+    // Disconnect (see resolveCalendarConnection).
     const { error } = await supabase
       .from("calendar_connections")
       .delete()
-      .eq("user_id", userId)
       .eq("provider", provider);
 
     if (error) {
@@ -330,7 +424,7 @@ export async function hasOtherCalendarConnection(
   besides: CalendarProvider
 ): Promise<boolean> {
   const other: CalendarProvider = besides === "google" ? "outlook" : "google";
-  const { connection } = await getCalendarConnection(userId, other);
+  const { connection } = await resolveCalendarConnection(userId, other);
   return Boolean(connection);
 }
 
@@ -338,7 +432,7 @@ async function getValidProviderAccessToken(
   userId: string,
   provider: CalendarProvider
 ): Promise<ValidAccessToken> {
-  const { connection, error, setupRequired } = await getCalendarConnection(
+  const { connection, error, setupRequired } = await resolveCalendarConnection(
     userId,
     provider
   );

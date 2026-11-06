@@ -1,10 +1,12 @@
 "use client";
 
+import { useLayoutEffect } from "react";
 import { VoiceExperienceRoot } from "@/components/voice/VoiceExperienceRoot";
 import { HomeSessionProvider } from "@/contexts/HomeSessionContext";
 import { useKeyboardOpen } from "@/hooks/useKeyboardOpen";
 import { useScrollChromeVisibility } from "@/hooks/useScrollChromeVisibility";
 import { useViewportCalibration } from "@/hooks/useViewportCalibration";
+import { ensureCalendarDeviceId } from "@/lib/calendar/device-id-client";
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -14,6 +16,9 @@ export function AppShell({ children }: AppShellProps) {
   useKeyboardOpen();
   useScrollChromeVisibility();
   useViewportCalibration();
+  useLayoutEffect(() => {
+    ensureCalendarDeviceId();
+  }, []);
 
   return (
     <div
