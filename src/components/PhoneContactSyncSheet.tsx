@@ -56,17 +56,21 @@ export function PhoneContactSyncSheet({
 
         <div className="flex flex-col gap-3 px-5 py-4 text-sm leading-relaxed text-muted">
           <p>
-            iPhone can&apos;t share the Contacts app with a Home Screen web app.
-            Export everyone from iCloud once, then import the file here. On
-            Android Chrome, Sync still opens the system contact picker.
+            iPhone won&apos;t let this Home Screen app tap into Contacts for
+            you. Export everyone once from the Contacts app, then choose the
+            file here. Android Chrome still opens the system picker.
           </p>
           <ol className="list-decimal space-y-1.5 pl-5 text-foreground">
-            <li>On the phone, open Safari and go to iCloud.com/contacts</li>
-            <li>Sign in → gear → Select All → Export vCard</li>
-            <li>Save the file in Files</li>
-            <li>Choose that vCard below</li>
+            <li>Open the Contacts app</li>
+            <li>Tap Lists (top left)</li>
+            <li>
+              Touch and hold <span className="font-medium">All iCloud</span> or{" "}
+              <span className="font-medium">All Contacts</span>
+            </li>
+            <li>Tap Export → Done</li>
+            <li>Save to Files</li>
+            <li>Choose that .vcf below</li>
           </ol>
-          <p>A CSV from Google Contacts works on any phone too.</p>
         </div>
 
         <div className="border-t border-hotel-border px-5 py-4">
