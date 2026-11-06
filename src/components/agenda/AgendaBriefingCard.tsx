@@ -8,6 +8,7 @@ import {
 import { formatAgendaEventTime } from "@/lib/agenda/time-frame";
 import { AGENDA_ITEM_SELECTED_CLASS } from "@/components/agenda/agenda-panel-styles";
 import { CalendarSourceBadge } from "@/components/calendar/CalendarSourceBadge";
+import { PreMeetingCard } from "@/components/PreMeetingCard";
 import {
   isLinkedContactId,
   type ScheduledInteraction,
@@ -77,6 +78,20 @@ export function AgendaBriefingCard({
           </div>
         </div>
       </div>
+
+      {hasContactLink ? (
+        <PreMeetingCard
+          contactId={interaction.contactId}
+          contactName={interaction.contactName}
+          eventId={interaction.id}
+          externalEventId={interaction.externalEventId}
+          provider={interaction.source}
+          variant="compact"
+          upcomingOnly
+          eventStartAt={interaction.scheduledAt}
+          durationMinutes={interaction.durationMinutes}
+        />
+      ) : null}
 
       {interaction.behavioralTags.length > 0 && (
         <ul

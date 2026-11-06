@@ -9,6 +9,7 @@ import { ContactDetailIntelSection } from "@/components/ContactDetailIntelSectio
 import { ContactAnchorQuickAdd } from "@/components/ContactAnchorQuickAdd";
 import { ContactTimeLogSection } from "@/components/ContactTimeLogSection";
 import { PreMeetingBriefing } from "@/components/PreMeetingBriefing";
+import { RelationshipGauge } from "@/components/RelationshipGauge";
 import { ContactDetailNavBar } from "@/components/ContactDetailNavBar";
 import { VoiceCaptureModal } from "@/components/VoiceCaptureModal";
 import { MicPermissionModal } from "@/components/MicPermissionModal";
@@ -58,6 +59,14 @@ export function ContactDetailView({
           <h1 className="contact-detail-hero__name text-3xl font-normal tracking-tight">
             {displayName}
           </h1>
+          <RelationshipGauge
+            contactName={contact.name}
+            lastInteractionDate={
+              contact.lastInteractionDate ?? contact.lastMeetingDate
+            }
+            email={contact.email}
+            profile={contact.profile}
+          />
         </div>
 
         <ContactTimeLogSection
@@ -87,7 +96,7 @@ export function ContactDetailView({
         />
       </div>
 
-      <PreMeetingBriefing contactId={contact.id} />
+      <PreMeetingBriefing contactId={contact.id} contactName={contact.name} />
 
       <ContactDetailIntelSection
         contact={contact}

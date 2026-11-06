@@ -12,6 +12,7 @@ import { useRouter } from "next/navigation";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import { Header } from "@/components/Header";
+import { PostMeetingDebriefBanner } from "@/components/PostMeetingDebriefBanner";
 import { PageHeader } from "@/components/PageHeader";
 import { HomeVoiceCapture } from "@/components/HomeVoiceCapture";
 import { MicrophoneButton } from "@/components/MicrophoneButton";
@@ -618,6 +619,7 @@ export function Dashboard({ homeSession: _homeSession = 0 }: DashboardProps) {
           <PageHeader className="home-dashboard__header home-page-header home-conversation-header">
             {header}
           </PageHeader>
+          <PostMeetingDebriefBanner />
 
           <main className="relative flex h-full min-h-0 flex-1 flex-col">
             <section
@@ -672,6 +674,7 @@ export function Dashboard({ homeSession: _homeSession = 0 }: DashboardProps) {
           <PageHeader className="home-dashboard__header home-page-header shrink-0">
             {header}
           </PageHeader>
+          <PostMeetingDebriefBanner />
 
           <main className="home-dashboard__main relative flex min-h-0 flex-1 flex-col">
             <section

@@ -13,6 +13,7 @@ import { Plus, Search } from "lucide-react";
 import { Header } from "@/components/Header";
 import { PageHeader } from "@/components/PageHeader";
 import { AgendaEventDetailsSheet } from "@/components/agenda/AgendaEventDetailsSheet";
+import { PostMeetingDebriefBanner } from "@/components/PostMeetingDebriefBanner";
 import { AgendaFeed } from "@/components/agenda/AgendaFeed";
 import { AgendaHourlyGrid } from "@/components/agenda/AgendaHourlyGrid";
 import { AgendaSearchBar } from "@/components/agenda/AgendaSearchBar";
@@ -382,6 +383,7 @@ export function AgendaPage() {
         >
           <Header title="Agenda" headerActions={headerActions} />
         </PageHeader>
+        <PostMeetingDebriefBanner interactions={agendaInteractions} />
         <div
           className={`agenda-page-toolbar shrink-0 ${
             headerScrolled ? "agenda-page-header--scrolled" : ""

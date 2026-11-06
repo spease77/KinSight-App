@@ -171,7 +171,20 @@ function EventDetails({ interaction }: { interaction: ScheduledInteraction }) {
   const calendarUrl = externalCalendarUrl(interaction);
 
   return (
-    <div className="divide-y divide-border">
+    <div className="flex flex-col gap-3 py-3">
+      {hasContactLink ? (
+        <PreMeetingBriefing
+          contactId={interaction.contactId}
+          contactName={interaction.contactName}
+          eventId={interaction.id}
+          externalEventId={interaction.externalEventId}
+          provider={interaction.source}
+          eventStartAt={interaction.scheduledAt}
+          durationMinutes={interaction.durationMinutes}
+        />
+      ) : null}
+
+      <div className="divide-y divide-border">
       {readOnly && interaction.source !== "kinsight" ? (
         <div className="flex items-start gap-2 py-3">
           <Lock className="mt-0.5 h-4 w-4 shrink-0 text-muted" strokeWidth={2} />
@@ -267,14 +280,7 @@ function EventDetails({ interaction }: { interaction: ScheduledInteraction }) {
         </div>
       ) : null}
 
-      {hasContactLink ? (
-        <PreMeetingBriefing
-          contactId={interaction.contactId}
-          eventId={interaction.id}
-          externalEventId={interaction.externalEventId}
-          provider={interaction.source}
-        />
-      ) : null}
+      </div>
     </div>
   );
 }

@@ -119,8 +119,13 @@ export function buildTelHref(e164: string): string {
   return `tel:${e164}`;
 }
 
-export function buildSmsHref(e164: string): string {
-  return `sms:${e164}`;
+export function buildSmsHref(e164: string, body?: string): string {
+  if (!body?.trim()) return `sms:${e164}`;
+  const encoded = encodeURIComponent(body.trim());
+  const ios = /iPhone|iPad|iPod/i.test(
+    typeof navigator === "undefined" ? "" : navigator.userAgent
+  );
+  return ios ? `sms:${e164}&body=${encoded}` : `sms:${e164}?body=${encoded}`;
 }
 
 export function buildFacetimeHref(e164: string): string {

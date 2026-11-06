@@ -13,9 +13,11 @@ import {
 } from "@/lib/audio/recording-engine";
 import { createMediaRecorderForStream } from "@/lib/audio/recorder-mime";
 import { showErrorToast, showSuccessToast } from "@/lib/ui/toast";
+import type { VoiceDebriefCaptureResult } from "@/lib/contacts/voice-debrief-result";
 import type { VoiceLogActionItem, VoiceLogRecord } from "@/lib/supabase/voice-logs";
+import { DebriefResultSheet } from "@/components/DebriefResultSheet";
 
-type CapturePhase = "recording" | "processing" | "confirm";
+type CapturePhase = "recording" | "processing" | "confirm" | "result";
 
 type PendingDebrief = {
   transcript: string;
@@ -36,7 +38,10 @@ interface VoiceCaptureModalProps {
   provider?: string | null;
   eventTitle?: string | null;
   onClose: () => void;
-  onComplete?: (voiceLog: VoiceLogRecord) => void;
+  onComplete?: (
+    voiceLog: VoiceLogRecord,
+    debrief?: VoiceDebriefCaptureResult | null
+  ) => void;
 }
 
 function formatTimer(seconds: number): string {
@@ -60,6 +65,8 @@ export function VoiceCaptureModal({
   const [elapsed, setElapsed] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState<PendingDebrief | null>(null);
+  const [result, setResult] = useState<VoiceDebriefCaptureResult | null>(null);
+  const savedLogRef = useRef<VoiceLogRecord | null>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const mimeRef = useRef("audio/mp4");
@@ -88,6 +95,8 @@ export function VoiceCaptureModal({
     setElapsed(0);
     setError(null);
     setPending(null);
+    setResult(null);
+    savedLogRef.current = null;
     onClose();
   }, [onClose, stopTracks]);
 
@@ -136,6 +145,7 @@ export function VoiceCaptureModal({
           action_items?: VoiceLogActionItem[];
           mentioned_names?: string[];
           calendar_event_id?: string | null;
+          debrief?: VoiceDebriefCaptureResult | null;
           error?: string;
         }>(res);
 
@@ -158,11 +168,23 @@ export function VoiceCaptureModal({
           throw new Error(data.error ?? "Could not process this recording.");
         }
 
+        const capture: VoiceDebriefCaptureResult = {
+          personal_notes: data.debrief?.personal_notes ?? [],
+          follow_up_tasks: data.debrief?.follow_up_tasks ?? [],
+          mentioned_contacts: data.debrief?.mentioned_contacts ?? [],
+          ai_summary:
+            data.debrief?.ai_summary || data.voice_log.ai_summary || undefined,
+          action_items:
+            data.debrief?.action_items ?? data.voice_log.action_items,
+        };
         showSuccessToast("Debrief saved to the contact.");
-        onComplete?.(data.voice_log);
+        savedLogRef.current = data.voice_log;
+        onComplete?.(data.voice_log, capture);
+        setResult(capture);
+        setPhase("result");
+        submittingRef.current = false;
         stopTracks();
         setPending(null);
-        onClose();
       } catch (err) {
         submittingRef.current = false;
         setPhase(pending ? "confirm" : "recording");
@@ -195,6 +217,8 @@ export function VoiceCaptureModal({
     setElapsed(0);
     setError(null);
     setPending(null);
+    setResult(null);
+    savedLogRef.current = null;
 
     try {
       const created = createMediaRecorderForStream(stream);
@@ -244,6 +268,15 @@ export function VoiceCaptureModal({
   }, [open, stream]);
 
   if (!open) return null;
+
+  if (phase === "result" && result) {
+    return (
+      <DebriefResultSheet
+        result={result}
+        onDone={resetAndClose}
+      />
+    );
+  }
 
   if (phase === "confirm" && pending) {
     return (

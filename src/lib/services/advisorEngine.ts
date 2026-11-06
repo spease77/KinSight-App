@@ -95,6 +95,7 @@ export async function generatePreMeetingBriefing(input: {
   contactId: string;
   externalEventId?: string | null;
   provider?: string | null;
+  refresh?: boolean;
 }): Promise<PreMeetingCard | null> {
   const contactId = input.contactId.trim();
   if (!isLinkedContactId(contactId)) return null;
@@ -105,7 +106,7 @@ export async function generatePreMeetingBriefing(input: {
     provider: input.provider,
   });
 
-  if (calendarEventId) {
+  if (calendarEventId && !input.refresh) {
     const stored = await readStoredPreMeetingCard(calendarEventId);
     if (stored && isFreshCard(stored)) return stored;
   }

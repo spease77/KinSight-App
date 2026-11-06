@@ -50,6 +50,7 @@ export type ProcessedVoiceDebrief = {
   intelligence_profile: IntelligenceProfile;
   mentioned_contacts: string[];
   follow_up_tasks: AdvisorTaskDraft[];
+  new_personal_context: string[];
 };
 
 function cleanLines(values: string[]): string[] {
@@ -145,6 +146,7 @@ export async function processVoiceDebrief(input: {
       intelligence_profile: profile,
       mentioned_contacts: [],
       follow_up_tasks: [],
+      new_personal_context: [],
     };
   }
 
@@ -238,6 +240,7 @@ ${transcript}
       intelligence_profile: profile,
       mentioned_contacts: mentioned,
       follow_up_tasks: followUps,
+      new_personal_context: personalContext,
     };
   } catch (err) {
     console.error("processVoiceDebrief error:", err);
@@ -250,6 +253,7 @@ ${transcript}
       intelligence_profile: profile,
       mentioned_contacts: [],
       follow_up_tasks: [],
+      new_personal_context: [],
     };
   }
 }

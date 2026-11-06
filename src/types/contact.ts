@@ -13,6 +13,8 @@ export interface Contact {
   aliases?: string[];
   lastContact: string;
   lastMeetingDate?: string;
+  /** ISO / YYYY-MM-DD used by the relationship temperature gauge. */
+  lastInteractionDate?: string | null;
   contactType?: ContactType | null;
   contactTypeNeedsConfirmation?: boolean;
   /** Canonical lowercase relationship preset (e.g. "wife", "mother"). */

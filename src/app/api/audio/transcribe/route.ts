@@ -268,13 +268,25 @@ export async function POST(req: Request) {
       { skipVoiceLog: true }
     );
 
-    void processVoiceDebrief({ voiceLogId: saved.voice_log.id }).catch((err) => {
+    const processed = await processVoiceDebrief({
+      voiceLogId: saved.voice_log.id,
+    }).catch((err) => {
       console.error("processVoiceDebrief error:", err);
+      return null;
     });
 
     return Response.json({
       voice_log: saved.voice_log as VoiceLogRecord,
       contact_id: resolved.contact_id,
+      debrief: processed
+        ? {
+            personal_notes: processed.new_personal_context,
+            follow_up_tasks: processed.follow_up_tasks,
+            mentioned_contacts: processed.mentioned_contacts,
+            ai_summary: saved.voice_log.ai_summary ?? undefined,
+            action_items: saved.voice_log.action_items,
+          }
+        : null,
     });
   } catch (err) {
     console.error("audio transcribe error:", err);

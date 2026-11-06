@@ -42,6 +42,10 @@ import {
 } from "@/lib/supabase/contact-photos";
 import { collectContactEmails, inferCompanyDomain } from "@/lib/contacts/contact-avatar-inputs";
 import {
+  intelligenceFromProfile,
+  parseIntelligenceProfile,
+} from "@/lib/contacts/intelligence-profile";
+import {
   ENRICHED_AVATAR_CACHE_KEY,
   getContactAvatar,
   isEnrichedAvatarCacheFresh,
@@ -280,6 +284,17 @@ async function enrichContactWithAvatar<T extends Contact>(
   return { ...contact, enrichedAvatarUrl };
 }
 
+function resolveLastInteractionDate(row: ContactRow): string | null {
+  const intel =
+    parseIntelligenceProfile(row.intelligence_profile) ??
+    intelligenceFromProfile(row.profile);
+  if (intel?.last_interaction_date) return intel.last_interaction_date;
+  if (row.last_meeting_date?.trim()) return row.last_meeting_date.trim();
+  const lastContact = row.last_contact?.trim();
+  if (lastContact && Number.isFinite(Date.parse(lastContact))) return lastContact;
+  return null;
+}
+
 function rowToContact(row: ContactRow): Contact {
   const contactTypeFields = resolveRowContactType(row);
   const relationship = readContactRelationship(row.profile ?? undefined);
@@ -294,6 +309,7 @@ function rowToContact(row: ContactRow): Contact {
     aliases: row.aliases ?? undefined,
     lastContact: formatLastContactDisplay(row),
     lastMeetingDate: row.last_meeting_date ?? undefined,
+    lastInteractionDate: resolveLastInteractionDate(row),
     contactType: contactTypeFields.contactType,
     contactTypeNeedsConfirmation: contactTypeFields.contactTypeNeedsConfirmation,
     relationship: relationship || undefined,

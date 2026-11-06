@@ -47,17 +47,33 @@ export const EMPTY_INTELLIGENCE_PROFILE: IntelligenceProfile = {
   relationship_velocity: "cold",
 };
 
-const WARM_DAYS = 14;
-const COOLING_DAYS = 45;
+export const WARM_DAYS = 21;
+export const COOLING_DAYS = 45;
+
+export const RELATIONSHIP_VELOCITY_LABELS: Record<
+  RelationshipVelocity,
+  "Warm" | "Cooling" | "Cold"
+> = {
+  warm: "Warm",
+  cooling: "Cooling",
+  cold: "Cold",
+};
+
+export function daysSinceInteraction(
+  lastInteractionDate: string | null | undefined
+): number | null {
+  if (!lastInteractionDate) return null;
+  const parsed = Date.parse(lastInteractionDate);
+  if (!Number.isFinite(parsed)) return null;
+  return (Date.now() - parsed) / (24 * 60 * 60 * 1000);
+}
 
 export function relationshipVelocityFromDate(
   lastInteractionDate: string | null | undefined
 ): RelationshipVelocity {
-  if (!lastInteractionDate) return "cold";
-  const parsed = Date.parse(lastInteractionDate);
-  if (!Number.isFinite(parsed)) return "cold";
-  const days = (Date.now() - parsed) / (24 * 60 * 60 * 1000);
-  if (days <= WARM_DAYS) return "warm";
+  const days = daysSinceInteraction(lastInteractionDate);
+  if (days == null) return "cold";
+  if (days < WARM_DAYS) return "warm";
   if (days <= COOLING_DAYS) return "cooling";
   return "cold";
 }

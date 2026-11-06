@@ -1,17 +1,20 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ExternalLink, Newspaper, Sparkles } from "lucide-react";
+import { ExternalLink, Newspaper } from "lucide-react";
+import { PreMeetingCard } from "@/components/PreMeetingCard";
 import { isLinkedContactId } from "@/types/scheduled-interaction";
 import type { CompanyNewsResult } from "@/lib/contacts/company-news";
-import type { PreMeetingCard } from "@/lib/contacts/intelligence-profile";
 import { readApiJson } from "@/lib/api/read-json";
 
 interface PreMeetingBriefingProps {
   contactId?: string | null;
+  contactName?: string | null;
   eventId?: string | null;
   externalEventId?: string | null;
   provider?: string | null;
+  eventStartAt?: string | null;
+  durationMinutes?: number | null;
 }
 
 function formatNewsDate(raw: string): string {
@@ -34,40 +37,22 @@ function domainFromUrl(url: string): string | null {
 
 export function PreMeetingBriefing({
   contactId,
+  contactName,
   eventId,
   externalEventId,
   provider,
+  eventStartAt,
+  durationMinutes,
 }: PreMeetingBriefingProps) {
-  const [card, setCard] = useState<PreMeetingCard | null>(null);
   const [news, setNews] = useState<CompanyNewsResult | null>(null);
 
   useEffect(() => {
     if (!isLinkedContactId(contactId)) {
-      setCard(null);
       setNews(null);
       return;
     }
 
     let cancelled = false;
-    const params = new URLSearchParams();
-    if (eventId?.trim()) params.set("eventId", eventId.trim());
-    if (externalEventId?.trim()) {
-      params.set("externalEventId", externalEventId.trim());
-    }
-    if (provider?.trim()) params.set("provider", provider.trim());
-    const briefingQuery = params.toString();
-
-    void (async () => {
-      try {
-        const res = await fetch(
-          `/api/contacts/${contactId}/briefing${briefingQuery ? `?${briefingQuery}` : ""}`
-        );
-        const data = await readApiJson<{ card?: PreMeetingCard | null }>(res);
-        if (!cancelled) setCard(data.card ?? null);
-      } catch {
-        if (!cancelled) setCard(null);
-      }
-    })();
 
     void (async () => {
       try {
@@ -87,52 +72,23 @@ export function PreMeetingBriefing({
     return () => {
       cancelled = true;
     };
-  }, [contactId, eventId, externalEventId, provider]);
+  }, [contactId]);
 
-  if (!card && !news?.has_news) return null;
+  if (!isLinkedContactId(contactId)) return null;
 
   const verifiedDomain = news?.source_url ? domainFromUrl(news.source_url) : null;
 
   return (
     <div className="pre-meeting-briefing-stack">
-      {card ? (
-        <article
-          className="pre-meeting-briefing pre-meeting-briefing--advisor"
-          aria-label="Pre-meeting briefing"
-        >
-          <div className="pre-meeting-briefing__header">
-            <Sparkles className="h-4 w-4 shrink-0" strokeWidth={2} />
-            <p className="pre-meeting-briefing__kicker">Before you walk in</p>
-          </div>
-
-          <p className="pre-meeting-briefing__summary">{card.summary}</p>
-
-          {card.top_questions.length > 0 ? (
-            <div>
-              <p className="pre-meeting-briefing__opener-label">Ask</p>
-              <ol className="pre-meeting-briefing__questions">
-                {card.top_questions.map((question) => (
-                  <li key={question}>{question}</li>
-                ))}
-              </ol>
-            </div>
-          ) : null}
-
-          {card.caution_flags.length > 0 ? (
-            <p className="pre-meeting-briefing__caution">
-              <span className="pre-meeting-briefing__opener-label">Watch</span>
-              {card.caution_flags[0]}
-            </p>
-          ) : null}
-
-          {card.opening_move ? (
-            <p className="pre-meeting-briefing__opener">
-              <span className="pre-meeting-briefing__opener-label">Open with</span>
-              {card.opening_move}
-            </p>
-          ) : null}
-        </article>
-      ) : null}
+      <PreMeetingCard
+        contactId={contactId}
+        contactName={contactName}
+        eventId={eventId}
+        externalEventId={externalEventId}
+        provider={provider}
+        eventStartAt={eventStartAt}
+        durationMinutes={durationMinutes}
+      />
 
       {news?.has_news ? (
         <article className="pre-meeting-briefing" aria-label="Company news">
