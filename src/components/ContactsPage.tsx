@@ -7,16 +7,21 @@ import { PageHeader } from "@/components/PageHeader";
 import { ContactList } from "@/components/ContactList";
 import { DatabaseSetupNotice } from "@/components/DatabaseSetupNotice";
 import { useContacts } from "@/hooks/useContacts";
+import { PhoneContactSyncSheet } from "@/components/PhoneContactSyncSheet";
 import { usePhoneContactSync } from "@/hooks/usePhoneContactSync";
-import { Loader2, RefreshCw, Smartphone, UserPlus } from "lucide-react";
+import { Loader2, RefreshCw, UserPlus } from "lucide-react";
 
 export function ContactsPage() {
   const { contacts, error, isLoading, reload } = useContacts();
   const {
-    supported,
     isSyncing,
     error: syncError,
+    sheetOpen,
+    fileInputRef,
+    accept,
     syncContacts,
+    importFiles,
+    closeSheet,
     clearStatus,
   } = usePhoneContactSync(reload);
 
@@ -52,10 +57,8 @@ export function ContactsPage() {
       >
         {isSyncing ? (
           <Loader2 className="h-3.5 w-3.5 animate-spin text-icon" strokeWidth={2} />
-        ) : supported ? (
-          <RefreshCw className="h-3.5 w-3.5 text-icon" strokeWidth={2} />
         ) : (
-          <Smartphone className="h-3.5 w-3.5 text-icon" strokeWidth={2} />
+          <RefreshCw className="h-3.5 w-3.5 text-icon" strokeWidth={2} />
         )}
         Sync
       </button>
@@ -69,7 +72,7 @@ export function ContactsPage() {
       </PageHeader>
       <PageBody className="flex flex-col gap-4 px-0">
         {statusMessage && (
-          <p className="ui-card ui-alert-error px-4 py-3 text-sm" role="alert">
+          <p className="ui-card ui-alert-error mx-4 px-4 py-3 text-sm" role="alert">
             {statusMessage}
           </p>
         )}
@@ -101,6 +104,16 @@ export function ContactsPage() {
           />
         )}
       </PageBody>
+
+      <PhoneContactSyncSheet
+        open={sheetOpen}
+        accept={accept}
+        fileInputRef={fileInputRef}
+        onClose={closeSheet}
+        onFiles={(files) => {
+          void importFiles(files);
+        }}
+      />
     </>
   );
 }
