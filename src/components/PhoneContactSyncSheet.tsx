@@ -14,6 +14,7 @@ interface PhoneContactSyncSheetProps {
   fileInputRef: RefObject<HTMLInputElement | null>;
   onClose: () => void;
   onFiles: (files: FileList | null) => void;
+  onCreateShortcut: () => void;
   onRunShortcut: () => void;
 }
 
@@ -23,6 +24,7 @@ export function PhoneContactSyncSheet({
   fileInputRef,
   onClose,
   onFiles,
+  onCreateShortcut,
   onRunShortcut,
 }: PhoneContactSyncSheetProps) {
   const [copied, setCopied] = useState<"import" | "return" | null>(null);
@@ -79,8 +81,10 @@ export function PhoneContactSyncSheet({
 
         <div className="flex flex-col gap-3 px-5 py-4 text-sm leading-relaxed text-muted">
           <p className="text-foreground">
-            Two taps after setup: <span className="font-medium">Sync</span>, then{" "}
-            <span className="font-medium">Allow</span>.
+            The shortcut is not in KinSight — it lives in Apple&apos;s Shortcuts
+            app. Create it once, named exactly{" "}
+            <span className="font-medium">{KINSIGHT_CONTACTS_SHORTCUT_NAME}</span>
+            . Then two taps: Sync, then Allow.
           </p>
           <ol className="list-decimal space-y-2 pl-5 text-foreground">
             <li>
@@ -138,11 +142,18 @@ export function PhoneContactSyncSheet({
         <div className="flex flex-col gap-2 border-t border-hotel-border px-5 py-4">
           <button
             type="button"
-            onClick={onRunShortcut}
+            onClick={onCreateShortcut}
             className="ui-btn-green flex w-full items-center justify-center gap-2 px-4 py-2.5 text-sm"
           >
             <Smartphone className="h-4 w-4" strokeWidth={2} />
-            Run iPhone Shortcut
+            Create shortcut (copies the name)
+          </button>
+          <button
+            type="button"
+            onClick={onRunShortcut}
+            className="ui-btn-outline-green flex w-full items-center justify-center px-4 py-2.5 text-sm"
+          >
+            I&apos;ve added it — Sync now
           </button>
           <label className="ui-btn-outline-green flex w-full cursor-pointer items-center justify-center gap-2 px-4 py-2.5 text-sm">
             Choose vCard or CSV instead

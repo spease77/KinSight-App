@@ -10,7 +10,7 @@ import { DatabaseSetupNotice } from "@/components/DatabaseSetupNotice";
 import { useContacts } from "@/hooks/useContacts";
 import { PhoneContactSyncSheet } from "@/components/PhoneContactSyncSheet";
 import { usePhoneContactSync } from "@/hooks/usePhoneContactSync";
-import { showSuccessToast } from "@/lib/ui/toast";
+import { showErrorToast, showSuccessToast } from "@/lib/ui/toast";
 import { Loader2, RefreshCw, UserPlus } from "lucide-react";
 
 export function ContactsPage() {
@@ -23,6 +23,7 @@ export function ContactsPage() {
     accept,
     syncContacts,
     importFiles,
+    createIosShortcut,
     runIosShortcut,
     closeSheet,
     clearStatus,
@@ -30,10 +31,22 @@ export function ContactsPage() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (params.get("contactsSynced") !== "1") return;
-    showSuccessToast("iPhone contacts synced.");
-    void reload();
+    const synced = params.get("contactsSynced") === "1";
+    const missing = params.get("shortcutMissing") === "1";
+    if (!synced && !missing) return;
+
+    if (synced) {
+      showSuccessToast("iPhone contacts synced.");
+      void reload();
+    }
+    if (missing) {
+      showErrorToast(
+        "Create the shortcut named KinSight Contacts first, then tap I’ve added it."
+      );
+    }
+
     params.delete("contactsSynced");
+    params.delete("shortcutMissing");
     const next = params.toString();
     window.history.replaceState(
       null,
@@ -129,6 +142,9 @@ export function ContactsPage() {
         onClose={closeSheet}
         onFiles={(files) => {
           void importFiles(files);
+        }}
+        onCreateShortcut={() => {
+          void createIosShortcut();
         }}
         onRunShortcut={runIosShortcut}
       />

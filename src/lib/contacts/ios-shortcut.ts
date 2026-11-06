@@ -1,9 +1,16 @@
 export const KINSIGHT_CONTACTS_SHORTCUT_NAME = "KinSight Contacts";
 
-export function contactsShortcutRunUrl(): string {
-  return `shortcuts://run-shortcut?name=${encodeURIComponent(
-    KINSIGHT_CONTACTS_SHORTCUT_NAME
-  )}`;
+export function contactsShortcutCreateUrl(): string {
+  return "shortcuts://create-shortcut";
+}
+
+export function contactsShortcutRunUrl(origin: string): string {
+  const errorUrl = `${origin.replace(/\/$/, "")}/contacts?shortcutMissing=1`;
+  return (
+    `shortcuts://x-callback-url/run-shortcut?name=${encodeURIComponent(
+      KINSIGHT_CONTACTS_SHORTCUT_NAME
+    )}&x-error=${encodeURIComponent(errorUrl)}`
+  );
 }
 
 export function contactsImportUrl(origin: string): string {
