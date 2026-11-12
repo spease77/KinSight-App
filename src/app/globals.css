@@ -2255,17 +2255,6 @@ html.keyboard-composer-active .home-composer-dock {
   color: var(--text-secondary);
 }
 
-.relationship-gauge__warmup {
-  margin: 0;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  font-size: 0.6875rem;
-  font-weight: 600;
-  color: var(--accent-green-bright);
-  white-space: nowrap;
-}
-
 .post-meeting-banner {
   display: flex;
   align-items: center;

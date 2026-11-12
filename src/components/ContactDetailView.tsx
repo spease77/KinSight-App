@@ -60,12 +60,9 @@ export function ContactDetailView({
             {displayName}
           </h1>
           <RelationshipGauge
-            contactName={contact.name}
             lastInteractionDate={
               contact.lastInteractionDate ?? contact.lastMeetingDate
             }
-            email={contact.email}
-            profile={contact.profile}
           />
         </div>
 

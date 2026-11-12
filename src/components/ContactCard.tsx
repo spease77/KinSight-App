@@ -14,7 +14,6 @@ import {
   formatTimeInvested,
   hasLoggedTimeInvested,
 } from "@/lib/time-logs/format-duration";
-import { RelationshipGauge } from "@/components/RelationshipGauge";
 
 export function ContactCard({
   contact,
@@ -83,25 +82,11 @@ export function ContactCard({
     </>
   );
 
-  const gauge = (
-    <div className="pl-14">
-      <RelationshipGauge
-        contactName={contact.name}
-        lastInteractionDate={
-          contact.lastInteractionDate ?? contact.lastMeetingDate
-        }
-        email={contact.email}
-        compact
-      />
-    </div>
-  );
-
   if (!contactHref) {
     return (
       <li>
-        <div className="contact-list-row flex w-full flex-col gap-1 py-3 text-left">
-          <div className="flex w-full items-center gap-4">{identity}</div>
-          {gauge}
+        <div className="contact-list-row flex w-full items-center gap-4 py-3 text-left">
+          {identity}
         </div>
       </li>
     );
@@ -109,32 +94,29 @@ export function ContactCard({
 
   return (
     <li>
-      <div className="contact-list-row flex w-full flex-col gap-1 py-3 text-left">
-        <Link
-          href={contactHref}
-          prefetch
-          aria-label={`View ${displayName}`}
-          className="group flex w-full cursor-pointer touch-manipulation items-center gap-4 active:scale-[0.99]"
-          onClick={(event) => {
-            if (
-              event.defaultPrevented ||
-              event.button !== 0 ||
-              event.metaKey ||
-              event.ctrlKey ||
-              event.shiftKey ||
-              event.altKey
-            ) {
-              return;
-            }
+      <Link
+        href={contactHref}
+        prefetch
+        aria-label={`View ${displayName}`}
+        className="contact-list-row group flex w-full cursor-pointer touch-manipulation items-center gap-4 py-3 text-left active:scale-[0.99]"
+        onClick={(event) => {
+          if (
+            event.defaultPrevented ||
+            event.button !== 0 ||
+            event.metaKey ||
+            event.ctrlKey ||
+            event.shiftKey ||
+            event.altKey
+          ) {
+            return;
+          }
 
-            event.preventDefault();
-            router.push(contactHref);
-          }}
-        >
-          {identity}
-        </Link>
-        {gauge}
-      </div>
+          event.preventDefault();
+          router.push(contactHref);
+        }}
+      >
+        {identity}
+      </Link>
     </li>
   );
 }
