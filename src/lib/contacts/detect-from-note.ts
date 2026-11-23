@@ -21,6 +21,7 @@ import {
   resolveContact,
   type ResolveContactCandidate,
 } from "@/lib/services/contactResolver";
+import { isConfirmationOnlyUtterance } from "@/lib/contacts/is-confirmation-utterance";
 import { fetchContacts } from "@/lib/supabase/contacts";
 
 export type ProposedContactForReview = {
@@ -69,10 +70,22 @@ function personEmail(person: ParsedProposedPerson): string | undefined {
   );
 }
 
+const EMPTY_DETECT_RESULT: DetectContactsResult = {
+  newContacts: [],
+  existingUpdates: [],
+  newConnections: [],
+  ambiguousIntel: [],
+  pendingResolutions: [],
+};
+
 export async function detectContactsFromNote(
   transcript: string,
   requestContext: AiRequestContext
 ): Promise<DetectContactsResult> {
+  if (isConfirmationOnlyUtterance(transcript)) {
+    return EMPTY_DETECT_RESULT;
+  }
+
   const [{ contacts }, people, records] = await Promise.all([
     fetchContacts(),
     parseMultiContactNote(transcript, requestContext),
