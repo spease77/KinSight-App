@@ -12,6 +12,7 @@ import type {
   ProposedContactForReview,
 } from "@/lib/contacts/detect-from-note";
 import type { AmbiguousIntelItem } from "@/lib/contacts/extract-contact-intel";
+import { isConfirmationOnlyUtterance } from "@/lib/contacts/is-confirmation-utterance";
 
 type NoteContext = {
   transcript: string;
@@ -55,6 +56,10 @@ export function useProposedContactQueue() {
     ) => {
       const trimmed = transcript.trim();
       if (!trimmed) return;
+      // Agent confirms with short yes/no replies — do not run contact
+      // detection on those, or we get a "Create yes?" popup that replaces
+      // any real pending review queue.
+      if (isConfirmationOnlyUtterance(trimmed)) return;
 
       setIsDetecting(true);
       setError(null);
@@ -154,8 +159,13 @@ export function useProposedContactQueue() {
           router.refresh();
         }
 
-        setQueue(items);
-        setCurrentIndex(0);
+        // Only replace the review queue when we actually found new contacts.
+        // An empty result (or a stray short reply) must not dismiss a pending
+        // "Create …?" modal the user still needs to confirm.
+        if (items.length > 0) {
+          setQueue(items);
+          setCurrentIndex(0);
+        }
       } catch (err) {
         console.warn(
           "Contact detection skipped:",

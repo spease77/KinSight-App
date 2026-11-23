@@ -5,6 +5,7 @@ import {
   CONTACT_TYPE_PARSE_INSTRUCTIONS,
   type ContactType,
 } from "@/lib/contacts/contact-type";
+import { isConfirmationOnlyName } from "@/lib/contacts/is-confirmation-utterance";
 import { openai } from "@ai-sdk/openai";
 import { generateObject } from "ai";
 import {
@@ -178,6 +179,7 @@ ${voiceSnippetRules}
 7. Resolve relative meeting dates per person into last_meeting_date (MM-DD-YYYY).
 8. Resolve birthDate and weddingAnniversary to MM-DD-YYYY in profileUpdates.
 9. ${CONTACT_TYPE_PARSE_INSTRUCTIONS} — assign contact_type per person independently.
+10. If the note is ONLY a short confirmation or rejection (yes, yep, yeah, ok, sure, correct, no, nope, cancel, never mind, etc.) with no person named, return contacts: []. Never invent a person whose name is "yes", "ok", or similar.
 
 Valid profile field keys:
 ${PROFILE_FIELD_LIST}
@@ -200,6 +202,7 @@ ${transcript.trim()}
 
   for (const raw of object.contacts) {
     if (!raw.displayName?.trim()) continue;
+    if (isConfirmationOnlyName(raw.displayName)) continue;
     const key = raw.displayName.trim().toLowerCase();
     if (seen.has(key)) continue;
     seen.add(key);
